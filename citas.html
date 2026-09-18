@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Citas — Turnia</title>
+<meta name="theme-color" content="#C7EBF6">
+<meta name="robots" content="noindex">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="theme.js"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-b from-brand-lightest via-brand-light to-brand/70 font-sans text-brand-darkest antialiased">
+
+<a href="#lista" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-xl focus:bg-brand-darkest focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
+  Saltar a la lista de citas
+</a>
+
+<div class="mx-auto max-w-md">
+
+  <!-- ═══════════ HEADER ═══════════ -->
+  <header class="sticky top-0 z-30 border-b border-white/50 bg-white/80 backdrop-blur-xl backdrop-saturate-150">
+    <div class="px-5 pb-3 pt-5">
+
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-semibold tracking-tight">Citas</h1>
+          <p class="text-xs text-brand-darkest/55">Miércoles 3 de septiembre</p>
+        </div>
+        <button type="button" id="btn-vista-cliente"
+                class="flex shrink-0 items-center gap-2 rounded-2xl bg-brand-dark px-3.5 py-2.5 text-xs font-semibold text-white shadow-soft transition hover:bg-brand-darkest active:scale-95">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle>
+          </svg>
+          Vista cliente
+        </button>
+      </div>
+
+      <!-- Selector de fecha -->
+      <nav aria-label="Seleccionar día" class="mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-brand-lightest/80 p-1">
+        <a href="#" class="rounded-xl py-2 text-center text-sm font-medium text-brand-darkest/55 transition hover:bg-white/70">Ayer</a>
+        <a href="#" aria-current="page" class="rounded-xl bg-white py-2 text-center text-sm font-semibold text-brand-dark shadow-soft">Hoy</a>
+        <a href="#" class="rounded-xl py-2 text-center text-sm font-medium text-brand-darkest/55 transition hover:bg-white/70">Mañana</a>
+      </nav>
+    </div>
+
+    <!-- Filtros de estado -->
+    <div class="flex gap-2 overflow-x-auto border-t border-white/50 px-5 py-2.5" role="group" aria-label="Filtrar por estado">
+      <button type="button" class="filtro shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition" data-filtro="todas">Todas</button>
+      <button type="button" class="filtro shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition" data-filtro="disponible">Disponibles</button>
+      <button type="button" class="filtro shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition" data-filtro="reservada">Reservadas</button>
+      <button type="button" class="filtro shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition" data-filtro="completada">Completadas</button>
+    </div>
+  </header>
+
+  <!-- ═══════════ LISTA ═══════════ -->
+  <main id="lista" class="px-5 pb-32 pt-5">
+    <h2 class="sr-only">Citas del día</h2>
+    <ol id="citas" class="space-y-2.5"></ol>
+
+    <!-- Estado vacío (Nielsen #1: decir por qué no hay nada, no dejar la pantalla en blanco) -->
+    <p id="vacio" class="hidden rounded-3xl border border-white/60 bg-white/70 p-8 text-center text-sm text-brand-darkest/60 backdrop-blur-xl">
+      No hay citas con este filtro.
+    </p>
+  </main>
+
+</div>
+
+<!-- ═══════════ MODAL: VISTA CLIENTE ═══════════ -->
+<dialog id="sheet-cliente" aria-labelledby="cliente-titulo"
+        class="mx-auto mb-0 mt-auto max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-0 text-brand-darkest shadow-lift">
+
+  <div class="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
+
+    <div class="mx-auto h-1.5 w-10 rounded-full bg-brand-light" aria-hidden="true"></div>
+
+    <div class="mt-4 flex items-start justify-between gap-3">
+      <div>
+        <p class="text-[10px] font-bold uppercase tracking-wide text-brand-dark">Previsualización</p>
+        <h2 id="cliente-titulo" class="text-lg font-semibold tracking-tight">Así lo ve tu cliente</h2>
+      </div>
+      <form method="dialog">
+        <button class="grid h-9 w-9 place-items-center rounded-full bg-brand-lightest/70 transition hover:bg-brand-light/60" aria-label="Cerrar previsualización">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        </button>
+      </form>
+    </div>
+
+    <!-- Lo que ve el cliente: sin login, solo servicios + hora + 2 datos -->
+    <div class="mt-4 rounded-3xl border border-brand-light/60 bg-brand-lightest/30 p-4">
+
+      <div class="flex items-center gap-3">
+        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-dark text-lg font-bold text-white">EC</span>
+        <div class="min-w-0">
+          <p class="truncate text-base font-semibold">Barbería El Cuartel</p>
+          <p class="text-xs text-brand-darkest/55">Cra. 45 #12-30 · Abierto hasta las 20:00</p>
+        </div>
+      </div>
+
+      <form id="form-reserva" class="mt-5 space-y-5">
+
+        <!-- 1. Servicio -->
+        <fieldset>
+          <legend class="text-sm font-semibold">1. Elige tu servicio</legend>
+          <div class="mt-2.5 space-y-2">
+            <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:ring-2 has-[:checked]:ring-brand/30">
+              <input type="radio" name="servicio" value="Corte clásico" data-precio="20000" required class="h-4 w-4 shrink-0 accent-brand-dark">
+              <span class="flex-1 text-sm font-medium">Corte clásico <span class="block text-xs font-normal text-brand-darkest/55">45 min</span></span>
+              <span class="text-sm font-semibold">$20.000</span>
+            </label>
+            <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:ring-2 has-[:checked]:ring-brand/30">
+              <input type="radio" name="servicio" value="Corte + barba" data-precio="25000" class="h-4 w-4 shrink-0 accent-brand-dark">
+              <span class="flex-1 text-sm font-medium">Corte + barba <span class="block text-xs font-normal text-brand-darkest/55">60 min</span></span>
+              <span class="text-sm font-semibold">$25.000</span>
+            </label>
+            <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:ring-2 has-[:checked]:ring-brand/30">
+              <input type="radio" name="servicio" value="Perfilado de barba" data-precio="15000" class="h-4 w-4 shrink-0 accent-brand-dark">
+              <span class="flex-1 text-sm font-medium">Perfilado de barba <span class="block text-xs font-normal text-brand-darkest/55">30 min</span></span>
+              <span class="text-sm font-semibold">$15.000</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- 2. Hora: solo se listan las libres, no se puede pedir una ocupada -->
+        <div>
+          <label for="hora" class="text-sm font-semibold">2. Elige la hora</label>
+          <select id="hora" name="hora" required
+                  class="mt-2.5 block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
+          </select>
+          <p class="mt-1.5 text-xs text-brand-darkest/50">Solo aparecen las horas libres de hoy.</p>
+        </div>
+
+        <!-- 3. Datos: nombre y WhatsApp, nada más. Sin cuenta, sin contraseña. -->
+        <fieldset class="space-y-3">
+          <legend class="text-sm font-semibold">3. Tus datos</legend>
+          <div>
+            <label for="nombre" class="sr-only">Tu nombre</label>
+            <input id="nombre" name="nombre" type="text" required maxlength="60" autocomplete="name" placeholder="Tu nombre"
+                   class="block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
+          </div>
+          <div>
+            <label for="telefono" class="sr-only">Tu WhatsApp</label>
+            <input id="telefono" name="telefono" type="tel" required inputmode="tel" autocomplete="tel"
+                   pattern="[0-9+ ()-]{7,20}" maxlength="20" placeholder="WhatsApp (ej. 300 111 2233)"
+                   class="block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
+            <p class="mt-1.5 text-xs text-brand-darkest/50">Te llega el recordatorio por aquí. No se comparte con nadie.</p>
+          </div>
+        </fieldset>
+
+        <button type="submit"
+                class="w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98]">
+          Confirmar reserva
+        </button>
+      </form>
+
+      <!-- Confirmación (Nielsen #1) -->
+      <div id="reserva-ok" class="hidden rounded-2xl bg-white p-5 text-center">
+        <span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6.5L9.5 17 4 11.5"></path></svg>
+        </span>
+        <p class="mt-3 text-base font-semibold">¡Cita reservada!</p>
+        <p id="reserva-detalle" class="mt-1 text-sm text-brand-darkest/60"></p>
+        <button type="button" id="btn-otra" class="mt-4 text-sm font-semibold text-brand-dark underline underline-offset-4">Simular otra reserva</button>
+      </div>
+    </div>
+
+    <p class="mt-4 text-center text-xs text-brand-darkest/45">
+      Las reservas que entren por aquí aparecen solas en tu agenda.
+    </p>
+  </div>
+</dialog>
+
+<script src="nav.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var citas = [
+    { hora: '08:00', cliente: 'Andrés Mejía',    servicio: 'Corte + barba',      precio: 25000, tel: '573001112233', estado: 'completada' },
+    { hora: '09:00', cliente: 'Kevin Ríos',      servicio: 'Fade',               precio: 18000, tel: '573002223344', estado: 'completada' },
+    { hora: '10:00', cliente: 'Julián Pardo',    servicio: 'Corte clásico',      precio: 20000, tel: '573003334455', estado: 'reservada' },
+    { hora: '11:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' },
+    { hora: '12:00', cliente: 'Mateo Guzmán',    servicio: 'Corte + cejas',      precio: 22000, tel: '573004445566', estado: 'reservada' },
+    { hora: '14:00', cliente: 'Santiago Lozano', servicio: 'Perfilado de barba', precio: 15000, tel: '573005556677', estado: 'reservada' },
+    { hora: '15:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' },
+    { hora: '16:00', cliente: 'Nicolás Vargas',  servicio: 'Corte + barba',      precio: 25000, tel: '573006667788', estado: 'reservada' },
+    { hora: '17:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' },
+    { hora: '18:00', cliente: 'Daniel Ospina',   servicio: 'Fade + diseño',      precio: 30000, tel: '573007778899', estado: 'reservada' },
+    { hora: '19:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' }
+  ];
+
+  var ETIQUETA = { disponible: 'Disponible', reservada: 'Reservada', completada: 'Completada' };
+  var BADGE = {
+    disponible: 'bg-brand-lightest text-brand-dark',
+    reservada:  'bg-brand-dark text-white',
+    completada: 'bg-emerald-50 text-emerald-700'
+  };
+
+  var filtro = 'todas';
+  var $lista = document.getElementById('citas');
+  var $vacio = document.getElementById('vacio');
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function tarjeta(c, i) {
+    var apagada = c.estado === 'completada' ? ' opacity-70' : '';
+    var html =
+      '<li class="flex gap-3">' +
+      '<span class="w-12 shrink-0 pt-4 text-right text-xs font-semibold ' +
+        (c.estado === 'reservada' ? 'text-brand-dark' : 'text-brand-darkest/45') + '">' + c.hora + '</span>' +
+      '<div class="flex-1 rounded-2xl border border-white/60 bg-white/90 p-4 shadow-soft backdrop-blur-xl' + apagada + '">';
+
+    if (c.estado === 'disponible') {
+      html +=
+        '<div class="flex items-center justify-between gap-2">' +
+          '<span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ' + BADGE.disponible + '">' + ETIQUETA.disponible + '</span>' +
+          '<span class="text-xs text-brand-darkest/45">Reservable online</span>' +
+        '</div>' +
+        '<button type="button" data-agendar="' + i + '" class="mt-3 w-full rounded-xl border border-dashed border-brand-light py-2.5 text-sm font-medium text-brand-dark transition hover:border-brand hover:bg-brand-lightest/40 active:scale-[.99]">' +
+          '+ Agendar cita manual' +
+        '</button>';
+    } else {
+      html +=
+        '<div class="flex items-start gap-2">' +
+          '<div class="min-w-0 flex-1">' +
+            '<p class="truncate text-base font-semibold' + (c.estado === 'completada' ? ' line-through decoration-brand-darkest/30' : '') + '">' + esc(c.cliente) + '</p>' +
+            '<p class="mt-0.5 text-xs text-brand-darkest/55">' + esc(c.servicio) + '</p>' +
+          '</div>' +
+          '<div class="shrink-0 text-right">' +
+            '<span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ' + BADGE[c.estado] + '">' + ETIQUETA[c.estado] + '</span>' +
+            '<p class="mt-1 text-sm font-semibold">' + window.pesos(c.precio) + '</p>' +
+          '</div>' +
+        '</div>';
+
+      if (c.estado === 'reservada') {
+        html +=
+          '<a href="https://wa.me/' + c.tel + '?text=' + encodeURIComponent('Hola ' + c.cliente + ', te recordamos tu cita hoy a las ' + c.hora + ' en Barbería El Cuartel.') + '" target="_blank" rel="noopener" ' +
+          'class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-lightest py-2.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/60 active:scale-[.98]">' +
+            'Recordar por WhatsApp' +
+          '</a>';
+      }
+    }
+
+    /* Cambio manual de estado: <select> nativo = picker cómodo en móvil y accesible sin JS extra */
+    html +=
+      '<div class="mt-3 flex items-center gap-2 border-t border-brand-light/40 pt-3">' +
+        '<label class="text-xs text-brand-darkest/55" for="estado-' + i + '">Estado</label>' +
+        '<select id="estado-' + i + '" data-estado="' + i + '" class="ml-auto rounded-lg border border-brand-light bg-white px-2.5 py-1.5 text-xs font-medium transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30">' +
+          '<option value="disponible"' + (c.estado === 'disponible' ? ' selected' : '') + '>Disponible</option>' +
+          '<option value="reservada"' + (c.estado === 'reservada' ? ' selected' : '') + '>Reservada</option>' +
+          '<option value="completada"' + (c.estado === 'completada' ? ' selected' : '') + '>Completada</option>' +
+        '</select>' +
+      '</div>';
+
+    return html + '</div></li>';
+  }
+
+  function pintar() {
+    var visibles = citas.filter(function (c) { return filtro === 'todas' || c.estado === filtro; });
+
+    $lista.innerHTML = citas.map(function (c, i) {
+      return (filtro === 'todas' || c.estado === filtro) ? tarjeta(c, i) : '';
+    }).join('');
+
+    $vacio.classList.toggle('hidden', visibles.length > 0);
+
+    document.querySelectorAll('.filtro').forEach(function (b) {
+      var activo = b.dataset.filtro === filtro;
+      b.setAttribute('aria-pressed', activo);
+      b.className = 'filtro shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ' +
+        (activo ? 'bg-brand-dark text-white shadow-soft' : 'bg-white/70 text-brand-darkest/60 hover:bg-white');
+    });
+
+    llenarHoras();
+  }
+
+  /* ── Filtros ── */
+  document.querySelectorAll('.filtro').forEach(function (b) {
+    b.addEventListener('click', function () { filtro = b.dataset.filtro; pintar(); });
+  });
+
+  /* ── Cambio de estado y agendado manual (delegación: la lista se repinta entera) ── */
+  $lista.addEventListener('change', function (e) {
+    var sel = e.target.closest('[data-estado]');
+    if (!sel) return;
+    var i = Number(sel.dataset.estado), c = citas[i], nuevo = sel.value;
+
+    /* Prevención de errores (Nielsen #5): liberar un turno borra los datos del cliente */
+    if (c.estado === 'reservada' && nuevo === 'disponible' &&
+        !confirm('¿Liberar el turno de ' + c.cliente + ' a las ' + c.hora + '?\n\nSe borran sus datos y la hora vuelve a quedar reservable online.')) {
+      sel.value = c.estado;
+      return;
+    }
+
+    if (nuevo === 'disponible') { c.cliente = ''; c.servicio = ''; c.precio = 0; c.tel = ''; }
+    if (nuevo !== 'disponible' && !c.cliente) { c.cliente = 'Cliente sin nombre'; c.servicio = 'Servicio por definir'; }
+    c.estado = nuevo;
+    pintar();
+  });
+
+  $lista.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-agendar]');
+    if (!btn) return;
+    var c = citas[Number(btn.dataset.agendar)];
+    var nombre = prompt('Nombre del cliente para las ' + c.hora + ':');
+    if (!nombre || !nombre.trim()) return;
+    c.cliente = nombre.trim();
+    c.servicio = 'Corte clásico';
+    c.precio = 20000;
+    c.tel = '';
+    c.estado = 'reservada';
+    pintar();
+  });
+
+  /* ══ Modal vista cliente ══ */
+  var sheet = document.getElementById('sheet-cliente');
+  var form = document.getElementById('form-reserva');
+  var ok = document.getElementById('reserva-ok');
+  var detalle = document.getElementById('reserva-detalle');
+  var $hora = document.getElementById('hora');
+
+  function llenarHoras() {
+    var libres = citas.filter(function (c) { return c.estado === 'disponible'; });
+    $hora.innerHTML = libres.length
+      ? libres.map(function (c) { return '<option value="' + c.hora + '">' + c.hora + '</option>'; }).join('')
+      : '<option value="">Hoy no quedan horas libres</option>';
+    $hora.disabled = libres.length === 0;
+  }
+
+  document.getElementById('btn-vista-cliente').addEventListener('click', function () {
+    form.classList.remove('hidden', 'enviado');
+    form.reset();
+    ok.classList.add('hidden');
+    llenarHoras();
+    sheet.showModal();
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    form.classList.add('enviado');
+    var datos = new FormData(form);
+    var hora = datos.get('hora');
+    var cita = citas.find(function (c) { return c.hora === hora && c.estado === 'disponible'; });
+    if (!cita) { alert('Esa hora ya se ocupó. Elige otra.'); llenarHoras(); return; }
+
+    var radio = form.querySelector('input[name="servicio"]:checked');
+    cita.cliente = String(datos.get('nombre')).trim();
+    cita.tel = String(datos.get('telefono')).replace(/[^0-9]/g, '');
+    cita.servicio = radio.value;
+    cita.precio = Number(radio.dataset.precio);
+    cita.estado = 'reservada';
+
+    detalle.textContent = cita.servicio + ' · hoy a las ' + cita.hora + ' · ' + window.pesos(cita.precio);
+    form.classList.add('hidden');
+    ok.classList.remove('hidden');
+    pintar();
+  });
+
+  document.getElementById('btn-otra').addEventListener('click', function () {
+    form.reset();
+    form.classList.remove('hidden', 'enviado');
+    ok.classList.add('hidden');
+    llenarHoras();
+  });
+
+  sheet.addEventListener('click', function (e) { if (e.target === sheet) sheet.close(); });
+
+  pintar();
+})();
+</script>
+
+</body>
+</html>
