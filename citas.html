@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Citas — Turnia</title>
-<meta name="theme-color" content="#C7EBF6">
+<title>Citas — Turnio</title>
+<meta name="theme-color" content="#FFFFFF">
 <meta name="robots" content="noindex">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="theme.js"></script>
+<script src="datos.js"></script>
 </head>
 
-<body class="min-h-screen bg-gradient-to-b from-brand-lightest via-brand-light to-brand/70 font-sans text-brand-darkest antialiased">
+<body class="min-h-screen bg-slate-100 font-sans text-brand-darkest antialiased">
 
 <a href="#lista" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-xl focus:bg-brand-darkest focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
   Saltar a la lista de citas
@@ -18,153 +19,252 @@
 
 <div class="mx-auto max-w-md">
 
-  <!-- ═══════════ HEADER ═══════════ -->
-  <header class="sticky top-0 z-30 border-b border-white/50 bg-white/80 backdrop-blur-xl backdrop-saturate-150">
-    <div class="px-5 pb-3 pt-5">
-
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <h1 class="text-xl font-semibold tracking-tight">Citas</h1>
-          <p class="text-xs text-brand-darkest/55">Miércoles 3 de septiembre</p>
-        </div>
-        <button type="button" id="btn-vista-cliente"
-                class="flex shrink-0 items-center gap-2 rounded-2xl bg-brand-dark px-3.5 py-2.5 text-xs font-semibold text-white shadow-soft transition hover:bg-brand-darkest active:scale-95">
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle>
-          </svg>
-          Vista cliente
-        </button>
+  <!-- ═══════════ CABECERA (se va con el scroll; solo los filtros quedan fijos) ═══════════ -->
+  <header class="bg-white px-5 pb-4 pt-5">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <p id="saludo" class="text-xs font-medium text-brand-darkest/50"></p>
+        <h1 class="truncate text-xl font-semibold tracking-tight">Barbería El Cuartel</h1>
+        <p id="fecha" class="truncate text-xs text-brand-darkest/55 first-letter:uppercase"></p>
       </div>
-
-      <!-- Selector de fecha -->
-      <nav aria-label="Seleccionar día" class="mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-brand-lightest/80 p-1">
-        <a href="#" class="rounded-xl py-2 text-center text-sm font-medium text-brand-darkest/55 transition hover:bg-white/70">Ayer</a>
-        <a href="#" aria-current="page" class="rounded-xl bg-white py-2 text-center text-sm font-semibold text-brand-dark shadow-soft">Hoy</a>
-        <a href="#" class="rounded-xl py-2 text-center text-sm font-medium text-brand-darkest/55 transition hover:bg-white/70">Mañana</a>
-      </nav>
+      <p class="mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true"></span>
+        Abierto
+      </p>
     </div>
 
-    <!-- Filtros de estado -->
-    <div class="flex gap-2 overflow-x-auto border-t border-white/50 px-5 py-2.5" role="group" aria-label="Filtrar por estado">
-      <button type="button" class="filtro shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition" data-filtro="todas">Todas</button>
-      <button type="button" class="filtro shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition" data-filtro="disponible">Disponibles</button>
-      <button type="button" class="filtro shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition" data-filtro="reservada">Reservadas</button>
-      <button type="button" class="filtro shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition" data-filtro="completada">Completadas</button>
+    <!-- Estado del día de un vistazo -->
+    <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+      <div class="rounded-2xl bg-rose-50 px-2 py-3">
+        <p id="n-reservadas" class="text-xl font-semibold tracking-tight text-rose-700">0</p>
+        <p class="text-[11px] font-medium text-rose-700/80">Por atender</p>
+      </div>
+      <div class="rounded-2xl bg-emerald-50 px-2 py-3">
+        <p id="n-libres" class="text-xl font-semibold tracking-tight text-emerald-700">0</p>
+        <p class="text-[11px] font-medium text-emerald-700/80">Libres</p>
+      </div>
+      <a href="caja.html" class="rounded-2xl bg-slate-100 px-2 py-3 transition hover:bg-slate-200">
+        <p id="n-caja" class="truncate text-xl font-semibold tracking-tight">$0</p>
+        <p class="text-[11px] font-medium text-brand-darkest/55">En caja</p>
+      </a>
+    </div>
+
+    <div class="mt-2 grid grid-cols-2 gap-2">
+      <button type="button" id="btn-copiar" data-link="https://turnio.app/b/el-cuartel"
+              class="flex items-center justify-center gap-2 rounded-2xl border border-brand-light bg-white px-2 text-xs font-semibold transition hover:bg-slate-50 active:scale-95">
+        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path>
+        </svg>
+        Copiar link
+      </button>
+      <button type="button" id="btn-vista-cliente"
+              class="flex items-center justify-center gap-2 rounded-2xl border border-brand-light bg-white px-2 text-xs font-semibold transition hover:bg-slate-50 active:scale-95">
+        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle>
+        </svg>
+        Vista cliente
+      </button>
     </div>
   </header>
 
-  <!-- ═══════════ LISTA ═══════════ -->
-  <main id="lista" class="px-5 pb-32 pt-5">
+  <!-- ═══════════ FILTROS (rejilla fija de 3: nunca hay scroll lateral) ═══════════ -->
+  <div class="sticky top-0 z-30 grid grid-cols-3 gap-2 border-b border-slate-200 bg-white/90 px-5 py-2 backdrop-blur-xl backdrop-saturate-150" role="group" aria-label="Filtrar por estado">
+    <button type="button" class="filtro" data-filtro="todas">Todas</button>
+    <button type="button" class="filtro" data-filtro="disponible">Disponibles</button>
+    <button type="button" class="filtro" data-filtro="reservada">Reservadas</button>
+  </div>
+
+  <!-- ═══════════ LÍNEA DE TIEMPO ═══════════ -->
+  <main id="lista" class="px-5 pb-44 pt-4">
     <h2 class="sr-only">Citas del día</h2>
     <ol id="citas" class="space-y-2.5"></ol>
 
-    <!-- Estado vacío (Nielsen #1: decir por qué no hay nada, no dejar la pantalla en blanco) -->
-    <p id="vacio" class="hidden rounded-3xl border border-white/60 bg-white/70 p-8 text-center text-sm text-brand-darkest/60 backdrop-blur-xl">
-      No hay citas con este filtro.
+    <p id="vacio" class="hidden rounded-3xl border border-slate-200 bg-white p-8 text-center text-sm text-brand-darkest/60">
+      No hay turnos con este filtro.
     </p>
   </main>
 
 </div>
 
-<!-- ═══════════ MODAL: VISTA CLIENTE ═══════════ -->
-<dialog id="sheet-cliente" aria-labelledby="cliente-titulo"
-        class="mx-auto mb-0 mt-auto max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-0 text-brand-darkest shadow-lift">
+<!-- ═══════════ FAB: VENTA RÁPIDA (esquina del pulgar) ═══════════ -->
+<button type="button" id="btn-venta"
+        class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-[max(1.25rem,calc(50vw-13rem))] z-40 flex items-center gap-2 rounded-2xl bg-brand-dark px-5 py-4 text-sm font-semibold text-white shadow-lift transition hover:bg-brand-darkest active:scale-95">
+  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14" stroke-width="1.6"></path><path d="M21 5v14" stroke-width="2.6"></path>
+  </svg>
+  Venta rápida
+</button>
+
+<!-- ═══════════ HOJA: VENTA RÁPIDA ═══════════ -->
+<dialog id="sheet-venta" aria-labelledby="venta-titulo"
+        class="mx-auto mb-0 mt-auto max-h-[92vh] w-full max-w-md overflow-y-auto overflow-x-hidden rounded-t-3xl bg-white p-0 text-brand-darkest shadow-lift">
+  <div class="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
+
+    <div class="mx-auto h-1.5 w-10 rounded-full bg-brand-light" aria-hidden="true"></div>
+
+    <div class="mt-4 flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <h2 id="venta-titulo" class="text-lg font-semibold tracking-tight">Venta rápida</h2>
+        <p class="text-xs text-brand-darkest/55">Toca un producto, búscalo o escanea su código.</p>
+      </div>
+      <form method="dialog">
+        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar venta rápida">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        </button>
+      </form>
+    </div>
+
+    <!-- Código o nombre a mano (Enter agrega), o código con la cámara -->
+    <form id="form-codigo" class="mt-4 flex gap-2">
+      <label for="codigo" class="sr-only">Código de barras o nombre del producto</label>
+      <input id="codigo" type="text" autocomplete="off" enterkeyhint="done" maxlength="40" placeholder="Código o nombre"
+             class="block min-w-0 flex-1 rounded-xl border border-brand-light bg-slate-50 px-4 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/25">
+      <button type="button" id="btn-escanear"
+              class="flex shrink-0 items-center gap-2 rounded-xl bg-brand-darkest px-4 text-sm font-semibold text-white transition active:scale-95">
+        Escanear
+      </button>
+    </form>
+    <div id="lector" class="mt-3 hidden overflow-hidden rounded-2xl bg-black"></div>
+
+    <!-- 2 filas de 3: los más vendidos, o los resultados de la búsqueda -->
+    <p id="productos-titulo" class="mt-4 text-xs font-semibold uppercase tracking-wide text-brand-darkest/50"></p>
+    <div id="productos" class="mt-2 grid grid-cols-3 gap-2"></div>
+
+    <!-- Carrito -->
+    <div class="mt-4 rounded-2xl bg-slate-100 p-4">
+      <ul id="carrito" class="space-y-1"></ul>
+      <div class="flex items-baseline justify-between">
+        <p id="carrito-vacio" class="text-xs text-brand-darkest/55">Nada seleccionado todavía</p>
+        <p class="ml-auto text-xs text-brand-darkest/55">Total</p>
+        <p id="total" class="ml-2 text-xl font-semibold tracking-tight">$0</p>
+      </div>
+    </div>
+
+    <div id="pago-venta" class="mt-3"></div>
+
+    <button type="button" id="btn-cobrar" disabled
+            class="mt-3 w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400">
+      Cobrar
+    </button>
+  </div>
+</dialog>
+
+<!-- ═══════════ HOJA: COBRAR CITA ═══════════ -->
+<dialog id="sheet-pago" aria-labelledby="pago-titulo"
+        class="mx-auto mb-0 mt-auto max-h-[92vh] w-full max-w-md overflow-y-auto overflow-x-hidden rounded-t-3xl bg-white p-0 text-brand-darkest shadow-lift">
+  <div class="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
+
+    <div class="mx-auto h-1.5 w-10 rounded-full bg-brand-light" aria-hidden="true"></div>
+
+    <div class="mt-4 flex items-center justify-between gap-3">
+      <h2 id="pago-titulo" class="text-lg font-semibold tracking-tight">Completar cita</h2>
+      <form method="dialog">
+        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="mt-4 flex items-center gap-3 rounded-2xl bg-slate-100 p-4">
+      <div class="min-w-0 flex-1">
+        <p id="pago-cliente" class="truncate text-base font-semibold"></p>
+        <p id="pago-servicio" class="truncate text-xs text-brand-darkest/55"></p>
+      </div>
+      <p id="pago-total" class="shrink-0 text-2xl font-semibold tracking-tight"></p>
+    </div>
+
+    <fieldset class="mt-4">
+      <legend class="text-sm font-semibold">¿Quién atendió?</legend>
+      <div id="pago-barberos" class="mt-2 grid grid-cols-2 gap-2"></div>
+      <p id="pago-reparto" class="mt-2 text-xs text-brand-darkest/55"></p>
+    </fieldset>
+
+    <p class="mt-4 text-sm font-semibold">¿Cómo pagó?</p>
+    <div id="pago-cita" class="mt-2"></div>
+
+    <button type="button" id="btn-pagar"
+            class="mt-4 w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98]">
+    </button>
+  </div>
+</dialog>
+
+<!-- ═══════════ HOJA: RESERVA (agenda manual y vista cliente comparten formulario) ═══════════ -->
+<dialog id="sheet-cliente" aria-labelledby="sheet-titulo"
+        class="mx-auto mb-0 mt-auto max-h-[92vh] w-full max-w-md overflow-y-auto overflow-x-hidden rounded-t-3xl bg-white p-0 text-brand-darkest shadow-lift">
 
   <div class="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
 
     <div class="mx-auto h-1.5 w-10 rounded-full bg-brand-light" aria-hidden="true"></div>
 
     <div class="mt-4 flex items-start justify-between gap-3">
-      <div>
-        <p class="text-[10px] font-bold uppercase tracking-wide text-brand-dark">Previsualización</p>
-        <h2 id="cliente-titulo" class="text-lg font-semibold tracking-tight">Así lo ve tu cliente</h2>
+      <div class="min-w-0">
+        <p id="sheet-eyebrow" class="text-[10px] font-bold uppercase tracking-wide text-brand-dark"></p>
+        <h2 id="sheet-titulo" class="text-lg font-semibold tracking-tight"></h2>
       </div>
       <form method="dialog">
-        <button class="grid h-9 w-9 place-items-center rounded-full bg-brand-lightest/70 transition hover:bg-brand-light/60" aria-label="Cerrar previsualización">
+        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar">
           <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
         </button>
       </form>
     </div>
 
-    <!-- Lo que ve el cliente: sin login, solo servicios + hora + 2 datos -->
-    <div class="mt-4 rounded-3xl border border-brand-light/60 bg-brand-lightest/30 p-4">
-
-      <div class="flex items-center gap-3">
-        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-dark text-lg font-bold text-white">EC</span>
-        <div class="min-w-0">
-          <p class="truncate text-base font-semibold">Barbería El Cuartel</p>
-          <p class="text-xs text-brand-darkest/55">Cra. 45 #12-30 · Abierto hasta las 20:00</p>
-        </div>
-      </div>
-
-      <form id="form-reserva" class="mt-5 space-y-5">
-
-        <!-- 1. Servicio -->
-        <fieldset>
-          <legend class="text-sm font-semibold">1. Elige tu servicio</legend>
-          <div class="mt-2.5 space-y-2">
-            <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:ring-2 has-[:checked]:ring-brand/30">
-              <input type="radio" name="servicio" value="Corte clásico" data-precio="20000" required class="h-4 w-4 shrink-0 accent-brand-dark">
-              <span class="flex-1 text-sm font-medium">Corte clásico <span class="block text-xs font-normal text-brand-darkest/55">45 min</span></span>
-              <span class="text-sm font-semibold">$20.000</span>
-            </label>
-            <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:ring-2 has-[:checked]:ring-brand/30">
-              <input type="radio" name="servicio" value="Corte + barba" data-precio="25000" class="h-4 w-4 shrink-0 accent-brand-dark">
-              <span class="flex-1 text-sm font-medium">Corte + barba <span class="block text-xs font-normal text-brand-darkest/55">60 min</span></span>
-              <span class="text-sm font-semibold">$25.000</span>
-            </label>
-            <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:ring-2 has-[:checked]:ring-brand/30">
-              <input type="radio" name="servicio" value="Perfilado de barba" data-precio="15000" class="h-4 w-4 shrink-0 accent-brand-dark">
-              <span class="flex-1 text-sm font-medium">Perfilado de barba <span class="block text-xs font-normal text-brand-darkest/55">30 min</span></span>
-              <span class="text-sm font-semibold">$15.000</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <!-- 2. Hora: solo se listan las libres, no se puede pedir una ocupada -->
-        <div>
-          <label for="hora" class="text-sm font-semibold">2. Elige la hora</label>
-          <select id="hora" name="hora" required
-                  class="mt-2.5 block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
-          </select>
-          <p class="mt-1.5 text-xs text-brand-darkest/50">Solo aparecen las horas libres de hoy.</p>
-        </div>
-
-        <!-- 3. Datos: nombre y WhatsApp, nada más. Sin cuenta, sin contraseña. -->
-        <fieldset class="space-y-3">
-          <legend class="text-sm font-semibold">3. Tus datos</legend>
-          <div>
-            <label for="nombre" class="sr-only">Tu nombre</label>
-            <input id="nombre" name="nombre" type="text" required maxlength="60" autocomplete="name" placeholder="Tu nombre"
-                   class="block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
-          </div>
-          <div>
-            <label for="telefono" class="sr-only">Tu WhatsApp</label>
-            <input id="telefono" name="telefono" type="tel" required inputmode="tel" autocomplete="tel"
-                   pattern="[0-9+ ()-]{7,20}" maxlength="20" placeholder="WhatsApp (ej. 300 111 2233)"
-                   class="block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
-            <p class="mt-1.5 text-xs text-brand-darkest/50">Te llega el recordatorio por aquí. No se comparte con nadie.</p>
-          </div>
-        </fieldset>
-
-        <button type="submit"
-                class="w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98]">
-          Confirmar reserva
-        </button>
-      </form>
-
-      <!-- Confirmación (Nielsen #1) -->
-      <div id="reserva-ok" class="hidden rounded-2xl bg-white p-5 text-center">
-        <span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">
-          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6.5L9.5 17 4 11.5"></path></svg>
-        </span>
-        <p class="mt-3 text-base font-semibold">¡Cita reservada!</p>
-        <p id="reserva-detalle" class="mt-1 text-sm text-brand-darkest/60"></p>
-        <button type="button" id="btn-otra" class="mt-4 text-sm font-semibold text-brand-dark underline underline-offset-4">Simular otra reserva</button>
+    <!-- Encabezado del negocio: solo en la vista cliente -->
+    <div id="sheet-negocio" class="mt-4 flex items-center gap-3 rounded-2xl bg-slate-100 p-3">
+      <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-dark text-lg font-bold text-white">EC</span>
+      <div class="min-w-0">
+        <p class="truncate text-base font-semibold">Barbería El Cuartel</p>
+        <p class="truncate text-xs text-brand-darkest/55">Cra. 45 #12-30 · Abierto hasta las 20:00</p>
       </div>
     </div>
 
-    <p class="mt-4 text-center text-xs text-brand-darkest/45">
+    <form id="form-reserva" class="mt-5 space-y-5">
+
+      <fieldset>
+        <legend class="text-sm font-semibold">Servicio</legend>
+        <!-- Se llena desde el inventario de servicios -->
+        <div id="servicios" class="mt-2.5 space-y-2"></div>
+      </fieldset>
+
+      <!-- Solo se listan las horas libres: no se puede pedir una ocupada -->
+      <div>
+        <label for="hora" class="text-sm font-semibold">Hora</label>
+        <select id="hora" name="hora" required
+                class="mt-2.5 block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
+        </select>
+      </div>
+
+      <fieldset class="space-y-3">
+        <legend class="text-sm font-semibold">Datos</legend>
+        <div>
+          <label for="nombre" class="sr-only">Nombre</label>
+          <input id="nombre" name="nombre" type="text" required maxlength="60" autocomplete="name" placeholder="Nombre"
+                 class="block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
+        </div>
+        <div>
+          <label for="telefono" class="sr-only">WhatsApp</label>
+          <input id="telefono" name="telefono" type="tel" inputmode="tel" autocomplete="tel"
+                 pattern="[0-9+ ()-]{7,20}" maxlength="20" placeholder="WhatsApp (ej. 300 111 2233)"
+                 class="block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
+          <p id="tel-ayuda" class="mt-1.5 text-xs text-brand-darkest/50"></p>
+        </div>
+      </fieldset>
+
+      <button type="submit" id="btn-confirmar"
+              class="w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98]">
+      </button>
+    </form>
+
+    <!-- Confirmación: solo en la vista cliente (la agenda manual cierra y avisa con un toast) -->
+    <div id="reserva-ok" class="mt-5 hidden rounded-2xl bg-slate-100 p-5 text-center">
+      <span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6.5L9.5 17 4 11.5"></path></svg>
+      </span>
+      <p class="mt-3 text-base font-semibold">¡Cita reservada!</p>
+      <p id="reserva-detalle" class="mt-1 text-sm text-brand-darkest/60"></p>
+      <button type="button" id="btn-otra" class="mt-2 text-sm font-semibold text-brand-dark underline underline-offset-4">Simular otra reserva</button>
+    </div>
+
+    <p id="sheet-nota" class="mt-4 text-center text-xs text-brand-darkest/45">
       Las reservas que entren por aquí aparecen solas en tu agenda.
     </p>
   </div>
@@ -175,30 +275,14 @@
 (function () {
   'use strict';
 
-  var citas = [
-    { hora: '08:00', cliente: 'Andrés Mejía',    servicio: 'Corte + barba',      precio: 25000, tel: '573001112233', estado: 'completada' },
-    { hora: '09:00', cliente: 'Kevin Ríos',      servicio: 'Fade',               precio: 18000, tel: '573002223344', estado: 'completada' },
-    { hora: '10:00', cliente: 'Julián Pardo',    servicio: 'Corte clásico',      precio: 20000, tel: '573003334455', estado: 'reservada' },
-    { hora: '11:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' },
-    { hora: '12:00', cliente: 'Mateo Guzmán',    servicio: 'Corte + cejas',      precio: 22000, tel: '573004445566', estado: 'reservada' },
-    { hora: '14:00', cliente: 'Santiago Lozano', servicio: 'Perfilado de barba', precio: 15000, tel: '573005556677', estado: 'reservada' },
-    { hora: '15:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' },
-    { hora: '16:00', cliente: 'Nicolás Vargas',  servicio: 'Corte + barba',      precio: 25000, tel: '573006667788', estado: 'reservada' },
-    { hora: '17:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' },
-    { hora: '18:00', cliente: 'Daniel Ospina',   servicio: 'Fade + diseño',      precio: 30000, tel: '573007778899', estado: 'reservada' },
-    { hora: '19:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' }
-  ];
+  var citas = window.datos.citas;
+  var productos = window.datos.productos;
+  var servicios = window.datos.servicios;
+  var movimientos = window.datos.movimientos;
 
-  var ETIQUETA = { disponible: 'Disponible', reservada: 'Reservada', completada: 'Completada' };
-  var BADGE = {
-    disponible: 'bg-brand-lightest text-brand-dark',
-    reservada:  'bg-brand-dark text-white',
-    completada: 'bg-emerald-50 text-emerald-700'
-  };
-
+  var $ = function (id) { return document.getElementById(id); };
   var filtro = 'todas';
-  var $lista = document.getElementById('citas');
-  var $vacio = document.getElementById('vacio');
+  var $lista = $('citas');
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -206,170 +290,568 @@
     });
   }
 
-  function tarjeta(c, i) {
-    var apagada = c.estado === 'completada' ? ' opacity-70' : '';
-    var html =
-      '<li class="flex gap-3">' +
-      '<span class="w-12 shrink-0 pt-4 text-right text-xs font-semibold ' +
-        (c.estado === 'reservada' ? 'text-brand-dark' : 'text-brand-darkest/45') + '">' + c.hora + '</span>' +
-      '<div class="flex-1 rounded-2xl border border-white/60 bg-white/90 p-4 shadow-soft backdrop-blur-xl' + apagada + '">';
-
-    if (c.estado === 'disponible') {
-      html +=
-        '<div class="flex items-center justify-between gap-2">' +
-          '<span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ' + BADGE.disponible + '">' + ETIQUETA.disponible + '</span>' +
-          '<span class="text-xs text-brand-darkest/45">Reservable online</span>' +
-        '</div>' +
-        '<button type="button" data-agendar="' + i + '" class="mt-3 w-full rounded-xl border border-dashed border-brand-light py-2.5 text-sm font-medium text-brand-dark transition hover:border-brand hover:bg-brand-lightest/40 active:scale-[.99]">' +
-          '+ Agendar cita manual' +
-        '</button>';
-    } else {
-      html +=
-        '<div class="flex items-start gap-2">' +
-          '<div class="min-w-0 flex-1">' +
-            '<p class="truncate text-base font-semibold' + (c.estado === 'completada' ? ' line-through decoration-brand-darkest/30' : '') + '">' + esc(c.cliente) + '</p>' +
-            '<p class="mt-0.5 text-xs text-brand-darkest/55">' + esc(c.servicio) + '</p>' +
-          '</div>' +
-          '<div class="shrink-0 text-right">' +
-            '<span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ' + BADGE[c.estado] + '">' + ETIQUETA[c.estado] + '</span>' +
-            '<p class="mt-1 text-sm font-semibold">' + window.pesos(c.precio) + '</p>' +
-          '</div>' +
-        '</div>';
-
-      if (c.estado === 'reservada') {
-        html +=
-          '<a href="https://wa.me/' + c.tel + '?text=' + encodeURIComponent('Hola ' + c.cliente + ', te recordamos tu cita hoy a las ' + c.hora + ' en Barbería El Cuartel.') + '" target="_blank" rel="noopener" ' +
-          'class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-lightest py-2.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/60 active:scale-[.98]">' +
-            'Recordar por WhatsApp' +
-          '</a>';
-      }
-    }
-
-    /* Cambio manual de estado: <select> nativo = picker cómodo en móvil y accesible sin JS extra */
-    html +=
-      '<div class="mt-3 flex items-center gap-2 border-t border-brand-light/40 pt-3">' +
-        '<label class="text-xs text-brand-darkest/55" for="estado-' + i + '">Estado</label>' +
-        '<select id="estado-' + i + '" data-estado="' + i + '" class="ml-auto rounded-lg border border-brand-light bg-white px-2.5 py-1.5 text-xs font-medium transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30">' +
-          '<option value="disponible"' + (c.estado === 'disponible' ? ' selected' : '') + '>Disponible</option>' +
-          '<option value="reservada"' + (c.estado === 'reservada' ? ' selected' : '') + '>Reservada</option>' +
-          '<option value="completada"' + (c.estado === 'completada' ? ' selected' : '') + '>Completada</option>' +
-        '</select>' +
-      '</div>';
-
-    return html + '</div></li>';
+  function libres() {
+    return citas.filter(function (c) { return c.estado === 'disponible'; });
   }
 
-  function pintar() {
-    var visibles = citas.filter(function (c) { return filtro === 'todas' || c.estado === filtro; });
+  /* ══ Cabecera: fecha y saludo reales ══ */
+  var hoy = new Date();
+  var h = hoy.getHours();
+  $('saludo').textContent = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+  $('fecha').textContent = hoy.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  var ahora = String(h).padStart(2, '0') + ':' + String(hoy.getMinutes()).padStart(2, '0');
 
+  /* ══ Línea de tiempo ══
+     Color por hora: verde = libre, rojo tenue = reservada, gris = ya pasó o no se atiende. */
+  var COLOR_HORA = {
+    disponible: 'text-emerald-600',
+    reservada:  'text-rose-600',
+    completada: 'text-brand-darkest/40',
+    bloqueada:  'text-brand-darkest/40'
+  };
+  var BTN = 'flex min-w-0 flex-1 items-center justify-center rounded-xl px-1 text-xs font-semibold transition active:scale-[.98] ';
+
+  function tarjeta(c, i) {
+    var hora = '<span class="w-11 shrink-0 pt-4 text-right text-xs font-semibold tabular-nums ' + COLOR_HORA[c.estado] + '">' + c.hora + '</span>';
+    var li = '<li class="flex gap-3">' + hora;
+
+    /* Turno libre: toda la tarjeta es el botón. Un toque abre la hoja con la hora ya puesta. */
+    if (c.estado === 'disponible') {
+      return li +
+        '<button type="button" data-agendar="' + i + '" class="min-w-0 flex-1 rounded-2xl border border-dashed border-emerald-300 bg-emerald-50 py-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 active:scale-[.99]">' +
+          'Disponible · Agendar' +
+        '</button></li>';
+    }
+
+    if (c.estado === 'bloqueada') {
+      return li +
+        '<div class="min-w-0 flex-1 truncate rounded-2xl bg-slate-200/60 px-4 py-3.5 text-xs font-medium text-brand-darkest/55">' +
+          esc(c.cliente) + ' · ' + esc(c.servicio) +
+        '</div></li>';
+    }
+
+    var hecha = c.estado === 'completada';
+    var acciones = hecha
+      ? '<div class="mt-2 flex items-center justify-between gap-2">' +
+          '<span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-darkest/55">Completada</span>' +
+          '<button type="button" data-accion="reabrir" data-i="' + i + '" class="rounded-xl px-3 text-xs font-medium text-brand-darkest/55 transition hover:bg-slate-100">Deshacer</button>' +
+        '</div>'
+      : '<div class="mt-3 flex gap-2">' +
+          '<button type="button" data-accion="liberar" data-i="' + i + '" class="' + BTN + 'border border-slate-200 text-rose-700 hover:bg-rose-50" aria-label="Liberar el turno de ' + esc(c.cliente) + '">Liberar</button>' +
+          (c.tel
+            ? '<a href="https://wa.me/' + c.tel + '?text=' + encodeURIComponent('Hola ' + c.cliente + ', te recordamos tu cita hoy a las ' + c.hora + ' en Barbería El Cuartel.') + '" target="_blank" rel="noopener" ' +
+              'class="' + BTN + 'min-h-[44px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100" aria-label="Recordar por WhatsApp a ' + esc(c.cliente) + '">Recordar</a>'
+            : '') +
+          '<button type="button" data-accion="completar" data-i="' + i + '" class="' + BTN + 'bg-brand-dark text-white hover:bg-brand-darkest" aria-label="Completar la cita de ' + esc(c.cliente) + '">Completar</button>' +
+        '</div>';
+
+    return li +
+      '<div class="min-w-0 flex-1 rounded-2xl border border-slate-200 border-l-4 bg-white p-4 ' +
+        (hecha ? 'border-l-slate-300 opacity-60' : 'border-l-rose-300 shadow-soft') + '">' +
+        '<div class="flex items-start gap-2">' +
+          '<div class="min-w-0 flex-1">' +
+            '<p class="truncate text-base font-semibold' + (hecha ? ' line-through decoration-brand-darkest/30' : '') + '">' + esc(c.cliente) + '</p>' +
+            '<p class="mt-0.5 truncate text-xs text-brand-darkest/55">' + esc(c.servicio) + '</p>' +
+          '</div>' +
+          '<p class="shrink-0 text-sm font-semibold">' + window.pesos(c.precio) + '</p>' +
+        '</div>' +
+        acciones +
+      '</div></li>';
+  }
+
+  var MARCA_AHORA =
+    '<li class="flex items-center gap-3 py-0.5" aria-label="Hora actual: ' + ahora + '">' +
+      '<span class="w-11 shrink-0 text-right text-xs font-bold tabular-nums text-brand-dark">' + ahora + '</span>' +
+      '<span class="h-2 w-2 shrink-0 rounded-full bg-brand-dark" aria-hidden="true"></span>' +
+      '<span class="h-px min-w-0 flex-1 bg-brand-dark/40" aria-hidden="true"></span>' +
+      '<span class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-brand-dark">Ahora</span>' +
+    '</li>';
+
+  function pintar() {
+    window.guardar();   /* todo cambio pasa por aquí: se persiste antes de repintar */
+
+    var visibles = 0, marcado = false;
     $lista.innerHTML = citas.map(function (c, i) {
-      return (filtro === 'todas' || c.estado === filtro) ? tarjeta(c, i) : '';
+      if (filtro !== 'todas' && c.estado !== filtro) return '';
+      /* La marca "Ahora" va antes del primer turno futuro, si ya pasó alguno */
+      var marca = '';
+      if (!marcado && c.hora > ahora) { marcado = true; if (visibles) marca = MARCA_AHORA; }
+      visibles++;
+      return marca + tarjeta(c, i);
     }).join('');
 
-    $vacio.classList.toggle('hidden', visibles.length > 0);
+    $('vacio').classList.toggle('hidden', visibles > 0);
+
+    $('n-reservadas').textContent = citas.filter(function (c) { return c.estado === 'reservada'; }).length;
+    $('n-libres').textContent = libres().length;
+    $('n-caja').textContent = window.pesos(movimientos.reduce(function (t, m) {
+      return t + (m.tipo === 'ingreso' ? m.monto : -m.monto);
+    }, 0));
 
     document.querySelectorAll('.filtro').forEach(function (b) {
       var activo = b.dataset.filtro === filtro;
       b.setAttribute('aria-pressed', activo);
-      b.className = 'filtro shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ' +
-        (activo ? 'bg-brand-dark text-white shadow-soft' : 'bg-white/70 text-brand-darkest/60 hover:bg-white');
+      b.className = 'filtro min-w-0 truncate rounded-full px-1 text-sm font-semibold transition ' +
+        (activo ? 'bg-brand-darkest text-white' : 'bg-slate-100 text-brand-darkest/60 hover:bg-slate-200');
     });
-
-    llenarHoras();
   }
 
-  /* ── Filtros ── */
   document.querySelectorAll('.filtro').forEach(function (b) {
     b.addEventListener('click', function () { filtro = b.dataset.filtro; pintar(); });
   });
 
-  /* ── Cambio de estado y agendado manual (delegación: la lista se repinta entera) ── */
-  $lista.addEventListener('change', function (e) {
-    var sel = e.target.closest('[data-estado]');
-    if (!sel) return;
-    var i = Number(sel.dataset.estado), c = citas[i], nuevo = sel.value;
-
-    /* Prevención de errores (Nielsen #5): liberar un turno borra los datos del cliente */
-    if (c.estado === 'reservada' && nuevo === 'disponible' &&
-        !confirm('¿Liberar el turno de ' + c.cliente + ' a las ' + c.hora + '?\n\nSe borran sus datos y la hora vuelve a quedar reservable online.')) {
-      sel.value = c.estado;
-      return;
-    }
-
-    if (nuevo === 'disponible') { c.cliente = ''; c.servicio = ''; c.precio = 0; c.tel = ''; }
-    if (nuevo !== 'disponible' && !c.cliente) { c.cliente = 'Cliente sin nombre'; c.servicio = 'Servicio por definir'; }
-    c.estado = nuevo;
-    pintar();
-  });
-
+  /* ── Acciones sobre la lista (delegación: la lista se repinta entera) ── */
   $lista.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-agendar]');
-    if (!btn) return;
-    var c = citas[Number(btn.dataset.agendar)];
-    var nombre = prompt('Nombre del cliente para las ' + c.hora + ':');
-    if (!nombre || !nombre.trim()) return;
-    c.cliente = nombre.trim();
-    c.servicio = 'Corte clásico';
-    c.precio = 20000;
-    c.tel = '';
-    c.estado = 'reservada';
-    pintar();
+    var slot = e.target.closest('[data-agendar]');
+    if (slot) { abrir('manual', citas[Number(slot.dataset.agendar)].hora); return; }
+
+    var b = e.target.closest('[data-accion]');
+    if (!b) return;
+    var c = citas[Number(b.dataset.i)];
+
+    if (b.dataset.accion === 'completar') {
+      abrirPago(c);
+    } else if (b.dataset.accion === 'reabrir') {
+      /* Deshacer también retira el cobro de la caja: se confirma */
+      window.confirmar(
+        '¿Deshacer el cobro de ' + c.cliente + '?',
+        'La cita vuelve a "Reservada" y los ' + window.pesos(c.precio) + ' salen de la caja.',
+        'Deshacer cobro'
+      ).then(function (si) {
+        if (!si) return;
+        for (var k = movimientos.length - 1; k >= 0; k--) {
+          if (movimientos[k].cita === c.hora) movimientos.splice(k, 1);
+        }
+        c.estado = 'reservada';
+        pintar();
+        window.toast('Cita reabierta · cobro retirado de caja');
+      });
+    } else {
+      /* Liberar borra los datos del cliente: se confirma */
+      window.confirmar(
+        '¿Liberar el turno de ' + c.cliente + '?',
+        'Se borran sus datos y las ' + c.hora + ' vuelven a quedar reservables online.',
+        'Liberar turno'
+      ).then(function (si) {
+        if (!si) return;
+        c.cliente = ''; c.servicio = ''; c.precio = 0; c.tel = ''; c.estado = 'disponible';
+        pintar();
+        window.toast('Turno de las ' + c.hora + ' liberado');
+      });
+    }
   });
 
-  /* ══ Modal vista cliente ══ */
-  var sheet = document.getElementById('sheet-cliente');
-  var form = document.getElementById('form-reserva');
-  var ok = document.getElementById('reserva-ok');
-  var detalle = document.getElementById('reserva-detalle');
-  var $hora = document.getElementById('hora');
+  /* ══ Copiar link de reservas ══ */
+  $('btn-copiar').addEventListener('click', function () {
+    var link = this.dataset.link;
+    /* ponytail: sin clipboard API (http o navegador viejo) mostramos el link para copiar a mano */
+    if (!navigator.clipboard) { window.toast(link); return; }
+    navigator.clipboard.writeText(link).then(
+      function () { window.toast('✓ Link de reservas copiado'); },
+      function () { window.toast(link); }
+    );
+  });
+
+  /* ══ Hoja de reserva: un formulario, dos modos ══ */
+  var MODO = {
+    manual:  { eyebrow: 'Agenda manual',    titulo: 'Nueva cita',           boton: 'Agendar cita',      ayuda: 'Opcional. Sirve para mandarle el recordatorio.' },
+    cliente: { eyebrow: 'Previsualización', titulo: 'Así lo ve tu cliente', boton: 'Confirmar reserva', ayuda: 'Te llega el recordatorio por aquí. No se comparte con nadie.' }
+  };
+  var modo = 'manual';
+  var sheet = $('sheet-cliente');
+  var form = $('form-reserva');
+  var ok = $('reserva-ok');
+  var $hora = $('hora');
 
   function llenarHoras() {
-    var libres = citas.filter(function (c) { return c.estado === 'disponible'; });
-    $hora.innerHTML = libres.length
-      ? libres.map(function (c) { return '<option value="' + c.hora + '">' + c.hora + '</option>'; }).join('')
+    var l = libres();
+    $hora.innerHTML = l.length
+      ? l.map(function (c) { return '<option value="' + c.hora + '">' + c.hora + '</option>'; }).join('')
       : '<option value="">Hoy no quedan horas libres</option>';
-    $hora.disabled = libres.length === 0;
+    $hora.disabled = l.length === 0;
   }
 
-  document.getElementById('btn-vista-cliente').addEventListener('click', function () {
-    form.classList.remove('hidden', 'enviado');
+  function llenarServicios() {
+    $('servicios').innerHTML = servicios.map(function (s, i) {
+      return '<label class="flex min-h-[56px] cursor-pointer items-center gap-3 rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:bg-brand-lightest/50">' +
+        '<input type="radio" name="servicio" value="' + i + '" required class="h-5 w-5 shrink-0 accent-brand-dark">' +
+        '<span class="min-w-0 flex-1 truncate text-sm font-medium">' + esc(s.nombre) +
+          '<span class="block text-xs font-normal text-brand-darkest/55">' + s.duracion + ' min</span></span>' +
+        '<span class="shrink-0 text-sm font-semibold">' + window.pesos(s.precio) + '</span>' +
+      '</label>';
+    }).join('');
+  }
+
+  function abrir(m, hora) {
+    if (!servicios.length) { window.toast('Crea primero un servicio en Inventario', 'error'); return; }
+    if (m === 'manual' && !libres().length) { window.toast('Hoy no quedan horas libres', 'error'); return; }
+    modo = m;
+    var t = MODO[m], manual = m === 'manual';
+
+    llenarServicios();
     form.reset();
+    form.classList.remove('hidden', 'enviado');
     ok.classList.add('hidden');
     llenarHoras();
-    sheet.showModal();
-  });
+    if (libres().some(function (c) { return c.hora === hora; })) $hora.value = hora;
+
+    $('sheet-eyebrow').textContent = t.eyebrow;
+    $('sheet-titulo').textContent = t.titulo;
+    $('btn-confirmar').textContent = t.boton;
+    $('tel-ayuda').textContent = t.ayuda;
+    $('sheet-negocio').classList.toggle('hidden', manual);
+    $('sheet-nota').classList.toggle('hidden', manual);
+    $('telefono').required = !manual;
+
+    if (!sheet.open) sheet.showModal();
+
+    /* Agenda manual: primer servicio ya marcado y cursor en el nombre.
+       Queda en 2 toques: el turno libre y "Agendar cita". */
+    if (manual) {
+      form.querySelector('input[name="servicio"]').checked = true;
+      $('nombre').focus();
+    }
+  }
+
+  $('btn-vista-cliente').addEventListener('click', function () { abrir('cliente'); });
+  $('btn-otra').addEventListener('click', function () { abrir('cliente'); });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    form.classList.add('enviado');
     var datos = new FormData(form);
     var hora = datos.get('hora');
     var cita = citas.find(function (c) { return c.hora === hora && c.estado === 'disponible'; });
-    if (!cita) { alert('Esa hora ya se ocupó. Elige otra.'); llenarHoras(); return; }
+    if (!cita) { window.toast('Esa hora ya se ocupó. Elige otra.', 'error'); llenarHoras(); return; }
 
-    var radio = form.querySelector('input[name="servicio"]:checked');
+    var s = servicios[Number(datos.get('servicio'))];
     cita.cliente = String(datos.get('nombre')).trim();
     cita.tel = String(datos.get('telefono')).replace(/[^0-9]/g, '');
-    cita.servicio = radio.value;
-    cita.precio = Number(radio.dataset.precio);
+    cita.servicio = s.nombre;
+    cita.precio = s.precio;
     cita.estado = 'reservada';
-
-    detalle.textContent = cita.servicio + ' · hoy a las ' + cita.hora + ' · ' + window.pesos(cita.precio);
-    form.classList.add('hidden');
-    ok.classList.remove('hidden');
     pintar();
+
+    if (modo === 'manual') {
+      sheet.close();
+      window.toast('✓ ' + cita.cliente + ' agendado a las ' + cita.hora);
+    } else {
+      $('reserva-detalle').textContent = cita.servicio + ' · hoy a las ' + cita.hora + ' · ' + window.pesos(cita.precio);
+      form.classList.add('hidden');
+      ok.classList.remove('hidden');
+    }
   });
 
-  document.getElementById('btn-otra').addEventListener('click', function () {
-    form.reset();
-    form.classList.remove('hidden', 'enviado');
-    ok.classList.add('hidden');
-    llenarHoras();
+  /* ══ Selector de pago (lo usan Venta rápida y Completar cita) ══
+     Efectivo / Transferencia / Mixto. En mixto, al escribir una parte la otra se completa sola.
+     partes() devuelve [{metodo, monto}] o null si el mixto no cuadra con el total. */
+  function crearPago(el, nombre) {
+    var CHIP = 'flex min-h-[44px] min-w-0 cursor-pointer items-center justify-center rounded-xl border border-brand-light px-1 text-[13px] font-semibold transition has-[:checked]:border-brand-dark has-[:checked]:bg-brand-lightest has-[:checked]:text-brand-dark has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand';
+    var CAMPO = 'mt-1 block w-full min-w-0 rounded-xl border border-brand-light bg-white px-3 text-base transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25';
+    el.innerHTML =
+      '<div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Método de pago">' +
+        ['efectivo', 'transferencia', 'mixto'].map(function (m) {
+          return '<label class="' + CHIP + '"><input type="radio" name="' + nombre + '" value="' + m + '" class="sr-only">' +
+            '<span class="truncate capitalize">' + m + '</span></label>';
+        }).join('') +
+      '</div>' +
+      '<div data-mixto class="mt-2 hidden grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-3">' +
+        '<label class="min-w-0 text-xs font-medium">En efectivo<input data-ef type="number" inputmode="numeric" min="0" step="100" placeholder="0" class="' + CAMPO + '"></label>' +
+        '<label class="min-w-0 text-xs font-medium">En transferencia<input data-tr type="number" inputmode="numeric" min="0" step="100" placeholder="0" class="' + CAMPO + '"></label>' +
+      '</div>';
+
+    var total = 0;
+    var radios = el.querySelectorAll('input[type=radio]');
+    var mixto = el.querySelector('[data-mixto]'), ef = el.querySelector('[data-ef]'), tr = el.querySelector('[data-tr]');
+    var resto = function (v) { return Math.max(0, total - (Number(v) || 0)); };
+
+    function metodo() { return el.querySelector('input[type=radio]:checked').value; }
+    function mostrar() {
+      var m = metodo() === 'mixto';
+      mixto.classList.toggle('hidden', !m);
+      mixto.classList.toggle('grid', m);
+    }
+
+    el.addEventListener('change', function (e) {
+      if (e.target.type !== 'radio') return;
+      mostrar();
+      if (metodo() === 'mixto') { ef.value = ''; tr.value = ''; ef.focus(); }
+    });
+    ef.addEventListener('input', function () { tr.value = resto(ef.value); });
+    tr.addEventListener('input', function () { ef.value = resto(tr.value); });
+
+    return {
+      reiniciar: function (t) { total = t; radios[0].checked = true; ef.value = ''; tr.value = ''; mostrar(); },
+      /* El total de la venta cambia con el carrito: se reajusta la parte en transferencia */
+      total: function (t) { total = t; if (ef.value !== '') tr.value = resto(ef.value); },
+      partes: function () {
+        if (metodo() !== 'mixto') return [{ metodo: metodo(), monto: total }];
+        var a = Number(ef.value) || 0, b = Number(tr.value) || 0;
+        if (a <= 0 || b <= 0 || a + b !== total) {
+          window.toast('Efectivo + transferencia deben sumar ' + window.pesos(total), 'error');
+          ef.focus();
+          return null;
+        }
+        return [{ metodo: 'efectivo', monto: a }, { metodo: 'transferencia', monto: b }];
+      }
+    };
+  }
+
+  /* Un pago mixto entra a caja como dos movimientos: así los totales por método salen solos. */
+  function registrar(partes, concepto, extra) {
+    partes.forEach(function (p) {
+      movimientos.push(Object.assign({ tipo: 'ingreso', concepto: concepto, monto: p.monto, metodo: p.metodo, barbero: null }, extra));
+    });
+  }
+
+  /* ══ Completar cita: cobro → caja → estado ══ */
+  var sheetP = $('sheet-pago');
+  var pagoCita = crearPago($('pago-cita'), 'metodo-cita');
+  var citaPago = null, pagaCita = 0;
+
+  function abrirPago(c) {
+    citaPago = c;
+    $('pago-cliente').textContent = c.cliente;
+    $('pago-servicio').textContent = c.servicio + ' · ' + c.hora;
+    $('pago-total').textContent = window.pesos(c.precio);
+    $('btn-pagar').textContent = 'Confirmar pago de ' + window.pesos(c.precio);
+
+    /* Reparto fijo según el servicio (se configura en Caja) */
+    var s = servicios.find(function (x) { return x.nombre === c.servicio; });
+    pagaCita = window.pagoBarbero(c.precio, s && s.pagoBarbero);
+    $('pago-reparto').textContent = pagaCita
+      ? 'Recibe ' + window.pesos(pagaCita) + ' · Local ' + window.pesos(c.precio - pagaCita)
+      : 'Este servicio no tiene reparto configurado en Caja: todo queda para el local.';
+    /* Sin barbero preseleccionado: atribuir mal la plata es peor que un toque más */
+    $('pago-barberos').innerHTML = window.datos.barberos.map(function (b) {
+      return '<label class="flex min-h-[44px] min-w-0 cursor-pointer items-center justify-center rounded-xl border border-brand-light px-2 text-sm font-semibold transition has-[:checked]:border-brand-dark has-[:checked]:bg-brand-lightest has-[:checked]:text-brand-dark has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand">' +
+        '<input type="radio" name="barbero" value="' + esc(b.nombre) + '" class="sr-only"><span class="truncate">' + esc(b.nombre) + '</span></label>';
+    }).join('');
+    pagoCita.reiniciar(c.precio);
+    sheetP.showModal();
+  }
+
+  $('btn-pagar').addEventListener('click', function () {
+    var c = citaPago;
+    var barbero = sheetP.querySelector('input[name="barbero"]:checked');
+    if (!barbero) { window.toast('Elige quién atendió', 'error'); return; }
+    var partes = pagoCita.partes();
+    if (!partes) return;
+
+    /* "cita" enlaza el cobro con el turno, para poder retirarlo si se deshace */
+    registrar(partes, c.servicio + ' · ' + c.cliente, { barbero: barbero.value, cita: c.hora });
+    /* En un pago mixto hay dos movimientos: el pago al barbero se anota una sola vez */
+    movimientos[movimientos.length - partes.length].paga = pagaCita;
+    c.estado = 'completada';
+    sheetP.close();
+    pintar();
+    window.toast('✓ Cita completada · ' + window.pesos(c.precio) + ' en caja');
   });
 
-  sheet.addEventListener('click', function (e) { if (e.target === sheet) sheet.close(); });
+  /* ══ Venta rápida ══
+     carrito[i] = cantidad del producto i. El stock se descuenta al cobrar, no antes. */
+  var sheetV = $('sheet-venta');
+  var pagoVenta = crearPago($('pago-venta'), 'metodo-venta');
+  var carrito = {};
+
+  function enCarrito() {
+    return Object.keys(carrito).map(Number);
+  }
+
+  function sinTildes(s) {
+    return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+
+  /* Índices a mostrar en la cuadrícula (máx. 6 = 2 filas de 3):
+     con texto escrito, los que coinciden por nombre; si no, los más vendidos. */
+  function vitrina() {
+    var q = sinTildes($('codigo').value.trim());
+    var idx = productos.map(function (p, i) { return i; });
+    var buscando = /[a-z]/.test(q);
+    if (buscando) idx = idx.filter(function (i) { return sinTildes(productos[i].nombre).indexOf(q) >= 0; });
+    else idx.sort(function (a, b) { return (productos[b].vendidos || 0) - (productos[a].vendidos || 0); });
+    return { buscando: buscando, idx: idx.slice(0, 6) };
+  }
+
+  function pintarVenta() {
+    var v = vitrina();
+    $('productos-titulo').textContent = !v.buscando ? 'Más vendidos' : v.idx.length ? 'Resultados' : 'Ningún producto con ese nombre';
+    $('productos').innerHTML = v.idx.map(function (i) {
+      var p = productos[i];
+      var n = carrito[i] || 0, quedan = p.unidades - n;
+      return '<button type="button" data-producto="' + i + '"' + (quedan <= 0 ? ' disabled' : '') +
+        ' class="relative min-w-0 rounded-2xl border p-2.5 text-center transition active:scale-95 disabled:opacity-40 ' +
+        (n ? 'border-brand-dark bg-brand-lightest/60' : 'border-brand-light bg-white hover:bg-slate-50') + '">' +
+        (n ? '<span class="absolute right-1.5 top-1.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-brand-dark px-1 text-[11px] font-bold text-white">' + n + '</span>' : '') +
+        '<span class="block text-2xl" aria-hidden="true">' + p.emoji + '</span>' +
+        '<span class="mt-1 block truncate text-xs font-semibold">' + esc(p.nombre) + '</span>' +
+        '<span class="block text-xs text-brand-dark">' + window.pesos(p.venta) + '</span>' +
+        '<span class="block text-[10px] text-brand-darkest/45">' + (p.unidades ? 'Quedan ' + quedan : 'Agotado') + '</span>' +
+      '</button>';
+    }).join('');
+
+    var total = 0;
+    $('carrito').innerHTML = enCarrito().map(function (i) {
+      var p = productos[i], sub = p.venta * carrito[i];
+      total += sub;
+      return '<li class="flex items-center gap-2">' +
+        '<button type="button" data-quitar="' + i + '" class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-lg font-semibold" aria-label="Quitar una unidad de ' + esc(p.nombre) + '">−</button>' +
+        '<span class="min-w-0 flex-1 truncate text-sm">' + carrito[i] + ' × ' + esc(p.nombre) + '</span>' +
+        '<span class="shrink-0 text-sm font-semibold">' + window.pesos(sub) + '</span>' +
+      '</li>';
+    }).join('');
+
+    pagoVenta.total(total);
+    $('carrito-vacio').classList.toggle('hidden', total > 0);
+    $('total').textContent = window.pesos(total);
+    $('btn-cobrar').disabled = total === 0;
+    $('btn-cobrar').textContent = total ? 'Cobrar ' + window.pesos(total) : 'Cobrar';
+  }
+
+  function agregar(i) {
+    var p = productos[i];
+    if ((carrito[i] || 0) >= p.unidades) { window.toast('No quedan más unidades de ' + p.nombre, 'error'); return; }
+    carrito[i] = (carrito[i] || 0) + 1;
+    pintarVenta();
+  }
+
+  function agregarPorCodigo(codigo) {
+    codigo = String(codigo).trim();
+    if (!codigo) return;
+    var i = productos.findIndex(function (p) { return p.codigo === codigo; });
+    if (i < 0) { window.toast('El código ' + codigo + ' no está en el inventario', 'error'); return; }
+    if (navigator.vibrate) navigator.vibrate(40);
+    agregar(i);
+  }
+
+  $('btn-venta').addEventListener('click', function () {
+    carrito = {};
+    $('codigo').value = '';
+    pagoVenta.reiniciar(0);
+    pintarVenta();
+    sheetV.showModal();
+  });
+
+  $('codigo').addEventListener('input', pintarVenta);
+
+  $('productos').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-producto]');
+    if (b) agregar(Number(b.dataset.producto));
+  });
+
+  $('carrito').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-quitar]');
+    if (!b) return;
+    var i = Number(b.dataset.quitar);
+    if (--carrito[i] <= 0) delete carrito[i];
+    pintarVenta();
+  });
+
+  $('form-codigo').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = vitrina();
+    if (!v.buscando) agregarPorCodigo($('codigo').value);
+    else if (v.idx.length === 1) agregar(v.idx[0]);   /* Enter con un solo resultado lo agrega */
+    else return;                                      /* varios o ninguno: se elige tocando */
+    $('codigo').value = '';
+    pintarVenta();
+  });
+
+  $('btn-cobrar').addEventListener('click', function () {
+    /* Primero se valida el pago: si el mixto no cuadra, no se toca el inventario */
+    var partes = pagoVenta.partes();
+    if (!partes) return;
+
+    var total = 0;
+    var concepto = enCarrito().map(function (i) {
+      var p = productos[i], n = carrito[i];
+      p.unidades -= n;
+      p.vendidos = (p.vendidos || 0) + n;
+      total += p.venta * n;
+      return p.nombre + (n > 1 ? ' x' + n : '');
+    }).join(' + ');
+
+    registrar(partes, concepto);
+    sheetV.close();
+    pintar();
+    window.toast('✓ Venta de ' + window.pesos(total) + ' registrada en caja');
+  });
+
+  /* ── Escáner: la librería (375 KB) solo se descarga al tocar "Escanear" ── */
+  var lector = null, ultimo = '', ultimoT = 0;
+
+  function cargarLector() {
+    return new Promise(function (ok, mal) {
+      if (window.Html5Qrcode) return ok();
+      var s = document.createElement('script');
+      s.src = 'lib/html5-qrcode.min.js';
+      s.onload = ok;
+      s.onerror = mal;
+      document.head.appendChild(s);
+    });
+  }
+
+  function detener() {
+    $('lector').classList.add('hidden');
+    $('btn-escanear').textContent = 'Escanear';
+    if (!lector) return;
+    var l = lector;
+    lector = null;
+    /* stop() lanza o rechaza si la cámara nunca arrancó: en ambos casos no hay nada que apagar */
+    try { l.stop().then(function () { l.clear(); }).catch(function () {}); } catch (e) {}
+  }
+
+  $('btn-escanear').addEventListener('click', function () {
+    var btn = this;
+    if (lector) { detener(); return; }
+
+    /* Los navegadores solo entregan la cámara en HTTPS o localhost */
+    if (!window.isSecureContext || !navigator.mediaDevices) {
+      window.toast('La cámara necesita HTTPS. Escribe el código.', 'error');
+      $('codigo').focus();
+      return;
+    }
+
+    btn.setAttribute('aria-busy', 'true');
+    cargarLector().then(function () {
+      /* Desde aquí el botón ya sirve para cancelar, aunque la cámara tarde o pida permiso */
+      btn.removeAttribute('aria-busy');
+      btn.textContent = 'Detener';
+      var F = window.Html5QrcodeSupportedFormats;
+      $('lector').classList.remove('hidden');
+      lector = new window.Html5Qrcode('lector', {
+        formatsToSupport: [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39],
+        verbose: false
+      });
+      return lector.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 240, height: 120 } },
+        function (codigo) {
+          /* La cámara lee el mismo código muchas veces por segundo: una sola unidad cada 2 s */
+          var t = Date.now();
+          if (codigo === ultimo && t - ultimoT < 2000) return;
+          ultimo = codigo; ultimoT = t;
+          agregarPorCodigo(codigo);
+        },
+        function () { /* fotograma sin código: normal */ }
+      );
+    }).catch(function () {
+      btn.removeAttribute('aria-busy');
+      detener();
+      window.toast('No se pudo abrir la cámara. Escribe el código.', 'error');
+    });
+  });
+
+  sheetV.addEventListener('close', detener);
+
+  [sheet, sheetV, sheetP].forEach(function (s) {
+    s.addEventListener('click', function (e) { if (e.target === s) s.close(); });
+  });
 
   pintar();
+
+  /* citas.html?agendar=11:00 abre la hoja con esa hora */
+  var pedida = new URLSearchParams(location.search).get('agendar');
+  if (pedida) abrir('manual', pedida);
 })();
 </script>
 

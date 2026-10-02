@@ -3,44 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Iniciar sesión — Turnia</title>
-<meta name="description" content="Accede a tu agenda y a la caja de tu barbería con Turnia.">
-<meta name="theme-color" content="#C7EBF6">
+<title>Iniciar sesión — Turnio</title>
+<meta name="description" content="Accede a tu agenda y a la caja de tu barbería con Turnio.">
+<meta name="theme-color" content="#F1F5F9">
 <meta name="robots" content="noindex">
 <script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          brand: {
-            lightest: '#C7EBF6',
-            light:    '#9BD1DB',
-            DEFAULT:  '#54C2DD',
-            dark:     '#238AA6',
-            darkest:  '#244D6A'
-          }
-        },
-        fontFamily: {
-          sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Inter', 'Helvetica Neue', 'Arial', 'sans-serif']
-        },
-        boxShadow: {
-          card: '0 1px 2px rgba(36,77,106,.04), 0 24px 48px -20px rgba(36,77,106,.30)'
-        }
-      }
-    }
-  };
-</script>
-<style type="text/tailwindcss">
-  @layer base {
-    :focus-visible { outline: 2px solid #238AA6; outline-offset: 3px; border-radius: 6px; }
-    /* El navegador solo marca en rojo tras el primer intento de envío, no mientras se escribe */
-    form.enviado input:invalid { border-color: #dc2626; }
-  }
-</style>
+<script src="theme.js"></script>
 </head>
 
-<body class="flex min-h-screen min-h-[100dvh] bg-brand-lightest font-sans text-brand-darkest antialiased selection:bg-brand-light/60">
+<body class="flex min-h-screen min-h-[100dvh] bg-slate-100 font-sans text-brand-darkest antialiased selection:bg-brand-light/60">
 
   <!-- m-auto (no justify-center): centra vertical sin recortar el borde superior
        cuando el teclado del móvil reduce la altura visible -->
@@ -48,7 +19,7 @@
 
     <a href="index.html"
        class="mx-auto mb-8 flex w-fit items-center gap-2.5 rounded-xl transition hover:opacity-70"
-       aria-label="Turnia, volver al inicio">
+       aria-label="Turnio, volver al inicio">
       <span class="grid h-10 w-10 place-items-center rounded-xl bg-brand-dark text-white">
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="4.5" width="18" height="16" rx="3"></rect>
@@ -56,18 +27,18 @@
           <path d="M9.5 14.5l2 2 3.5-4"></path>
         </svg>
       </span>
-      <span class="text-lg font-semibold tracking-tight">Turnia</span>
+      <span class="text-lg font-semibold tracking-tight">Turnio</span>
     </a>
 
     <!-- ═══ CARD ═══ -->
-    <div class="rounded-3xl border border-white/70 bg-white/90 p-7 shadow-card backdrop-blur-xl sm:p-9">
+    <div class="rounded-3xl border border-slate-200 bg-white p-7 shadow-lift sm:p-9">
 
       <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">Bienvenido de vuelta</h1>
       <p class="mt-2 text-sm leading-relaxed text-brand-darkest/60">
         Ingresa para ver tu agenda del día y cerrar la caja.
       </p>
 
-      <form action="#" method="post" class="mt-8 space-y-5" onsubmit="this.classList.add('enviado')">
+      <form id="form-login" class="mt-8 space-y-5">
 
         <!-- Correo -->
         <div>
@@ -103,7 +74,7 @@
                    focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/25">
 
           <div class="mt-2.5 flex justify-end">
-            <a href="mailto:hola@turnia.app?subject=Recuperar%20mi%20contrase%C3%B1a" class="rounded text-xs font-medium text-brand-darkest/70 underline-offset-4 transition hover:text-brand-dark hover:underline">
+            <a href="mailto:hola@turnio.app?subject=Recuperar%20mi%20contrase%C3%B1a" class="rounded text-xs font-medium text-brand-darkest/70 underline-offset-4 transition hover:text-brand-dark hover:underline">
               ¿Olvidaste tu contraseña?
             </a>
           </div>
@@ -118,7 +89,7 @@
       </form>
 
       <p class="mt-7 border-t border-brand-light/50 pt-6 text-center text-sm text-brand-darkest/60">
-        ¿Aún no usas Turnia?
+        ¿Aún no usas Turnio?
         <a href="index.html#demo" class="rounded font-semibold text-brand-darkest underline-offset-4 transition hover:text-brand-dark hover:underline">
           Agenda un demo
         </a>
@@ -126,14 +97,24 @@
     </div>
 
     <p class="mt-5 text-center text-xs text-brand-darkest/50">
-      <a href="app.html" class="rounded font-medium underline underline-offset-4 transition hover:text-brand-dark">Ver el panel de demo</a>
+      <a href="citas.html" class="rounded font-medium underline underline-offset-4 transition hover:text-brand-dark">Ver el panel de demo</a>
     </p>
 
     <p class="mt-6 text-center text-xs text-brand-darkest/45">
-      © 2026 Turnia · <a href="#" class="underline-offset-2 transition hover:text-brand-dark hover:underline">Términos y privacidad</a>
+      © 2026 Turnio · <a href="#" class="underline-offset-2 transition hover:text-brand-dark hover:underline">Términos y privacidad</a>
     </p>
 
   </main>
+
+<script>
+  // ponytail: sin backend todavía, cualquier correo y clave válidos entran al panel de demo.
+  // Cuando exista la API de autenticación, el fetch va aquí y el spinner ya está puesto.
+  document.getElementById('form-login').addEventListener('submit', function (e) {
+    e.preventDefault();
+    this.querySelector('[type=submit]').setAttribute('aria-busy', 'true');
+    location.href = 'citas.html';
+  });
+</script>
 
 </body>
 </html>

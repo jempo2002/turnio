@@ -3,41 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Turnia — La agenda digital para tu barbería</title>
-<meta name="description" content="Turnia digitaliza la agenda de tu barbería: reservas 24/7, control de caja y ventas extra, todo desde el celular.">
+<title>Turnio — La agenda digital para tu barbería</title>
+<meta name="description" content="Turnio digitaliza la agenda de tu barbería: reservas 24/7, control de caja y ventas extra, todo desde el celular.">
 <script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          brand: {
-            lightest: '#C7EBF6',
-            light:    '#9BD1DB',
-            DEFAULT:  '#54C2DD',
-            dark:     '#238AA6',
-            darkest:  '#244D6A'
-          }
-        },
-        fontFamily: {
-          sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Inter', 'Helvetica Neue', 'Arial', 'sans-serif']
-        },
-        boxShadow: {
-          soft: '0 1px 2px rgba(36,77,106,.04), 0 8px 24px -12px rgba(36,77,106,.18)',
-          lift: '0 2px 4px rgba(36,77,106,.05), 0 24px 48px -20px rgba(36,77,106,.28)'
-        }
-      }
-    }
-  };
-</script>
-<style type="text/tailwindcss">
-  @layer base {
-    :focus-visible { outline: 2px solid #238AA6; outline-offset: 3px; border-radius: 4px; }
-  }
-</style>
+<script src="theme.js"></script>
 </head>
 
-<body class="min-h-screen bg-gradient-to-b from-brand-lightest via-brand-light to-brand/70 font-sans text-brand-darkest antialiased selection:bg-brand-lightest">
+<body class="min-h-screen bg-white font-sans text-brand-darkest antialiased selection:bg-brand-lightest">
 
 <a href="#contenido" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-3 focus:left-3 focus:rounded-xl focus:bg-brand-darkest focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
   Saltar al contenido
@@ -47,7 +19,7 @@
 <header class="sticky top-0 z-40 border-b border-brand-light/40 bg-white/70 backdrop-blur-xl backdrop-saturate-150">
   <nav aria-label="Principal" class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
 
-    <a href="#" class="flex items-center gap-2.5" aria-label="Turnia, ir al inicio">
+    <a href="#" class="flex items-center gap-2.5" aria-label="Turnio, ir al inicio">
       <span class="grid h-9 w-9 place-items-center rounded-xl bg-brand-dark text-white shadow-soft">
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="4.5" width="18" height="16" rx="3"></rect>
@@ -55,7 +27,7 @@
           <path d="M9.5 14.5l2 2 3.5-4"></path>
         </svg>
       </span>
-      <span class="text-lg font-semibold tracking-tight">Turnia</span>
+      <span class="text-lg font-semibold tracking-tight">Turnio</span>
     </a>
 
     <ul class="hidden items-center gap-8 text-sm font-medium text-brand-darkest/70 md:flex">
@@ -79,8 +51,7 @@
 
   <!-- ═══ HERO ═══ -->
   <section class="relative overflow-hidden">
-    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 -top-40 h-[32rem] bg-gradient-to-b from-white via-white/50 to-transparent"></div>
-    <div aria-hidden="true" class="pointer-events-none absolute -right-24 top-20 h-72 w-72 rounded-full bg-brand/20 blur-3xl"></div>
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-[36rem] bg-gradient-to-b from-brand-lightest to-white"></div>
 
     <div class="relative mx-auto max-w-6xl px-5 pb-20 pt-16 sm:px-8 sm:pb-28 sm:pt-24">
       <div class="mx-auto max-w-3xl text-center">
@@ -122,8 +93,8 @@
 
       <!-- Vista previa del producto: visibilidad del estado del sistema -->
       <div class="mx-auto mt-16 max-w-md">
-        <div class="rounded-[2rem] border border-white/60 bg-white/60 p-3 shadow-lift backdrop-blur-xl">
-          <div class="rounded-3xl bg-white/95 p-5 backdrop-blur-xl">
+        <div class="rounded-[2rem] border border-slate-200 bg-white/60 p-3 shadow-lift">
+          <div class="rounded-3xl bg-white/95 p-5">
 
             <div class="flex items-center justify-between">
               <div>
@@ -174,7 +145,7 @@
 
     <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 
-      <li class="rounded-3xl border border-white/60 bg-white/90 p-7 shadow-soft backdrop-blur-xl transition hover:-translate-y-1 hover:border-brand hover:shadow-lift">
+      <li class="rounded-3xl border border-slate-200 bg-white p-7 shadow-soft transition hover:-translate-y-1 hover:border-brand hover:shadow-lift">
         <span class="grid h-12 w-12 place-items-center rounded-2xl bg-brand-lightest text-brand-dark">
           <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.5 2"></path>
@@ -187,7 +158,7 @@
         </p>
       </li>
 
-      <li class="rounded-3xl border border-white/60 bg-white/90 p-7 shadow-soft backdrop-blur-xl transition hover:-translate-y-1 hover:border-brand hover:shadow-lift">
+      <li class="rounded-3xl border border-slate-200 bg-white p-7 shadow-soft transition hover:-translate-y-1 hover:border-brand hover:shadow-lift">
         <span class="grid h-12 w-12 place-items-center rounded-2xl bg-brand-lightest text-brand-dark">
           <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="2.5" y="6" width="19" height="13" rx="3"></rect><path d="M2.5 10.5h19"></path><path d="M6.5 15h3"></path>
@@ -200,7 +171,7 @@
         </p>
       </li>
 
-      <li class="rounded-3xl border border-white/60 bg-white/90 p-7 shadow-soft backdrop-blur-xl transition hover:-translate-y-1 hover:border-brand hover:shadow-lift sm:col-span-2 lg:col-span-1">
+      <li class="rounded-3xl border border-slate-200 bg-white p-7 shadow-soft transition hover:-translate-y-1 hover:border-brand hover:shadow-lift sm:col-span-2 lg:col-span-1">
         <span class="grid h-12 w-12 place-items-center rounded-2xl bg-brand-lightest text-brand-dark">
           <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="6.5" y="2.5" width="11" height="19" rx="3"></rect><path d="M11 18.5h2"></path>
@@ -215,7 +186,7 @@
     </ul>
 
     <!-- Ventajas frente a la competencia -->
-    <div class="mt-16 rounded-[2rem] border border-white/60 bg-white/70 p-7 backdrop-blur-xl sm:p-10">
+    <div class="mt-16 rounded-[2rem] border border-slate-200 bg-white/70 p-7 sm:p-10">
       <h3 class="text-2xl font-semibold tracking-tight">Lo que los otros no te dan</h3>
       <dl class="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2">
 
@@ -263,16 +234,16 @@
   </section>
 
   <!-- ═══ COMPARATIVA ═══ -->
-  <section id="comparativa" class="scroll-mt-20 bg-white/30 py-20 backdrop-blur-xl sm:py-28">
+  <section id="comparativa" class="scroll-mt-20 bg-slate-50 py-20 sm:py-28">
     <div class="mx-auto max-w-6xl px-5 sm:px-8">
       <div class="max-w-2xl">
-        <p class="text-sm font-semibold uppercase tracking-wide text-brand-dark">A mano vs. Turnia</p>
+        <p class="text-sm font-semibold uppercase tracking-wide text-brand-dark">A mano vs. Turnio</p>
         <h2 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Lo que cambia el lunes siguiente</h2>
       </div>
 
       <div class="mt-12 grid gap-5 lg:grid-cols-2">
 
-        <div class="rounded-3xl border border-white/60 bg-white/70 p-7 backdrop-blur-xl sm:p-8">
+        <div class="rounded-3xl border border-slate-200 bg-white/70 p-7 sm:p-8">
           <h3 class="flex items-center gap-2.5 text-lg font-semibold text-brand-darkest/60">
             <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
             Con cuaderno y WhatsApp
@@ -287,10 +258,10 @@
           </ul>
         </div>
 
-        <div class="rounded-3xl border border-brand bg-white/95 p-7 shadow-lift backdrop-blur-xl sm:p-8">
+        <div class="rounded-3xl border border-brand bg-white/95 p-7 shadow-lift sm:p-8">
           <h3 class="flex items-center gap-2.5 text-lg font-semibold text-brand-dark">
             <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6.5L9.5 17 4 11.5"></path></svg>
-            Con Turnia
+            Con Turnio
           </h3>
           <ul class="mt-6 space-y-4 text-sm leading-relaxed text-brand-darkest/80">
             <li>El cliente reserva solo a las 2 a.m. y tú te enteras por la app.</li>
@@ -304,21 +275,21 @@
       </div>
 
       <dl class="mt-12 grid gap-5 sm:grid-cols-3">
-        <div class="rounded-3xl bg-white/90 p-7 text-center shadow-soft backdrop-blur-xl">
+        <div class="rounded-3xl bg-white p-7 text-center shadow-soft">
           <dt class="text-3xl font-semibold tracking-tight text-brand-dark">−40%</dt>
           <dd class="mt-1.5 text-sm text-brand-darkest/60">de clientes que no se presentan</dd>
         </div>
-        <div class="rounded-3xl bg-white/90 p-7 text-center shadow-soft backdrop-blur-xl">
+        <div class="rounded-3xl bg-white p-7 text-center shadow-soft">
           <dt class="text-3xl font-semibold tracking-tight text-brand-dark">+6 h</dt>
           <dd class="mt-1.5 text-sm text-brand-darkest/60">al mes que dejas de gastar coordinando turnos</dd>
         </div>
-        <div class="rounded-3xl bg-white/90 p-7 text-center shadow-soft backdrop-blur-xl">
+        <div class="rounded-3xl bg-white p-7 text-center shadow-soft">
           <dt class="text-3xl font-semibold tracking-tight text-brand-dark">+18%</dt>
           <dd class="mt-1.5 text-sm text-brand-darkest/60">en ventas extra al ofrecerlas dentro del ticket</dd>
         </div>
       </dl>
       <p class="mt-4 text-xs text-brand-darkest/45">
-        Promedios de barberías de 2 a 5 sillas durante sus primeros 90 días con Turnia.
+        Promedios de barberías de 2 a 5 sillas durante sus primeros 90 días con Turnio.
       </p>
     </div>
   </section>
@@ -328,9 +299,9 @@
     <div class="mx-auto max-w-4xl rounded-[2rem] bg-brand-darkest px-7 py-14 text-center sm:px-12 sm:py-20">
       <h2 class="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Guarda el cuaderno esta semana</h2>
       <p class="mx-auto mt-4 max-w-lg text-base leading-relaxed text-brand-lightest/80">
-        Te mostramos Turnia con los servicios y precios de tu barbería. 15 minutos, desde tu celular, sin compromiso.
+        Te mostramos Turnio con los servicios y precios de tu barbería. 15 minutos, desde tu celular, sin compromiso.
       </p>
-      <a href="mailto:hola@turnia.app?subject=Quiero%20un%20demo%20de%20Turnia"
+      <a href="mailto:hola@turnio.app?subject=Quiero%20un%20demo%20de%20Turnio"
          class="mt-9 inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-brand-darkest shadow-lift transition hover:bg-brand-lightest active:scale-[.98]">
         Agendar mi demo
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
@@ -342,18 +313,18 @@
 </main>
 
 <!-- ═══ FOOTER ═══ -->
-<footer class="border-t border-white/50 bg-white/80 backdrop-blur-xl">
+<footer class="border-t border-slate-200 bg-white/80">
   <div class="mx-auto max-w-6xl px-5 py-14 sm:px-8">
     <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
 
       <div class="lg:col-span-2">
-        <a href="#" class="flex items-center gap-2.5" aria-label="Turnia, ir al inicio">
+        <a href="#" class="flex items-center gap-2.5" aria-label="Turnio, ir al inicio">
           <span class="grid h-9 w-9 place-items-center rounded-xl bg-brand-dark text-white">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="3" y="4.5" width="18" height="16" rx="3"></rect><path d="M8 2.5v4M16 2.5v4M3 10h18"></path><path d="M9.5 14.5l2 2 3.5-4"></path>
             </svg>
           </span>
-          <span class="text-lg font-semibold tracking-tight">Turnia</span>
+          <span class="text-lg font-semibold tracking-tight">Turnio</span>
         </a>
         <p class="mt-4 max-w-xs text-sm leading-relaxed text-brand-darkest/60">
           La agenda y la caja de tu barbería, en el bolsillo.
@@ -373,7 +344,7 @@
       <nav aria-labelledby="footer-contacto">
         <h2 id="footer-contacto" class="text-sm font-semibold">Contacto</h2>
         <ul class="mt-4 space-y-3 text-sm text-brand-darkest/60">
-          <li><a class="transition hover:text-brand-dark" href="mailto:hola@turnia.app">hola@turnia.app</a></li>
+          <li><a class="transition hover:text-brand-dark" href="mailto:hola@turnio.app">hola@turnio.app</a></li>
           <li><a class="transition hover:text-brand-dark" href="#">Soporte por WhatsApp</a></li>
           <li><a class="transition hover:text-brand-dark" href="#">Términos y privacidad</a></li>
         </ul>
@@ -381,7 +352,7 @@
     </div>
 
     <div class="mt-12 flex flex-col gap-3 border-t border-brand-light/40 pt-7 text-xs text-brand-darkest/50 sm:flex-row sm:items-center sm:justify-between">
-      <p>© 2026 Turnia. Todos los derechos reservados.</p>
+      <p>© 2026 Turnio. Todos los derechos reservados.</p>
       <p>Hecho para barberías que odian el papeleo.</p>
     </div>
   </div>

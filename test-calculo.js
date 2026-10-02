@@ -1,7 +1,7 @@
 /* Prueba de las fórmulas de dinero. Correr con:  node test-calculo.js  */
 
 const assert = require('assert');
-const { pesos, precioVenta, pctGanancia } = require('./theme.js');
+const { pesos, precioVenta, pctGanancia, pagoBarbero } = require('./theme.js');
 
 /* ── Formato de moneda ── */
 assert.strictEqual(pesos(0), '$0');
@@ -40,15 +40,13 @@ assert.strictEqual(pctGanancia(0, 5000), 0, 'sin costo no hay porcentaje que cal
   });
 });
 
-/* ── Reparto de caja: lo repartido más lo del local nunca puede
-      superar los ingresos, con cualquier comisión. ── */
-const repartir = (generado, comision) => Math.round(generado * comision / 100);
-[0, 25, 50, 100].forEach(c => {
-  const pagos = [88000, 63000].map(g => repartir(g, c));
-  const total = pagos.reduce((a, b) => a + b, 0);
-  assert.ok(total <= 151000, `comisión ${c}% reparte ${total} de 151000`);
-});
-assert.strictEqual(repartir(88000, 50), 44000);
-assert.strictEqual(repartir(63000, 40), 25200);
+/* ── Reparto fijo: el barbero recibe un monto por servicio y el resto es del local.
+      Entre los dos nunca pueden sumar más que el precio. ── */
+assert.strictEqual(pagoBarbero(18000, 12000), 12000);
+assert.strictEqual(18000 - pagoBarbero(18000, 12000), 6000, 'el local se queda el resto');
+assert.strictEqual(pagoBarbero(18000, 25000), 18000, 'nunca más que el precio');
+assert.strictEqual(pagoBarbero(18000, -500), 0, 'nunca negativo');
+assert.strictEqual(pagoBarbero(18000, NaN), 0);
+assert.strictEqual(pagoBarbero(18000, undefined), 0, 'servicio sin reparto configurado: todo al local');
 
 console.log('OK — 27 comprobaciones de cálculo');
