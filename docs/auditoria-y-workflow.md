@@ -86,7 +86,7 @@ Al revisarlos apareció algo que cambia la decisión de infraestructura: jemPOS 
 | Migraciones, CI de pruebas, deploy | `scripts/run_migration.py`, pytest, `Procfile`, `DEPLOY.md` |
 | Páginas legales para Colombia, SEO | `routes/legal.py`, `routes/seo.py` |
 
-El backend Node actual de Turnio cubre cerca del 30 % y casi todo lo demás ya existe en Flask. Por eso la recomendación pasa a ser: **construir el backend de Turnio sobre la base de jemPOS Chef (Flask + MySQL en Railway)**, igual que Chef se construyó sobre jemPOS, y portar desde el backend Node las piezas propias que sí valen: el candado de reservas por profesional, el cobro atómico y la página pública de reservas. El frontend actual de Turnio se conserva como diseño de las plantillas. Esta decisión reemplaza la de la sección 4 y queda pendiente de tu confirmación.
+El backend Node actual de Turnio cubre cerca del 30 % y casi todo lo demás ya existe en Flask. Por eso la recomendación pasa a ser: **construir el backend de Turnio sobre la base de jemPOS Chef (Flask + MySQL en Railway)**, igual que Chef se construyó sobre jemPOS, y portar desde el backend Node las piezas propias que sí valen: el candado de reservas por profesional, el cobro atómico y la página pública de reservas. El frontend actual de Turnio se conserva como diseño de las plantillas. Esta decisión reemplaza la de la sección 4. **Confirmada por jempo el 8 de octubre de 2026: el backend de Turnio se construye sobre la base Flask de jemPOS Chef.**
 
 ## 5. Workflow de trabajo
 
