@@ -9,6 +9,7 @@
 {% block content %}
 <h1>Equipo</h1>
 <p class="muted">Recepción y profesionales trabajan en una sede. Un Admin puede ver todas.</p>
+<p class="muted">Admin configura el negocio y ve todo. Recepción maneja la agenda y la caja de todos. Profesional ve su agenda y sus comisiones.</p>
 
 <section class="tarjeta">
   <table class="tabla">
@@ -18,7 +19,7 @@
       <tr>
         <td>{{ u.nombre_completo }}</td>
         <td>{{ u.correo }}</td>
-        <td>{{ u.rol }}</td>
+        <td>{{ u.rol }}{% if u.invitacion_pendiente %} <span class="chip">Invitación pendiente</span>{% endif %}</td>
         <td>{{ u.sede or 'Todas' }}</td>
         <td class="acciones">
           <details>
@@ -32,6 +33,10 @@
               <button class="btn" type="submit">Guardar</button>
             </form>
           </details>
+          {% if u.invitacion_pendiente %}
+            <button class="btn-link" type="button"
+                    data-api="POST {{ url_for('negocio.api_usuarios_invitacion', id_usuario=u.id_usuario) }}">Enlace nuevo</button>
+          {% endif %}
           {% if u.id_usuario != session.id_usuario %}
             <button class="btn-link btn-link--peligro" type="button"
                     data-api="DELETE {{ url_for('negocio.api_usuarios_desactivar', id_usuario=u.id_usuario) }}"
@@ -46,6 +51,7 @@
 
 <section class="tarjeta">
   <h2>Nuevo usuario</h2>
+  <p class="muted">Deja la contraseña vacía y te damos un enlace para mandarle por WhatsApp: con él elige su propia contraseña.</p>
   <form class="form form--rejilla" data-api="POST {{ url_for('negocio.api_usuarios_crear') }}">
     <label>Nombre completo <input name="nombre" maxlength="150" required /></label>
     <label>Cédula <input name="cc" inputmode="numeric" maxlength="15" required /></label>
@@ -54,8 +60,9 @@
       <select name="rol">{% for r in roles %}<option {% if r == 'Profesional' %}selected{% endif %}>{{ r }}</option>{% endfor %}</select>
     </label>
     <label>Sede {{ select_sede(none, true) }}</label>
-    <label>Contraseña <input type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" required /></label>
-    <label>Repítela <input type="password" name="confirm_password" minlength="8" maxlength="128" autocomplete="new-password" required /></label>
+    <label>WhatsApp (opcional) <input type="tel" name="telefono" inputmode="tel" maxlength="20" autocomplete="off" /></label>
+    <label>Contraseña (opcional) <input type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" /></label>
+    <label>Repítela <input type="password" name="confirm_password" minlength="8" maxlength="128" autocomplete="new-password" /></label>
     <button class="btn btn--primario" type="submit">Crear usuario</button>
   </form>
 </section>

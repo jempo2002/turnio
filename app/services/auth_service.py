@@ -136,6 +136,21 @@ def decode_reset_token(
     return str(datos[0]), str(datos[1])
 
 
+# Enlace de invitacion al equipo: mismo formato que el de recuperacion (correo
+# + huella de la clave, asi sirve una sola vez) con otra sal y 7 dias de
+# vigencia, porque se manda por WhatsApp y no siempre se abre el mismo dia.
+SAL_INVITACION = "invitacion-equipo"
+DIAS_INVITACION = 7
+
+
+def create_invite_token(secret_key: str, email: str, clave_hash: str) -> str:
+    return create_reset_token(secret_key, email, clave_hash, salt=SAL_INVITACION)
+
+
+def decode_invite_token(secret_key: str, token: str) -> tuple[str, str]:
+    return decode_reset_token(secret_key, token, salt=SAL_INVITACION, max_age=DIAS_INVITACION * 86400)
+
+
 def send_recovery_email(destinatario: str, enlace: str) -> bool:
     """Encola el correo de recuperacion en un hilo aparte: un fallo de SMTP
     no bloquea ni rompe la peticion."""

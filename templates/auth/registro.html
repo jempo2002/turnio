@@ -1,0 +1,40 @@
+{% extends "auth/_base_auth.html" %}
+{% block title %}Registra tu negocio{% endblock %}
+{% block content %}
+<h1>Registra tu negocio</h1>
+<p class="muted">{{ dias_prueba }} días gratis del plan {{ plan_prueba }}, sin tarjeta. Al terminar eliges tu plan.</p>
+<form method="post" action="{{ url_for('auth.registro') }}" class="form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <label>Nombre del negocio
+    <input name="nombre_negocio" value="{{ previos.nombre_negocio }}" maxlength="150" required autofocus />
+  </label>
+  <label>Tipo de negocio
+    <select name="tipo_negocio">
+      {% for clave, texto in tipos.items() %}<option value="{{ clave }}" {% if clave == previos.tipo_negocio %}selected{% endif %}>{{ texto }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>WhatsApp del negocio
+    <input type="tel" name="telefono" value="{{ previos.telefono }}" inputmode="tel" maxlength="20" autocomplete="tel" required />
+  </label>
+  <label>Tu nombre
+    <input name="admin_nombre" value="{{ previos.admin_nombre }}" maxlength="150" autocomplete="name" required />
+  </label>
+  <label>Tu cédula
+    <input name="admin_cc" value="{{ previos.admin_cc }}" inputmode="numeric" maxlength="15" required />
+  </label>
+  <label>Correo
+    <input type="email" name="admin_correo" value="{{ previos.admin_correo }}" maxlength="150" autocomplete="username" required />
+  </label>
+  <label>Contraseña
+    <input type="password" name="admin_password" minlength="8" maxlength="128" autocomplete="new-password" required />
+  </label>
+  <label>Repítela
+    <input type="password" name="confirm_password" minlength="8" maxlength="128" autocomplete="new-password" required />
+  </label>
+  <p class="muted">Mínimo 8 caracteres, con una mayúscula, una minúscula y un número.</p>
+  {# Campo trampa: las personas no lo ven; los bots lo llenan. #}
+  <label hidden aria-hidden="true">No llenar <input name="sitio_web" tabindex="-1" autocomplete="off" /></label>
+  <button class="btn btn--primario" type="submit">Crear mi cuenta</button>
+</form>
+<p class="pie">¿Ya tienes cuenta? <a href="{{ url_for('auth.login') }}">Inicia sesión</a></p>
+{% endblock %}

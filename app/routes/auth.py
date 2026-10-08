@@ -8,8 +8,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import limiter
 from app.security import cerrar_sesion_publica
+from app.services import master_service, plan_service, usuario_service
 from app.services.auth_service import (
     create_reset_token,
+    decode_invite_token,
     decode_reset_token,
     fijar_sede,
     first_password_policy_error,
@@ -98,9 +100,21 @@ def login():
     if not user["estado_activo"]:
         return _error_login("Cuenta desactivada. Contacta al administrador.", 403)
 
+    redirect_url = _abrir_sesion(user)
+    if not redirect_url:
+        return _error_login(_SEDE_INACTIVA, 403)
+    if request.is_json:
+        return jsonify({"ok": True, "redirect": redirect_url})
+    return redirect(redirect_url)
+
+
+def _abrir_sesion(user: dict) -> str | None:
+    """Abre la sesion de `user` (ya autenticado) y devuelve a donde ir, o None
+    si su sede ya no esta activa. La usan el login, el registro y la
+    invitacion."""
     sede = sede_inicial(user)
     if user["id_sede"] and not sede:
-        return _error_login(_SEDE_INACTIVA, 403)
+        return None
 
     initialize_user_session(session, user, sede)
     # ID de sesion nuevo al autenticarse: anula una fijacion de sesion previa.
@@ -109,12 +123,117 @@ def login():
         current_app.session_interface.regenerate(session)
 
     if user["rol"] != "Master" and not sede:
-        redirect_url = url_for("auth.seleccionar_sede")
-    else:
-        redirect_url = resolve_post_login_redirect(user["rol"])
+        return url_for("auth.seleccionar_sede")
+    return resolve_post_login_redirect(user["rol"])
+
+
+# Registro abierto: cualquiera puede crear su negocio y arranca con la prueba
+# gratis (plan_service.DIAS_PRUEBA dias del Pro). Limite por IP para frenar
+# altas en masa; el campo trampa `sitio_web` (oculto) atrapa bots simples.
+REGISTRO_RATE_LIMIT = "5 per hour"
+_CAMPOS_REGISTRO = ("nombre_negocio", "tipo_negocio", "telefono", "admin_nombre", "admin_cc", "admin_correo")
+
+
+def _error_registro(msg: str, status: int, datos: dict):
     if request.is_json:
-        return jsonify({"ok": True, "redirect": redirect_url})
-    return redirect(redirect_url)
+        return jsonify({"ok": False, "msg": msg}), status
+    flash(msg, "error")
+    return _form_registro(datos), status
+
+
+def _form_registro(datos: dict | None = None):
+    previos = {k: str((datos or {}).get(k, ""))[:150] for k in _CAMPOS_REGISTRO}
+    return render_template(
+        "auth/registro.html",
+        tipos=master_service.TIPOS_NEGOCIO,
+        dias_prueba=plan_service.DIAS_PRUEBA,
+        plan_prueba=plan_service.PLANES[plan_service.PLAN_PRUEBA]["nombre"],
+        previos=previos,
+    )
+
+
+@auth.route("/registro", methods=["GET", "POST"])
+@limiter.limit(REGISTRO_RATE_LIMIT, methods=["POST"])
+def registro():
+    if request.method == "GET":
+        cerrar_sesion_publica()
+        return _form_registro()
+
+    data = dict(_datos_peticion())
+    if data.get("sitio_web"):
+        log_seguridad("registro_trampa")
+        return _error_registro("No se pudo crear la cuenta.", 400, {})
+    if not str(data.get("telefono", "")).strip():
+        return _error_registro("El WhatsApp del negocio es requerido.", 400, data)
+    if str(data.get("admin_password", "")) != str(data.get("confirm_password", "")):
+        return _error_registro("Las contrasenas no coinciden.", 400, data)
+    try:
+        id_tienda = master_service.crear_negocio(data)
+    except (ValueError, master_service.MasterError) as exc:
+        return _error_registro(str(exc), getattr(exc, "status", 400), data)
+
+    conn = get_db()
+    try:
+        cur = conn.cursor(dictionary=True)
+        # crear_negocio deja un solo usuario: el Admin dueno.
+        cur.execute(
+            "SELECT id_usuario, id_tienda, id_sede, nombre_completo, rol FROM usuarios WHERE id_tienda = %s LIMIT 1",
+            (id_tienda,),
+        )
+        user = cur.fetchone()
+    finally:
+        conn.close()
+    current_app.logger.info("Negocio registrado id_tienda=%s", id_tienda)
+    destino = _abrir_sesion(user)
+    if request.is_json:
+        return jsonify({"ok": True, "id_tienda": id_tienda, "redirect": destino}), 201
+    flash(
+        f"Listo, tu negocio ya está en Turnio. Tienes {plan_service.DIAS_PRUEBA} días gratis del plan "
+        f"{plan_service.PLANES[plan_service.PLAN_PRUEBA]['nombre']}.",
+        "success",
+    )
+    return redirect(destino)
+
+
+@auth.route("/api/auth/register", methods=["POST"])
+def api_registro():
+    # Sin limite propio: el de registro() ya cuenta esta llamada (con los dos
+    # contaba doble).
+    return registro()
+
+
+@auth.route("/invitacion/<token>", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
+def invitacion(token):
+    """Quien fue invitado al equipo elige su contrasena y entra."""
+    try:
+        correo, huella = decode_invite_token(current_app.secret_key, token)
+    except (SignatureExpired, BadSignature):
+        usuario = None
+    else:
+        usuario = usuario_service.invitacion_vigente(correo, huella)
+    if not usuario:
+        cerrar_sesion_publica()
+        flash("La invitación venció o ya se usó. Pide al administrador un enlace nuevo.", "error")
+        return redirect(url_for("auth.login"))
+
+    if request.method == "GET":
+        cerrar_sesion_publica()
+        return render_template("auth/invitacion.html", token=token, usuario=usuario)
+
+    try:
+        usuario_service.aceptar_invitacion(usuario, request.form.get("password"), request.form.get("confirm_password"))
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("auth.invitacion", token=token))
+    except usuario_service.UsuarioError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("auth.login"))
+    destino = _abrir_sesion(usuario)
+    if not destino:
+        flash(_SEDE_INACTIVA, "error")
+        return redirect(url_for("auth.login"))
+    return redirect(destino)
 
 
 @auth.route("/seleccionar-sede", methods=["GET", "POST"])
@@ -252,7 +371,7 @@ def reset_password(token):
         try:
             cur = conn.cursor()
             cur.execute(
-                "UPDATE usuarios SET clave_hash = %s WHERE id_usuario = %s AND correo = %s",
+                "UPDATE usuarios SET clave_hash = %s, invitacion_pendiente = 0 WHERE id_usuario = %s AND correo = %s",
                 (generate_password_hash(password), user["id_usuario"], user["correo"]),
             )
             conn.commit()

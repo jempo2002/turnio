@@ -2,7 +2,7 @@
 {% block title %}Iniciar sesión{% endblock %}
 {% block content %}
 <h1>Iniciar sesión</h1>
-<p class="muted">Entra con el correo que te dio el administrador del negocio.</p>
+<p class="muted">Entra con tu correo y tu contraseña.</p>
 <form method="post" action="{{ url_for('auth.login') }}" class="form">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <label>Correo
@@ -14,4 +14,5 @@
   <button class="btn btn--primario" type="submit">Entrar</button>
 </form>
 <p class="pie"><a href="{{ url_for('auth.olvide_password') }}">¿Olvidaste tu contraseña?</a></p>
+<p class="pie">¿Tu negocio aún no está en Turnio? <a href="{{ url_for('auth.registro') }}">Pruébalo gratis</a></p>
 {% endblock %}
