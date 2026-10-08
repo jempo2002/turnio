@@ -54,7 +54,7 @@
 
 <section class="tarjeta">
   <h2>Nuevo negocio</h2>
-  <p class="muted">Arranca con un mes de prueba del plan elegido.</p>
+  <p class="muted">Arranca con {{ dias_prueba }} días de prueba gratis del Plan {{ planes[plan_prueba].nombre }}. Al registrar el primer pago, cámbialo al plan que elija.</p>
   <form class="form form--rejilla" data-api="POST {{ url_for('master.api_crear') }}">
     <label>Nombre del negocio <input name="nombre_negocio" maxlength="150" required /></label>
     <label>Tipo
@@ -64,11 +64,6 @@
     </label>
     <label>NIT <input name="nit" maxlength="30" /></label>
     <label>Teléfono <input name="telefono" maxlength="20" inputmode="tel" /></label>
-    <label>Plan
-      <select name="plan_id">
-        {% for pid, p in planes.items() %}<option value="{{ pid }}" {% if pid == 'basico' %}selected{% endif %}>{{ p.nombre }} · {{ p.precio|pesos }}</option>{% endfor %}
-      </select>
-    </label>
     <label>Sede principal <input name="sede_nombre" maxlength="120" placeholder="Principal" /></label>
     <label>Dirección <input name="sede_direccion" maxlength="200" /></label>
     <label>Administrador <input name="admin_nombre" maxlength="150" required /></label>

@@ -97,7 +97,7 @@ def sembrar(clave: str) -> int | None:
         conn.close()
 
     id_tienda = master_service.crear_negocio({
-        "nombre_negocio": NOMBRE, "tipo_negocio": "barberia", "plan_id": "basico", "telefono": "3000000000",
+        "nombre_negocio": NOMBRE, "tipo_negocio": "barberia", "telefono": "3000000000",
         "sede_nombre": "Principal", "admin_nombre": "Admin Demo", "admin_cc": "1000000001",
         "admin_correo": f"admin@{DOMINIO}", "admin_password": clave,
     })

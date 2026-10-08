@@ -1,5 +1,4 @@
 """Panel Master: alta de negocios, cambio de plan y renovacion."""
-from datetime import date
 
 from conftest import entrar
 
@@ -20,8 +19,12 @@ def test_crear_negocio_con_sede_admin_y_slug(client, crear):
     r = client.post("/api/master/negocios", json=NUEVO)
     assert r.status_code == 201, r.get_json()
     id_tienda = r.get_json()["id_tienda"]
-    t = crear.fila("SELECT plan_id, trial_ends_at, slug, tipo_negocio FROM tiendas WHERE id_tienda = %s", (id_tienda,))
-    assert t["plan_id"] == "basico" and t["trial_ends_at"] > date.today()
+    t = crear.fila(
+        "SELECT plan_id, DATEDIFF(trial_ends_at, CURDATE()) AS dias, slug, tipo_negocio FROM tiendas "
+        "WHERE id_tienda = %s", (id_tienda,),
+    )
+    # Prueba gratis: 14 dias del Pro, sin importar el plan que llegue en el alta.
+    assert t["plan_id"] == "pro" and t["dias"] == 14
     assert t["slug"] == "barberia-el-cuartel" and t["tipo_negocio"] == "barberia"
     s = crear.fila("SELECT nombre, es_principal FROM sedes WHERE id_tienda = %s", (id_tienda,))
     assert s == {"nombre": "Centro", "es_principal": 1}

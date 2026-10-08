@@ -27,7 +27,11 @@ Tomado de jemPOS Chef (que no se modifica):
 Lo propio de Turnio:
 
 - **Roles**: Master (administra los negocios), Admin (dueño o encargado), Recepción y Profesional (quien atiende; sus citas y comisiones van a su nombre).
-- **Planes** (los del landing): Básico $49.000 y Pro $89.000 al mes. Pro suma el asistente con IA y la confirmación automática por WhatsApp (`requiere_funcion("asistente_ia")`). Sin tope de usuarios y una sola sede por ahora (varias sedes llegan con T15).
+- **Planes** (aprobados el 2026-10-08, los mismos del landing; fuente única en `app/services/plan_service.py`):
+  - Básico $49.000/mes: 1 sede, hasta 3 profesionales con agenda, 1 Admin y 150 productos.
+  - Pro $89.000/mes: 1 sede, hasta 10 profesionales, 2 Admin, productos sin tope, asistente con IA, comisiones y recordatorios automáticos por WhatsApp (500 mensajes al mes).
+  - Multisede $139.000/mes: todo lo del Pro con 2 sedes incluidas y hasta 5 (cada sede extra suma $45.000/mes y $79.000 de montaje), 10 profesionales por sede y 1.000 mensajes.
+  - Todo negocio nuevo arranca con 14 días gratis del Pro; al registrar el primer pago el Master le pone el plan elegido. Recepción no tiene tope. Profesional extra $9.000/mes y paquete de 500 mensajes $15.000 (los cobra el Master por ahora).
 - **Negocios**: cada uno tiene `slug` (su página pública de reservas, `/r/<slug>`, en T8) y `tipo_negocio` (barbería, peluquería, uñas, cejas y pestañas, estética).
 - **Esquema** (`migrations/`): negocios, sedes y usuarios; horario por sede; servicios con duración, precio y pago al profesional; citas con candado por profesional y hora; productos con código de barras; movimientos de caja con la comisión de cada cobro.
 
