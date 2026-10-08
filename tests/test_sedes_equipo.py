@@ -15,18 +15,35 @@ def _admin(client, crear, plan="basico", sedes=("Principal",)):
 
 
 @pytest.mark.parametrize("plan", ["basico", "pro"])
-def test_ningun_plan_abre_segunda_sede_todavia(client, crear, plan):
+def test_basico_y_pro_son_de_una_sede(client, crear, plan):
     _admin(client, crear, plan)
     r = client.post("/api/sedes", json={"nombre": "Norte"})
     assert r.status_code == 403
     assert r.get_json()["code"] == "limite_plan"
+    assert r.get_json()["accion_texto"] == "Pasarme al Plan Multisede"
     assert "sola sede" in client.get("/sedes").get_data(as_text=True)
 
 
-def test_la_base_rechaza_una_quinta_sede(crear):
-    id_tienda, _ = crear.tienda("pro", sedes=("A", "B", "C", "D"))
+def test_multisede_incluye_dos_sedes_y_cobra_las_extra(client, crear):
+    id_tienda, _ = _admin(client, crear, "multisede")
+    assert "incluye 2 sedes" in client.get("/sedes").get_data(as_text=True)
+    assert client.post("/api/sedes", json={"nombre": "Norte"}).status_code == 201
+    assert client.post("/api/sedes", json={"nombre": "Sur"}).status_code == 201
+    montajes = crear.fila(
+        "SELECT GROUP_CONCAT(costo_montaje ORDER BY id_sede) AS m FROM sedes WHERE id_tienda = %s", (id_tienda,)
+    )["m"]
+    assert montajes == "0,0,79000"
+    for nombre in ("Este", "Oeste"):
+        assert client.post("/api/sedes", json={"nombre": nombre}).status_code == 201
+    r = client.post("/api/sedes", json={"nombre": "Sexta"})
+    assert r.status_code == 403 and "máximo de 5" in r.get_json()["msg"]
+    assert "$274.000" in client.get("/sedes").get_data(as_text=True)  # 139.000 + 3 x 45.000
+
+
+def test_la_base_rechaza_una_sexta_sede(crear):
+    id_tienda, _ = crear.tienda("multisede", sedes=("A", "B", "C", "D", "E"))
     with pytest.raises(mysql.connector.Error) as exc:
-        crear.sede(id_tienda, "E")
+        crear.sede(id_tienda, "F")
     assert exc.value.errno == 1644
 
 
@@ -64,12 +81,31 @@ def _nuevo(n, rol="Profesional", **extra):
     }
 
 
-def test_sin_tope_de_usuarios_en_basico(client, crear):
+def test_tope_de_profesionales_en_basico(client, crear):
     _admin(client, crear)
-    for n in range(10):
+    for n in range(3):
         assert client.post("/api/usuarios", json=_nuevo(n)).status_code == 201
-    fila = crear.fila("SELECT COUNT(*) AS n FROM usuarios WHERE rol = 'Profesional'")
-    assert fila["n"] == 10
+    r = client.post("/api/usuarios", json=_nuevo(3))
+    assert r.status_code == 403
+    assert r.get_json()["recurso"] == "profesionales"
+    assert r.get_json()["accion_texto"] == "Pasarme al Plan Pro"
+    # Recepcion no topa; un Admin mas si (Basico trae 1).
+    assert client.post("/api/usuarios", json=_nuevo(4, rol="Recepcion")).status_code == 201
+    assert client.post("/api/usuarios", json=_nuevo(5, rol="Admin")).status_code == 403
+    # Cambiar de rol a Profesional tambien cuenta.
+    recepcion = crear.fila("SELECT id_usuario FROM usuarios WHERE correo = 'p4@turnio.co'")["id_usuario"]
+    r = client.put(f"/api/usuarios/{recepcion}", json={"nombre": "Persona 4", "rol": "Profesional"})
+    assert r.status_code == 403
+
+
+def test_bajar_de_plan_con_profesionales_de_sobra_se_bloquea(crear):
+    from app.services import master_service
+
+    id_tienda, (sede,) = crear.tienda("pro")
+    for n in range(4):
+        crear.usuario(f"p{n}@turnio.co", "Profesional", id_tienda, sede)
+    with pytest.raises(ValueError, match="4 profesionales"):
+        master_service.cambiar_plan(id_tienda, "basico")
 
 
 def test_roles_del_negocio(client, crear):

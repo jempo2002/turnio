@@ -1,15 +1,17 @@
 """Panel Master: alta de negocios, plan, suscripcion y baja.
 
 Tomado de jemPOS Chef. Por ahora sin registro publico, igual que jemPOS: el
-Master crea el negocio con un mes de prueba del plan elegido. El registro
-abierto (POST /auth/register) es la tarea T3 y reutilizara crear_negocio.
+Master crea el negocio y este arranca con la prueba gratis (DIAS_PRUEBA dias
+del plan PLAN_PRUEBA, hoy 14 dias del Pro). Al registrar el primer pago el
+Master le pone el plan que eligio. El registro abierto (POST /auth/register)
+es la tarea T3 y reutilizara crear_negocio.
 """
 from __future__ import annotations
 
 import calendar
 import re
 import unicodedata
-from datetime import date
+from datetime import date, timedelta
 
 from mysql.connector import IntegrityError
 from werkzeug.security import generate_password_hash
@@ -26,7 +28,6 @@ from app.utils.helpers import ahora_local, hoy_local, normalize_phone
 from app.utils.validation import sanitize_optional_text, sanitize_text
 from database import get_db
 
-MESES_PRUEBA = 1
 PERIODOS = (1, 3, 6, 12)
 TIPOS_NEGOCIO = {
     "barberia": "Barbería",
@@ -125,7 +126,7 @@ def crear_negocio(data: dict) -> int:
     tipo = _parse_tipo(data.get("tipo_negocio"))
     nit = sanitize_optional_text(data.get("nit"), "NIT", max_len=30)
     telefono = normalize_phone(data.get("telefono"), max_len=20)
-    plan_id = _parse_plan(data.get("plan_id"))
+    plan_id = plan_service.PLAN_PRUEBA
     sede_nombre = sanitize_text(data.get("sede_nombre") or "Principal", "El nombre de la sede", max_len=120)
     sede_direccion = sanitize_optional_text(data.get("sede_direccion"), "La direccion", max_len=200)
     admin_nombre = sanitize_text(data.get("admin_nombre"), "El nombre del administrador", max_len=150)
@@ -140,7 +141,7 @@ def crear_negocio(data: dict) -> int:
     if pwd_error:
         raise ValueError(pwd_error)
 
-    fin_prueba = sumar_meses(hoy_local(), MESES_PRUEBA)
+    fin_prueba = hoy_local() + timedelta(days=plan_service.DIAS_PRUEBA)
     conn = get_db()
     try:
         cur = conn.cursor(dictionary=True)

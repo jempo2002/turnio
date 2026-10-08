@@ -26,6 +26,8 @@ def panel():
         negocios=negocios,
         tipos=master_service.TIPOS_NEGOCIO,
         planes=plan_service.PLANES,
+        plan_prueba=plan_service.PLAN_PRUEBA,
+        dias_prueba=plan_service.DIAS_PRUEBA,
         periodos=master_service.PERIODOS,
         mrr=sum(n["mensualidad"] for n in negocios if not n["en_prueba"]),
         montajes=sum(n["montaje_pendiente"] for n in negocios),

@@ -1,16 +1,20 @@
 """Planes de suscripcion de Turnio (tiendas.plan_id) y sus limites.
 
 Tomado de jemPOS Chef. Fuente unica de precios, topes y funciones por plan.
-Los precios son los del landing (index.html, seccion #planes), en COP por mes:
+Los precios los aprobo jempo el 2026-10-08 (turnio/planes-y-precios.md) y son
+los del landing (index.html, seccion #planes), en COP por mes:
 
-  Basico  $49.000  agenda, caja con desglose por profesional, inventario,
-                   venta rapida y recordatorios manuales por WhatsApp
-  Pro     $89.000  + asistente con IA y confirmacion automatica por WhatsApp
+  Basico     $49.000  1 sede, 3 profesionales, 1 Admin, 150 productos.
+                      Agenda, caja, inventario y recordatorios manuales.
+  Pro        $89.000  1 sede, 10 profesionales, 2 Admin, productos sin tope.
+                      + asistente con IA y WhatsApp automatico (500 msgs/mes).
+  Multisede $139.000  2 sedes incluidas y hasta 5 (cada extra $45.000/mes y
+                      montaje de $79.000), 10 profesionales por sede, 2 Admin.
+                      Todo lo del Pro, con 1.000 mensajes/mes.
 
-Topes: el landing no limita usuarios, asi que `usuarios_por_sede` es None
-(sin tope) hasta que jempo fije uno. Ningun plan trae multisede todavia
-(llega con T15): todos quedan en una sede. La maquinaria de Chef para varias
-sedes (tope, sede extra al 50 %, montaje) se conserva para entonces.
+Los topes son de profesionales (rol Profesional: quien tiene agenda) y de
+administradores (rol Admin). Recepcion no tiene tope: es el encargado de
+cada sede. Los productos solo topan en el Basico, igual que en jemPOS.
 
 plan_id NULL (no deberia pasar: el Master siempre elige plan) se trata como
 Basico, el plan mas restringido, para que un dato faltante nunca abra
@@ -26,46 +30,85 @@ from flask import flash, g, jsonify, redirect, url_for
 WHATSAPP = "https://wa.me/573106152268"
 
 PLAN_POR_DEFECTO = "basico"
+# Todo negocio nuevo arranca con DIAS_PRUEBA dias de este plan, sin tarjeta.
+PLAN_PRUEBA = "pro"
+DIAS_PRUEBA = 14
 
-MAX_SEDES = 4
+# Tope absoluto de sedes activas (lo repiten los triggers de `sedes`).
+MAX_SEDES = 5
+# Montaje de cada sede por encima de las incluidas en el plan.
 COSTO_MONTAJE_SEDE = 79000
-# Mensualidad de cada sede extra como fraccion del precio del plan.
-FRACCION_SEDE_EXTRA = 0.5
+# Mensualidad de cada sede por encima de las incluidas (50 % del Pro).
+PRECIO_SEDE_EXTRA = 45000
+# Cada profesional por encima del tope del plan, al mes (lo cobra el Master).
+PRECIO_PROFESIONAL_EXTRA = 9000
+# Paquete de mensajes de WhatsApp automaticos extra: (mensajes, precio).
+PAQUETE_WHATSAPP = (500, 15000)
+
+_FUNCIONES_PRO = frozenset({"asistente_ia", "whatsapp_auto", "comisiones"})
 
 PLANES: dict[str, dict] = {
     "basico": {
         "nombre": "Básico",
         "precio": 49000,
-        "usuarios_por_sede": None,
+        "sedes_incluidas": 1,
+        "max_sedes": 1,
+        "profesionales_por_sede": 3,
+        "administradores": 1,
+        "productos": 150,
+        "mensajes_whatsapp": 0,
         "funciones": frozenset(),
     },
     "pro": {
         "nombre": "Pro",
         "precio": 89000,
-        "usuarios_por_sede": None,
-        "funciones": frozenset({"asistente_ia", "whatsapp_auto"}),
+        "sedes_incluidas": 1,
+        "max_sedes": 1,
+        "profesionales_por_sede": 10,
+        "administradores": 2,
+        "productos": None,
+        "mensajes_whatsapp": 500,
+        "funciones": _FUNCIONES_PRO,
+    },
+    "multisede": {
+        "nombre": "Multisede",
+        "precio": 139000,
+        "sedes_incluidas": 2,
+        "max_sedes": MAX_SEDES,
+        "profesionales_por_sede": 10,
+        "administradores": 2,
+        "productos": None,
+        "mensajes_whatsapp": 1000,
+        "funciones": _FUNCIONES_PRO | {"multisede"},
     },
 }
 for _plan in PLANES.values():
-    _multisede = "multisede" in _plan["funciones"]
-    _plan["max_sedes"] = MAX_SEDES if _multisede else 1
-    _plan["sede_extra"] = round(_plan["precio"] * FRACCION_SEDE_EXTRA) if _multisede else None
+    _plan["sede_extra"] = PRECIO_SEDE_EXTRA if _plan["max_sedes"] > _plan["sedes_incluidas"] else None
 PLANES_VALIDOS = tuple(PLANES)
 
 # Para el mensaje de "esta funcion no viene en tu plan".
 NOMBRE_FUNCION = {
     "asistente_ia": "El asistente con IA",
-    "whatsapp_auto": "La confirmación y reprogramación automática por WhatsApp",
+    "whatsapp_auto": "Los recordatorios y la confirmación automática por WhatsApp",
+    "comisiones": "Las comisiones y la liquidación por profesional",
     "multisede": "Tener varias sedes",
 }
 
-# Plan al que se sube desde cada uno y lo que gana: alimenta el aviso de upsell.
-_SIGUIENTE = {
-    "basico": ("pro", (
-        "Asistente con IA que responde y gestiona por ti",
-        "Reportes de caja e inventario conversando",
-        "Confirmación y reprogramación automática por WhatsApp",
-    )),
+# Plan al que se sube desde cada uno, y lo que se gana al llegar a cada uno:
+# alimentan el aviso de upsell.
+_SIGUIENTE = {"basico": "pro", "pro": "multisede"}
+_BENEFICIOS = {
+    "pro": (
+        "Hasta 10 profesionales con agenda",
+        "Recordatorios y confirmación automática por WhatsApp",
+        "Comisiones y liquidación automática por profesional",
+        "Asistente con IA e inventario ilimitado",
+    ),
+    "multisede": (
+        "2 sedes incluidas y hasta 5",
+        "Caja, inventario y reportes por sede y consolidados",
+        "1.000 mensajes automáticos de WhatsApp al mes",
+    ),
 }
 
 
@@ -82,40 +125,89 @@ def tiene_funcion(plan_id: str | None, funcion: str) -> bool:
 
 
 def tope_sedes(plan_id: str | None) -> int:
-    """Maximo de sedes activas: 1 en Basico, MAX_SEDES con multisede."""
+    """Maximo de sedes activas: 1 en Basico y Pro, MAX_SEDES en Multisede."""
     return plan_de(plan_id)["max_sedes"]
 
 
-def tope_usuarios(plan_id: str | None, sedes_activas: int) -> int | None:
-    """Usuarios activos (sin contar Master) que admite el plan. None = sin tope."""
-    por_sede = plan_de(plan_id)["usuarios_por_sede"]
-    return None if por_sede is None else por_sede * max(1, int(sedes_activas))
+# Recursos con tope y el rol de usuario que cuenta para cada uno.
+ROL_DE_RECURSO = {"profesionales": "Profesional", "administradores": "Admin"}
+
+
+def tope(plan_id: str | None, recurso: str, sedes_activas: int = 1) -> int | None:
+    """Cuantos `recurso` admite el plan. None = sin tope."""
+    plan = plan_de(plan_id)
+    if recurso == "sedes":
+        return plan["max_sedes"]
+    if recurso == "profesionales":
+        return plan["profesionales_por_sede"] * max(1, int(sedes_activas))
+    if recurso == "administradores":
+        return plan["administradores"]
+    if recurso == "productos":
+        return plan["productos"]
+    raise ValueError(f"Recurso desconocido: {recurso}")
+
+
+def recurso_de_rol(rol: str) -> str | None:
+    """'profesionales' o 'administradores' segun el rol; None si no tiene tope."""
+    for recurso, r in ROL_DE_RECURSO.items():
+        if r == rol:
+            return recurso
+    return None
 
 
 def sedes_extra(plan_id: str | None, sedes_activas: int) -> int:
-    """Sedes por encima de la principal (la unica incluida en el precio)."""
-    return max(0, int(sedes_activas) - 1)
+    """Sedes por encima de las incluidas en el precio del plan."""
+    return max(0, int(sedes_activas) - plan_de(plan_id)["sedes_incluidas"])
 
 
 def mensualidad(plan_id: str | None, sedes_activas: int) -> int:
-    """Lo que paga el negocio al mes: plan + 50 % del plan por sede extra."""
+    """Lo que paga el negocio al mes: plan + PRECIO_SEDE_EXTRA por sede extra."""
     plan = plan_de(plan_id)
     return plan["precio"] + sedes_extra(plan_id, sedes_activas) * (plan["sede_extra"] or 0)
 
 
-def _mensaje(recurso: str, plan_id: str, tope: int) -> str:
-    nombre = plan_de(plan_id)["nombre"]
+def costo_montaje_nueva_sede(plan_id: str | None, sedes_activas: int) -> int:
+    """Montaje de la proxima sede: gratis si entra en las incluidas."""
+    return COSTO_MONTAJE_SEDE if sedes_extra(plan_id, int(sedes_activas) + 1) else 0
+
+
+_QUE = {"profesionales": "profesionales con agenda", "administradores": "administradores",
+        "productos": "productos", "sedes": "sedes"}
+
+
+def _sube(antes: int | None, despues: int | None) -> bool:
+    if antes is None:
+        return False
+    return despues is None or despues > antes
+
+
+def plan_para_crecer(plan_id: str | None, recurso: str) -> str | None:
+    """Plan al que hay que pasar para tener mas `recurso`, o None si ningun
+    plan sube ese tope (ahi se habla por WhatsApp)."""
     if recurso == "sedes":
-        if tope >= MAX_SEDES:
-            return f"Llegaste al máximo de {MAX_SEDES} sedes. Para más sedes escríbenos."
-        return (
-            f"Tu Plan {nombre} es para una sola sede. Si tu negocio abrió otro local, "
-            "escríbenos y lo habilitamos."
-        )
-    base = f"Tu Plan {nombre} permite {tope} usuarios activos."
-    siguiente = _SIGUIENTE.get(plan_id)
-    if siguiente:
-        return f"{base} Para sumar más personas pásate al Plan {PLANES[siguiente[0]]['nombre']}."
+        return None if plan_id == "multisede" else "multisede"
+    destino = _SIGUIENTE.get(plan_id or "")
+    if destino and _sube(tope(plan_id, recurso), tope(destino, recurso)):
+        return destino
+    return None
+
+
+def _mensaje(recurso: str, plan_id: str, tope_: int) -> str:
+    nombre = plan_de(plan_id)["nombre"]
+    destino = plan_para_crecer(plan_id, recurso)
+    if recurso == "sedes":
+        if destino:
+            return (
+                f"Tu Plan {nombre} es para una sola sede. Si tu negocio abrió otro local, "
+                f"pásate al Plan {PLANES[destino]['nombre']}."
+            )
+        return f"Llegaste al máximo de {tope_} sedes. Para más sedes escríbenos."
+    base = f"Tu Plan {nombre} permite {tope_} {_QUE[recurso]}."
+    if destino:
+        return f"{base} Para sumar más pásate al Plan {PLANES[destino]['nombre']}."
+    if recurso == "profesionales":
+        extra = f"{PRECIO_PROFESIONAL_EXTRA:,}".replace(",", ".")
+        return f"{base} Escríbenos y sumamos más por ${extra} al mes cada uno."
     return f"{base} Escríbenos si necesitas más."
 
 
@@ -129,14 +221,12 @@ class LimitePlanError(Exception):
         """Cuerpo JSON + 403. `code` le dice al front que muestre el aviso de
         cambio de plan en vez del error normal."""
         actual = plan_de(self.plan_id)["nombre"]
-        # Sedes: ningun plan las suma todavia, se habla por WhatsApp.
-        destino = None if self.recurso == "sedes" else (_SIGUIENTE.get(self.plan_id) or (None,))[0]
+        destino = plan_para_crecer(self.plan_id, self.recurso)
         if destino:
             texto = f"Hola, tengo el Plan {actual} de Turnio y quiero pasarme al Plan {PLANES[destino]['nombre']}."
             cta = f"Pasarme al Plan {PLANES[destino]['nombre']}"
         else:
-            falta = "más sedes" if self.recurso == "sedes" else "más usuarios"
-            texto = f"Hola, tengo el Plan {actual} de Turnio y necesito {falta}."
+            texto = f"Hola, tengo el Plan {actual} de Turnio y necesito más {_QUE[self.recurso]}."
             cta = "Escribirnos por WhatsApp"
         return {
             "ok": False,
@@ -146,7 +236,7 @@ class LimitePlanError(Exception):
             "msg": str(self),
             "accion_url": WHATSAPP + "?text=" + quote(texto),
             "accion_texto": cta,
-            "beneficios": list(_SIGUIENTE.get(self.plan_id, (None, ()))[1]),
+            "beneficios": list(_BENEFICIOS.get(destino, ())),
         }, 403
 
 
@@ -158,64 +248,77 @@ def _contar_sedes(cur, id_tienda: int) -> int:
     return int(cur.fetchone()["n"])
 
 
-def _contar_usuarios(cur, id_tienda: int) -> int:
-    cur.execute(
+_CONTEO = {
+    "profesionales": (
         "SELECT COUNT(*) AS n FROM usuarios "
-        "WHERE id_tienda = %s AND estado_activo = 1 AND rol <> 'Master'",
-        (id_tienda,),
-    )
+        "WHERE id_tienda = %s AND estado_activo = 1 AND rol = 'Profesional'"
+    ),
+    "administradores": (
+        "SELECT COUNT(*) AS n FROM usuarios "
+        "WHERE id_tienda = %s AND estado_activo = 1 AND rol = 'Admin'"
+    ),
+    "productos": "SELECT COUNT(*) AS n FROM productos WHERE id_tienda = %s AND estado_activo = 1",
+}
+
+
+def _contar(cur, id_tienda: int, recurso: str) -> int:
+    if recurso == "sedes":
+        return _contar_sedes(cur, id_tienda)
+    cur.execute(_CONTEO[recurso], (id_tienda,))
     return int(cur.fetchone()["n"])
 
 
 def verificar_limite(cur, id_tienda: int, recurso: str) -> None:
-    """Lanza LimitePlanError si agregar uno mas de `recurso` ('sedes' o
-    'usuarios') pasa el tope del plan.
+    """Lanza LimitePlanError si agregar uno mas de `recurso` ('sedes',
+    'profesionales', 'administradores' o 'productos') pasa el tope del plan.
 
     `cur` debe ser un cursor dictionary=True dentro de la transaccion del alta.
     El FOR UPDATE bloquea la fila de la tienda hasta el commit del llamador:
     dos altas simultaneas no pueden pasar las dos el conteo."""
+    if recurso != "sedes" and recurso not in _CONTEO:
+        raise ValueError(f"Recurso desconocido: {recurso}")
     cur.execute("SELECT plan_id FROM tiendas WHERE id_tienda = %s FOR UPDATE", (id_tienda,))
     plan_id = normalizar_plan((cur.fetchone() or {}).get("plan_id"))
-    sedes = _contar_sedes(cur, id_tienda)
-    if recurso == "sedes":
-        tope = tope_sedes(plan_id)
-        if sedes >= tope:
-            raise LimitePlanError("sedes", plan_id, tope)
-        return
-    if recurso == "usuarios":
-        tope = tope_usuarios(plan_id, sedes)
-        if tope is not None and _contar_usuarios(cur, id_tienda) >= tope:
-            raise LimitePlanError("usuarios", plan_id, tope)
-        return
-    raise ValueError(f"Recurso desconocido: {recurso}")
+    tope_ = tope(plan_id, recurso, _contar_sedes(cur, id_tienda))
+    if tope_ is not None and _contar(cur, id_tienda, recurso) >= tope_:
+        raise LimitePlanError(recurso, plan_id, tope_)
+
+
+def verificar_limite_rol(cur, id_tienda: int, rol: str) -> None:
+    """verificar_limite para sumar un usuario con `rol` (Recepcion no topa)."""
+    recurso = recurso_de_rol(rol)
+    if recurso:
+        verificar_limite(cur, id_tienda, recurso)
 
 
 def verificar_cambio_plan(cur, id_tienda: int, plan_nuevo: str) -> None:
     """ValueError si el negocio usa mas de lo que el plan nuevo permite.
 
-    Bajar a un plan con menos sedes o usuarios de los que el negocio tiene
-    activos dejaria datos fuera de plan: primero hay que quitarlos. Mismo
-    FOR UPDATE que verificar_limite.
+    Bajar a un plan con menos sedes, profesionales, administradores o
+    productos de los que el negocio tiene activos dejaria datos fuera de plan:
+    primero hay que quitarlos. Mismo FOR UPDATE que verificar_limite.
     """
     if plan_nuevo not in PLANES:
         raise ValueError("Plan invalido.")
     cur.execute("SELECT 1 FROM tiendas WHERE id_tienda = %s FOR UPDATE", (id_tienda,))
     cur.fetchone()
     sedes = _contar_sedes(cur, id_tienda)
-    tope = tope_sedes(plan_nuevo)
     nombre = PLANES[plan_nuevo]["nombre"]
-    if sedes > tope:
-        raise ValueError(
-            f"El negocio tiene {sedes} sedes activas y el Plan {nombre} permite {tope}. "
-            "Elimina las sedes de sobra antes de cambiar de plan."
-        )
-    usuarios = _contar_usuarios(cur, id_tienda)
-    tope_u = tope_usuarios(plan_nuevo, sedes)
-    if tope_u is not None and usuarios > tope_u:
-        raise ValueError(
-            f"El negocio tiene {usuarios} usuarios activos y el Plan {nombre} permite {tope_u}. "
-            "Desactiva usuarios antes de cambiar de plan."
-        )
+    for recurso, accion in (
+        ("sedes", "Elimina las sedes de sobra"),
+        ("profesionales", "Desactiva profesionales"),
+        ("administradores", "Cambia de rol o desactiva administradores"),
+        ("productos", "Desactiva productos"),
+    ):
+        tope_ = tope(plan_nuevo, recurso, sedes)
+        if tope_ is None:
+            continue
+        n = sedes if recurso == "sedes" else _contar(cur, id_tienda, recurso)
+        if n > tope_:
+            raise ValueError(
+                f"El negocio tiene {n} {_QUE[recurso]} y el Plan {nombre} permite {tope_}. "
+                f"{accion} antes de cambiar de plan."
+            )
 
 
 def requiere_funcion(funcion: str):
