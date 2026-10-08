@@ -1,10 +1,10 @@
 """Panel Master: alta de negocios, plan, suscripcion y baja.
 
-Tomado de jemPOS Chef. Por ahora sin registro publico, igual que jemPOS: el
-Master crea el negocio y este arranca con la prueba gratis (DIAS_PRUEBA dias
-del plan PLAN_PRUEBA, hoy 14 dias del Pro). Al registrar el primer pago el
-Master le pone el plan que eligio. El registro abierto (POST /auth/register)
-es la tarea T3 y reutilizara crear_negocio.
+Tomado de jemPOS Chef. El negocio lo crea el Master desde su panel o el
+dueno desde el registro abierto (/registro, T3); los dos usan crear_negocio y
+arrancan con la prueba gratis (DIAS_PRUEBA dias del plan PLAN_PRUEBA, hoy 14
+dias del Pro). Al registrar el primer pago el Master le pone el plan que
+eligio.
 """
 from __future__ import annotations
 

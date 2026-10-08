@@ -43,7 +43,11 @@ def api_crear():
         id_tienda = master_service.crear_negocio(request.get_json(silent=True) or {})
     except _ERRORES as exc:
         return _error(exc)
-    return jsonify({"ok": True, "id_tienda": id_tienda, "msg": "Negocio creado con un mes de prueba."}), 201
+    return jsonify({
+        "ok": True, "id_tienda": id_tienda,
+        "msg": f"Negocio creado con {plan_service.DIAS_PRUEBA} días de prueba del plan "
+               f"{plan_service.PLANES[plan_service.PLAN_PRUEBA]['nombre']}.",
+    }), 201
 
 
 @master.put("/api/master/negocios/<int:id_tienda>/plan")

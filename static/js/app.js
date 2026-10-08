@@ -5,6 +5,8 @@
  *
  * Sin JS inline (la CSP lo bloquea). Con ok recarga la pagina; con error
  * muestra el mensaje y, si es un limite del plan, el enlace para subir.
+ * Si la respuesta trae `invitacion` (equipo), muestra el enlace con botones
+ * de WhatsApp y copiar, y recarga al cerrar el aviso.
  */
 (function () {
   'use strict';
@@ -29,6 +31,44 @@
     caja.scrollIntoView({ block: 'nearest' });
   }
 
+  function crearBoton(texto, clase) {
+    var b = document.createElement(clase === 'a' ? 'a' : 'button');
+    b.className = 'btn';
+    b.textContent = texto;
+    if (clase !== 'a') b.type = 'button';
+    return b;
+  }
+
+  function mostrarInvitacion(msg, inv) {
+    var caja = document.getElementById('mensaje');
+    if (!caja) { window.prompt(msg, inv.enlace); window.location.reload(); return; }
+    caja.textContent = msg;
+    caja.className = 'aviso aviso--ok';
+    var campo = document.createElement('input');
+    campo.readOnly = true;
+    campo.value = inv.enlace;
+    campo.setAttribute('aria-label', 'Enlace de invitación');
+    var wa = crearBoton('Enviar por WhatsApp', 'a');
+    wa.href = inv.whatsapp;
+    wa.target = '_blank';
+    wa.rel = 'noopener';
+    var copiar = crearBoton('Copiar');
+    copiar.addEventListener('click', function () {
+      campo.select();
+      if (navigator.clipboard) navigator.clipboard.writeText(inv.enlace);
+      else document.execCommand('copy');
+      copiar.textContent = 'Copiado';
+    });
+    var listo = crearBoton('Listo');
+    listo.addEventListener('click', function () { window.location.reload(); });
+    var fila = document.createElement('div');
+    fila.className = 'form form--fila';
+    [campo, wa, copiar, listo].forEach(function (el) { fila.appendChild(el); });
+    caja.appendChild(fila);
+    caja.hidden = false;
+    caja.scrollIntoView({ block: 'nearest' });
+  }
+
   function llamar(spec, cuerpo, boton) {
     var partes = spec.split(' ');
     if (boton) boton.disabled = true;
@@ -48,6 +88,10 @@
       })
       .then(function (data) {
         if (!data) return;
+        if (data.ok && data.invitacion) {
+          mostrarInvitacion(data.msg, data.invitacion);
+          return;
+        }
         if (data.ok) {
           mostrar(data.msg || 'Listo.', false);
           window.setTimeout(function () { window.location.reload(); }, 600);

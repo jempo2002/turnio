@@ -1,0 +1,17 @@
+{% extends "auth/_base_auth.html" %}
+{% block title %}Aceptar invitación{% endblock %}
+{% block content %}
+<h1>Hola, {{ usuario.nombre_completo }}</h1>
+<p class="muted">Te invitaron a {{ usuario.nombre_negocio }}. Elige tu contraseña para entrar con {{ usuario.correo }}.</p>
+<form method="post" class="form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <label>Contraseña
+    <input type="password" name="password" autocomplete="new-password" minlength="8" maxlength="128" required autofocus />
+  </label>
+  <label>Repítela
+    <input type="password" name="confirm_password" autocomplete="new-password" minlength="8" maxlength="128" required />
+  </label>
+  <p class="muted">Mínimo 8 caracteres, con una mayúscula, una minúscula y un número.</p>
+  <button class="btn btn--primario" type="submit">Entrar</button>
+</form>
+{% endblock %}

@@ -1,11 +1,16 @@
 """Sedes y equipo del negocio (rol Admin). Tomado de jemPOS Chef."""
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, render_template, request, session
+import html
+from urllib.parse import quote
+
+from flask import Blueprint, current_app, jsonify, render_template, request, session, url_for
 
 from app.services import sede_service, usuario_service
+from app.services.auth_service import DIAS_INVITACION, create_invite_token
 from app.services.plan_service import LimitePlanError
 from app.utils.decorators import login_required, roles_required
+from app.utils.mail import send_invite_email_async
 
 negocio = Blueprint("negocio", __name__)
 
@@ -81,15 +86,57 @@ def equipo_page():
     )
 
 
+def _enlace_whatsapp(telefono: str | None, texto: str) -> str:
+    """wa.me al numero si es un celular colombiano; si no, WhatsApp abre para
+    elegir el contacto."""
+    destino = f"57{telefono}" if telefono and len(telefono) == 10 and telefono.startswith("3") else ""
+    return f"https://wa.me/{destino}?text={quote(texto)}"
+
+
+def _invitacion(id_usuario: int) -> dict:
+    """Arma el enlace de invitacion, lo manda por correo (si hay SMTP) y lo
+    devuelve para que el Admin lo comparta por WhatsApp."""
+    usuario = usuario_service.datos_invitacion(session["id_tienda"], id_usuario)
+    token = create_invite_token(current_app.secret_key, usuario["correo"], usuario["clave_hash"])
+    enlace = url_for("auth.invitacion", token=token, _external=True)
+    send_invite_email_async(usuario["correo"], usuario["nombre_negocio"], enlace)
+    nombre = html.unescape(usuario["nombre_completo"]).split()[0]
+    negocio = html.unescape(usuario["nombre_negocio"])
+    texto = (
+        f"Hola {nombre}, te invito a {negocio} en Turnio. "
+        f"Elige tu contraseña aquí (vale {DIAS_INVITACION} días): {enlace}"
+    )
+    return {"enlace": enlace, "whatsapp": _enlace_whatsapp(usuario["telefono"], texto)}
+
+
 @negocio.post("/api/usuarios")
 @login_required
 @roles_required("Admin")
 def api_usuarios_crear():
+    data = _json()
     try:
-        id_usuario = usuario_service.crear_usuario(session["id_tienda"], _json())
+        id_usuario = usuario_service.crear_usuario(session["id_tienda"], data)
     except _ERRORES as exc:
         return _error(exc)
-    return jsonify({"ok": True, "id_usuario": id_usuario, "msg": "Usuario creado."}), 201
+    cuerpo = {"ok": True, "id_usuario": id_usuario, "msg": "Usuario creado."}
+    if not data.get("password"):
+        cuerpo.update(
+            invitacion=_invitacion(id_usuario),
+            msg="Usuario creado. Mándale este enlace para que elija su contraseña:",
+        )
+    return jsonify(cuerpo), 201
+
+
+@negocio.post("/api/usuarios/<int:id_usuario>/invitacion")
+@login_required
+@roles_required("Admin")
+def api_usuarios_invitacion(id_usuario):
+    """Enlace nuevo para quien aun no acepta (el anterior vencio o se perdio)."""
+    try:
+        invitacion = _invitacion(id_usuario)
+    except _ERRORES as exc:
+        return _error(exc)
+    return jsonify({"ok": True, "invitacion": invitacion, "msg": "Mándale este enlace para que elija su contraseña:"})
 
 
 @negocio.put("/api/usuarios/<int:id_usuario>")

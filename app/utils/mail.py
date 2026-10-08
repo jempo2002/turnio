@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import logging
 import os
 import smtplib
@@ -98,6 +99,49 @@ def build_recovery_email_message(sender: str, destinatario: str, enlace: str) ->
     return msg
 
 
+def build_invite_email_message(sender: str, destinatario: str, negocio: str, enlace: str) -> MIMEMultipart:
+    """Invitacion al equipo de un negocio. `negocio` ya viene escapado para HTML."""
+    nombre_plano = html.unescape(negocio)
+    subject = f"Te invitaron a {nombre_plano} en Turnio"
+    cuerpo_texto = (
+        f"Hola, te invitaron a trabajar con {nombre_plano} en Turnio.\n"
+        "Abre el enlace para elegir tu contraseña y entrar:\n\n"
+        f"{enlace}\n\n"
+        "El enlace es válido por 7 días y sirve una sola vez.\n"
+    )
+    cuerpo_html = f"""
+    <html>
+      <body style="font-family: Arial, sans-serif; background-color: #f8fafc; color: #0f172a; padding: 24px;">
+        <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0;
+                    border-radius: 16px; padding: 24px;">
+          <h2 style="margin: 0 0 12px; color: #0f172a;">Te invitaron a {negocio}</h2>
+          <p style="margin: 0 0 16px; color: #475569; line-height: 1.5;">
+            Elige tu contraseña para entrar a Turnio y ver tu agenda.
+          </p>
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="{enlace}"
+               style="background: #17748E; color: #ffffff; text-decoration: none; padding: 12px 24px;
+                      border-radius: 12px; display: inline-block; font-weight: 600;">
+              Aceptar invitación
+            </a>
+          </div>
+          <p style="margin: 0; color: #94a3b8; font-size: 13px;">
+            El enlace es válido por 7 días y sirve una sola vez.
+          </p>
+        </div>
+      </body>
+    </html>
+    """
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = sender
+    msg["To"] = destinatario
+    msg.attach(MIMEText(cuerpo_texto, "plain", "utf-8"))
+    msg.attach(MIMEText(cuerpo_html, "html", "utf-8"))
+    return msg
+
+
 def _enviar_smtp(destinatario: str, construir: Callable[[str], MIMEMultipart]) -> None:
     """Send the message built by `construir(sender)` using SMTP env configuration."""
     sender = os.getenv("EMAIL_SENDER")
@@ -144,3 +188,16 @@ def send_recovery_email_async(destinatario: str, enlace: str) -> None:
             destinatario,
             exc_info=True,
         )
+
+
+@run_async
+def send_invite_email_async(destinatario: str, negocio: str, enlace: str) -> None:
+    """Igual que send_recovery_email_async: los fallos van al log. Sin SMTP
+    configurado el Admin igual tiene el enlace para mandarlo por WhatsApp."""
+    try:
+        _enviar_smtp(
+            destinatario,
+            lambda sender: build_invite_email_message(sender, destinatario, negocio, enlace),
+        )
+    except Exception:
+        _get_mail_logger().error("Failed to send invite email to %s", destinatario, exc_info=True)

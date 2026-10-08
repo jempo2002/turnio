@@ -114,6 +114,7 @@ main   ← producción (Railway "production"). Solo se toca con tu confirmación
 
 ### Fase 1: Backend completo
 **T3. Autenticación y registro de negocios.** `POST /auth/register` (crea negocio + dueño, genera slug), `POST /auth/login` (bcrypt + JWT propio), invitar profesionales, roles owner/admin/staff.
+*Hecho (PR de T3):* `/registro` y `POST /api/auth/register` (negocio + sede principal + Admin, slug único, 14 días del Pro), invitaciones por enlace de WhatsApp o correo, roles Admin/Recepción/Profesional (equivalen a owner/admin/staff) y test de aislamiento entre dos negocios. En vez de JWT propio se usa la sesión de jemPOS (cookie segura + Redis, revalidada en cada petición) y el hash de Werkzeug en vez de bcrypt: el panel y la API viven en el mismo dominio, así que no hace falta un token aparte.
 *Listo cuando:* un negocio nuevo se registra, entra y solo ve sus datos (test de aislamiento entre dos tenants).
 
 **T4. API de catálogo y configuración.** CRUD de servicios, profesionales (foto, comisión), horario del negocio y datos del local.

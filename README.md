@@ -6,7 +6,7 @@ Reglas de trabajo y ramas: [CLAUDE.md](CLAUDE.md). Plan hasta el deploy: [docs/a
 
 ## Qué hay en el repo
 
-- **App Flask** (`app/`, `templates/`, `static/`, `migrations/`, `scripts/`, `tests/`): el backend de Turnio, construido sobre la base de jemPOS Chef (Flask + MySQL + Redis). Hoy trae login, recuperación de contraseña, sesiones revalidadas en cada petición, modo solo lectura al vencer la suscripción, cabeceras de seguridad, planes, panel Master, sedes y equipo. La agenda, la caja y el inventario van encima en las tareas T3 a T6.
+- **App Flask** (`app/`, `templates/`, `static/`, `migrations/`, `scripts/`, `tests/`): el backend de Turnio, construido sobre la base de jemPOS Chef (Flask + MySQL + Redis). Hoy trae registro de negocios, login, invitaciones al equipo, recuperación de contraseña, sesiones revalidadas en cada petición, modo solo lectura al vencer la suscripción, cabeceras de seguridad, planes, panel Master, sedes y equipo. La agenda, la caja y el inventario van encima en las tareas T3 a T6.
 - **Prototipo del frontend** (`index.html`, `login.html`, `citas.html`, `caja.html`, `inventario.html`, `configuracion.html`, `reservar.html`): datos en `localStorage`, es el diseño de referencia de las pantallas. Para verlo: `python3 -m http.server 8000`.
 - **Backend Node** (`backend/`): el primer backend (Express + PostgreSQL). Ya no se desarrolla; queda como referencia hasta portar sus piezas (candado de reservas, cobro atómico, reservas públicas) en T6 y T8, y entonces se borra.
 
@@ -26,7 +26,9 @@ Tomado de jemPOS Chef (que no se modifica):
 
 Lo propio de Turnio:
 
-- **Roles**: Master (administra los negocios), Admin (dueño o encargado), Recepción y Profesional (quien atiende; sus citas y comisiones van a su nombre).
+- **Registro abierto** (`/registro` y `POST /api/auth/register`, T3): el dueño crea su negocio, su sede principal y su cuenta de Admin en un paso y entra de una vez, con la prueba gratis. Límite de 5 registros por hora por IP y campo trampa contra bots. El Master también puede crear negocios desde su panel (misma función, `crear_negocio`).
+- **Invitaciones al equipo** (T3): en `/equipo`, si el Admin deja la contraseña vacía, la persona queda invitada y el Admin recibe un enlace con botón de WhatsApp (también sale por correo si hay SMTP). Con el enlace (`/invitacion/<token>`, 7 días, un solo uso) elige su contraseña y entra. Mientras no la acepte, el Admin puede sacar un enlace nuevo; después ya no (usa "Olvidé mi contraseña").
+- **Roles**: Master (administra los negocios), Admin (dueño o encargado: configura el negocio y ve todo), Recepción (agenda y caja de todos) y Profesional (quien atiende; sus citas y comisiones van a su nombre). Cada negocio solo ve lo suyo: los servicios filtran por `id_tienda` de la sesión, y un ID de otro negocio responde 404 (`tests/test_registro.py`).
 - **Planes** (aprobados el 2026-10-08, los mismos del landing; fuente única en `app/services/plan_service.py`):
   - Básico $49.000/mes: 1 sede, hasta 3 profesionales con agenda, 1 Admin y 150 productos.
   - Pro $89.000/mes: 1 sede, hasta 10 profesionales, 2 Admin, productos sin tope, asistente con IA, comisiones y recordatorios automáticos por WhatsApp (500 mensajes al mes).
