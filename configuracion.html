@@ -8,6 +8,7 @@
 <meta name="robots" content="noindex">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="theme.js"></script>
+<script src="datos.js"></script>
 </head>
 
 <body class="min-h-screen bg-slate-100 font-sans text-brand-darkest antialiased">
@@ -317,7 +318,9 @@
   /* ══ Cerrar sesión: acción destructiva, se confirma (Nielsen #5) ══ */
   $('btn-salir').addEventListener('click', function () {
     window.confirmar('¿Cerrar sesión?', 'Tendrás que volver a ingresar en este dispositivo.', 'Cerrar sesión').then(function (si) {
-      if (si) location.href = 'login.html';
+      if (!si) return;
+      window.salir();
+      location.href = 'login.html';
     });
   });
 

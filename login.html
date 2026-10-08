@@ -9,6 +9,7 @@
 <meta name="robots" content="noindex">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="theme.js"></script>
+<script src="datos.js"></script>
 </head>
 
 <body class="flex min-h-screen min-h-[100dvh] bg-slate-100 font-sans text-brand-darkest antialiased selection:bg-brand-light/60">
@@ -99,6 +100,7 @@
     <p class="mt-5 text-center text-xs text-brand-darkest/50">
       <a href="citas.html" class="rounded font-medium underline underline-offset-4 transition hover:text-brand-dark">Ver el panel de demo</a>
     </p>
+    <p class="mt-2 text-center text-xs text-brand-darkest/45">Demo: entra como carlos@elcuartel.co o junior@elcuartel.co</p>
 
     <p class="mt-6 text-center text-xs text-brand-darkest/45">
       © 2026 Turnio · <a href="#" class="underline-offset-2 transition hover:text-brand-dark hover:underline">Términos y privacidad</a>
@@ -108,10 +110,12 @@
 
 <script>
   // ponytail: sin backend todavía, cualquier correo y clave válidos entran al panel de demo.
+  // El correo decide con qué profesional se entra (carlos@ o junior@elcuartel.co); otro correo entra como el primero.
   // Cuando exista la API de autenticación, el fetch va aquí y el spinner ya está puesto.
   document.getElementById('form-login').addEventListener('submit', function (e) {
     e.preventDefault();
     this.querySelector('[type=submit]').setAttribute('aria-busy', 'true');
+    window.entrar(this.email.value);
     location.href = 'citas.html';
   });
 </script>

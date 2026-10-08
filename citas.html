@@ -57,13 +57,14 @@
         </svg>
         Copiar link
       </button>
-      <button type="button" id="btn-vista-cliente"
-              class="flex items-center justify-center gap-2 rounded-2xl border border-brand-light bg-white px-2 text-xs font-semibold transition hover:bg-slate-50 active:scale-95">
+      <!-- Abre la página pública en otra pestaña: lo que pase aquí se refleja allá al instante -->
+      <a href="reservar.html" target="_blank" rel="noopener"
+         class="flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border border-brand-light bg-white px-2 text-xs font-semibold transition hover:bg-slate-50 active:scale-95">
         <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle>
         </svg>
         Vista cliente
-      </button>
+      </a>
     </div>
   </header>
 
@@ -173,11 +174,14 @@
       <p id="pago-total" class="shrink-0 text-2xl font-semibold tracking-tight"></p>
     </div>
 
-    <fieldset class="mt-4">
-      <legend class="text-sm font-semibold">¿Quién atendió?</legend>
-      <div id="pago-barberos" class="mt-2 grid grid-cols-2 gap-2"></div>
-      <p id="pago-reparto" class="mt-2 text-xs text-brand-darkest/55"></p>
-    </fieldset>
+    <!-- Quien cobra es quien tiene la sesión abierta: no se elige a mano -->
+    <div class="mt-4 flex items-center gap-3 rounded-2xl border border-brand-light p-3">
+      <span id="pago-iniciales" class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-dark text-xs font-bold text-white" aria-hidden="true"></span>
+      <div class="min-w-0 flex-1">
+        <p id="pago-atiende" class="truncate text-sm font-semibold"></p>
+        <p id="pago-reparto" class="text-xs text-brand-darkest/55"></p>
+      </div>
+    </div>
 
     <p class="mt-4 text-sm font-semibold">¿Cómo pagó?</p>
     <div id="pago-cita" class="mt-2"></div>
@@ -188,7 +192,7 @@
   </div>
 </dialog>
 
-<!-- ═══════════ HOJA: RESERVA (agenda manual y vista cliente comparten formulario) ═══════════ -->
+<!-- ═══════════ HOJA: AGENDA MANUAL (la reserva del cliente final vive en reservar.html) ═══════════ -->
 <dialog id="sheet-cliente" aria-labelledby="sheet-titulo"
         class="mx-auto mb-0 mt-auto max-h-[92vh] w-full max-w-md overflow-y-auto overflow-x-hidden rounded-t-3xl bg-white p-0 text-brand-darkest shadow-lift">
 
@@ -198,23 +202,14 @@
 
     <div class="mt-4 flex items-start justify-between gap-3">
       <div class="min-w-0">
-        <p id="sheet-eyebrow" class="text-[10px] font-bold uppercase tracking-wide text-brand-dark"></p>
-        <h2 id="sheet-titulo" class="text-lg font-semibold tracking-tight"></h2>
+        <p id="sheet-eyebrow" class="truncate text-[10px] font-bold uppercase tracking-wide text-brand-dark"></p>
+        <h2 id="sheet-titulo" class="text-lg font-semibold tracking-tight">Nueva cita</h2>
       </div>
       <form method="dialog">
         <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar">
           <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
         </button>
       </form>
-    </div>
-
-    <!-- Encabezado del negocio: solo en la vista cliente -->
-    <div id="sheet-negocio" class="mt-4 flex items-center gap-3 rounded-2xl bg-slate-100 p-3">
-      <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-dark text-lg font-bold text-white">EC</span>
-      <div class="min-w-0">
-        <p class="truncate text-base font-semibold">Barbería El Cuartel</p>
-        <p class="truncate text-xs text-brand-darkest/55">Cra. 45 #12-30 · Abierto hasta las 20:00</p>
-      </div>
     </div>
 
     <form id="form-reserva" class="mt-5 space-y-5">
@@ -243,30 +238,17 @@
         <div>
           <label for="telefono" class="sr-only">WhatsApp</label>
           <input id="telefono" name="telefono" type="tel" inputmode="tel" autocomplete="tel"
-                 pattern="[0-9+ ()-]{7,20}" maxlength="20" placeholder="WhatsApp (ej. 300 111 2233)"
+                 pattern="[0-9+ \(\)\-]{7,20}" maxlength="20" placeholder="WhatsApp (ej. 300 111 2233)"
                  class="block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
-          <p id="tel-ayuda" class="mt-1.5 text-xs text-brand-darkest/50"></p>
+          <p class="mt-1.5 text-xs text-brand-darkest/50">Opcional. Sirve para mandarle el recordatorio.</p>
         </div>
       </fieldset>
 
-      <button type="submit" id="btn-confirmar"
+      <button type="submit"
               class="w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98]">
+        Agendar cita
       </button>
     </form>
-
-    <!-- Confirmación: solo en la vista cliente (la agenda manual cierra y avisa con un toast) -->
-    <div id="reserva-ok" class="mt-5 hidden rounded-2xl bg-slate-100 p-5 text-center">
-      <span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">
-        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6.5L9.5 17 4 11.5"></path></svg>
-      </span>
-      <p class="mt-3 text-base font-semibold">¡Cita reservada!</p>
-      <p id="reserva-detalle" class="mt-1 text-sm text-brand-darkest/60"></p>
-      <button type="button" id="btn-otra" class="mt-2 text-sm font-semibold text-brand-dark underline underline-offset-4">Simular otra reserva</button>
-    </div>
-
-    <p id="sheet-nota" class="mt-4 text-center text-xs text-brand-darkest/45">
-      Las reservas que entren por aquí aparecen solas en tu agenda.
-    </p>
   </div>
 </dialog>
 
@@ -290,14 +272,19 @@
     });
   }
 
+  /* Quien tiene la sesión abierta: ve su agenda y los cobros quedan a su nombre */
+  var yo = window.sesion();
+
+  /* Horas en las que yo no tengo un turno vigente */
   function libres() {
-    return citas.filter(function (c) { return c.estado === 'disponible'; });
+    return window.horasAgenda(citas).filter(function (hora) { return !window.ocupado(citas, hora, yo); });
   }
 
   /* ══ Cabecera: fecha y saludo reales ══ */
   var hoy = new Date();
   var h = hoy.getHours();
-  $('saludo').textContent = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+  $('saludo').textContent = (h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches') + ', ' + yo;
+  $('sheet-eyebrow').textContent = 'Agenda de ' + yo;
   $('fecha').textContent = hoy.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
   var ahora = String(h).padStart(2, '0') + ':' + String(hoy.getMinutes()).padStart(2, '0');
 
@@ -372,7 +359,7 @@
 
     var visibles = 0, marcado = false;
     $lista.innerHTML = citas.map(function (c, i) {
-      if (filtro !== 'todas' && c.estado !== filtro) return '';
+      if (c.barbero !== yo || (filtro !== 'todas' && c.estado !== filtro)) return '';
       /* La marca "Ahora" va antes del primer turno futuro, si ya pasó alguno */
       var marca = '';
       if (!marcado && c.hora > ahora) { marcado = true; if (visibles) marca = MARCA_AHORA; }
@@ -382,7 +369,7 @@
 
     $('vacio').classList.toggle('hidden', visibles > 0);
 
-    $('n-reservadas').textContent = citas.filter(function (c) { return c.estado === 'reservada'; }).length;
+    $('n-reservadas').textContent = citas.filter(function (c) { return c.barbero === yo && c.estado === 'reservada'; }).length;
     $('n-libres').textContent = libres().length;
     $('n-caja').textContent = window.pesos(movimientos.reduce(function (t, m) {
       return t + (m.tipo === 'ingreso' ? m.monto : -m.monto);
@@ -403,7 +390,7 @@
   /* ── Acciones sobre la lista (delegación: la lista se repinta entera) ── */
   $lista.addEventListener('click', function (e) {
     var slot = e.target.closest('[data-agendar]');
-    if (slot) { abrir('manual', citas[Number(slot.dataset.agendar)].hora); return; }
+    if (slot) { abrir(citas[Number(slot.dataset.agendar)].hora); return; }
 
     var b = e.target.closest('[data-accion]');
     if (!b) return;
@@ -412,6 +399,11 @@
     if (b.dataset.accion === 'completar') {
       abrirPago(c);
     } else if (b.dataset.accion === 'reabrir') {
+      /* Al completarla, la franja quedó libre y pudo entrar otra reserva: no caben dos */
+      if (window.ocupado(citas, c.hora, yo)) {
+        window.toast('Ya tienes otro turno a las ' + c.hora + '. Libéralo primero.', 'error');
+        return;
+      }
       /* Deshacer también retira el cobro de la caja: se confirma */
       window.confirmar(
         '¿Deshacer el cobro de ' + c.cliente + '?',
@@ -420,7 +412,7 @@
       ).then(function (si) {
         if (!si) return;
         for (var k = movimientos.length - 1; k >= 0; k--) {
-          if (movimientos[k].cita === c.hora) movimientos.splice(k, 1);
+          if (movimientos[k].cita === c.id) movimientos.splice(k, 1);
         }
         c.estado = 'reservada';
         pintar();
@@ -452,21 +444,15 @@
     );
   });
 
-  /* ══ Hoja de reserva: un formulario, dos modos ══ */
-  var MODO = {
-    manual:  { eyebrow: 'Agenda manual',    titulo: 'Nueva cita',           boton: 'Agendar cita',      ayuda: 'Opcional. Sirve para mandarle el recordatorio.' },
-    cliente: { eyebrow: 'Previsualización', titulo: 'Así lo ve tu cliente', boton: 'Confirmar reserva', ayuda: 'Te llega el recordatorio por aquí. No se comparte con nadie.' }
-  };
-  var modo = 'manual';
+  /* ══ Agenda manual: la cita queda en la agenda de quien tiene la sesión ══ */
   var sheet = $('sheet-cliente');
   var form = $('form-reserva');
-  var ok = $('reserva-ok');
   var $hora = $('hora');
 
   function llenarHoras() {
     var l = libres();
     $hora.innerHTML = l.length
-      ? l.map(function (c) { return '<option value="' + c.hora + '">' + c.hora + '</option>'; }).join('')
+      ? l.map(function (hora) { return '<option value="' + esc(hora) + '">' + esc(hora) + '</option>'; }).join('')
       : '<option value="">Hoy no quedan horas libres</option>';
     $hora.disabled = l.length === 0;
   }
@@ -482,63 +468,40 @@
     }).join('');
   }
 
-  function abrir(m, hora) {
+  function abrir(hora) {
     if (!servicios.length) { window.toast('Crea primero un servicio en Inventario', 'error'); return; }
-    if (m === 'manual' && !libres().length) { window.toast('Hoy no quedan horas libres', 'error'); return; }
-    modo = m;
-    var t = MODO[m], manual = m === 'manual';
+    if (!libres().length) { window.toast('Hoy no quedan horas libres', 'error'); return; }
 
     llenarServicios();
     form.reset();
-    form.classList.remove('hidden', 'enviado');
-    ok.classList.add('hidden');
+    form.classList.remove('enviado');
     llenarHoras();
-    if (libres().some(function (c) { return c.hora === hora; })) $hora.value = hora;
+    if (libres().indexOf(hora) >= 0) $hora.value = hora;
 
-    $('sheet-eyebrow').textContent = t.eyebrow;
-    $('sheet-titulo').textContent = t.titulo;
-    $('btn-confirmar').textContent = t.boton;
-    $('tel-ayuda').textContent = t.ayuda;
-    $('sheet-negocio').classList.toggle('hidden', manual);
-    $('sheet-nota').classList.toggle('hidden', manual);
-    $('telefono').required = !manual;
+    sheet.showModal();
 
-    if (!sheet.open) sheet.showModal();
-
-    /* Agenda manual: primer servicio ya marcado y cursor en el nombre.
+    /* Primer servicio ya marcado y cursor en el nombre.
        Queda en 2 toques: el turno libre y "Agendar cita". */
-    if (manual) {
-      form.querySelector('input[name="servicio"]').checked = true;
-      $('nombre').focus();
-    }
+    form.querySelector('input[name="servicio"]').checked = true;
+    $('nombre').focus();
   }
-
-  $('btn-vista-cliente').addEventListener('click', function () { abrir('cliente'); });
-  $('btn-otra').addEventListener('click', function () { abrir('cliente'); });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var datos = new FormData(form);
-    var hora = datos.get('hora');
-    var cita = citas.find(function (c) { return c.hora === hora && c.estado === 'disponible'; });
+    var s = servicios[Number(datos.get('servicio'))];
+    var cita = s && window.reservar(citas, String(datos.get('hora')), yo, {
+      cliente: String(datos.get('nombre')).trim(),
+      tel: String(datos.get('telefono')).replace(/[^0-9]/g, ''),
+      servicio: s.nombre,
+      precio: s.precio
+    });
+    /* Pudo entrar una reserva online mientras la hoja estaba abierta */
     if (!cita) { window.toast('Esa hora ya se ocupó. Elige otra.', 'error'); llenarHoras(); return; }
 
-    var s = servicios[Number(datos.get('servicio'))];
-    cita.cliente = String(datos.get('nombre')).trim();
-    cita.tel = String(datos.get('telefono')).replace(/[^0-9]/g, '');
-    cita.servicio = s.nombre;
-    cita.precio = s.precio;
-    cita.estado = 'reservada';
     pintar();
-
-    if (modo === 'manual') {
-      sheet.close();
-      window.toast('✓ ' + cita.cliente + ' agendado a las ' + cita.hora);
-    } else {
-      $('reserva-detalle').textContent = cita.servicio + ' · hoy a las ' + cita.hora + ' · ' + window.pesos(cita.precio);
-      form.classList.add('hidden');
-      ok.classList.remove('hidden');
-    }
+    sheet.close();
+    window.toast('✓ ' + cita.cliente + ' agendado a las ' + cita.hora);
   });
 
   /* ══ Selector de pago (lo usan Venta rápida y Completar cita) ══
@@ -606,10 +569,10 @@
   /* ══ Completar cita: cobro → caja → estado ══ */
   var sheetP = $('sheet-pago');
   var pagoCita = crearPago($('pago-cita'), 'metodo-cita');
-  var citaPago = null, pagaCita = 0;
+  var citaPago = null, pagaCita = 0;   /* citaPago = id: la lista puede recargarse con la hoja abierta */
 
   function abrirPago(c) {
-    citaPago = c;
+    citaPago = c.id;
     $('pago-cliente').textContent = c.cliente;
     $('pago-servicio').textContent = c.servicio + ' · ' + c.hora;
     $('pago-total').textContent = window.pesos(c.precio);
@@ -619,26 +582,23 @@
     var s = servicios.find(function (x) { return x.nombre === c.servicio; });
     pagaCita = window.pagoBarbero(c.precio, s && s.pagoBarbero);
     $('pago-reparto').textContent = pagaCita
-      ? 'Recibe ' + window.pesos(pagaCita) + ' · Local ' + window.pesos(c.precio - pagaCita)
+      ? 'Recibes ' + window.pesos(pagaCita) + ' · Local ' + window.pesos(c.precio - pagaCita)
       : 'Este servicio no tiene reparto configurado en Caja: todo queda para el local.';
-    /* Sin barbero preseleccionado: atribuir mal la plata es peor que un toque más */
-    $('pago-barberos').innerHTML = window.datos.barberos.map(function (b) {
-      return '<label class="flex min-h-[44px] min-w-0 cursor-pointer items-center justify-center rounded-xl border border-brand-light px-2 text-sm font-semibold transition has-[:checked]:border-brand-dark has-[:checked]:bg-brand-lightest has-[:checked]:text-brand-dark has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand">' +
-        '<input type="radio" name="barbero" value="' + esc(b.nombre) + '" class="sr-only"><span class="truncate">' + esc(b.nombre) + '</span></label>';
-    }).join('');
+    $('pago-iniciales').textContent = yo.slice(0, 2).toUpperCase();
+    $('pago-atiende').textContent = 'Atiende ' + yo + ' · tu sesión';
     pagoCita.reiniciar(c.precio);
     sheetP.showModal();
   }
 
   $('btn-pagar').addEventListener('click', function () {
-    var c = citaPago;
-    var barbero = sheetP.querySelector('input[name="barbero"]:checked');
-    if (!barbero) { window.toast('Elige quién atendió', 'error'); return; }
+    var c = citas.find(function (x) { return x.id === citaPago; });
+    if (!c || c.estado !== 'reservada') { sheetP.close(); window.toast('Esa cita ya no está por cobrar', 'error'); return; }
     var partes = pagoCita.partes();
     if (!partes) return;
 
-    /* "cita" enlaza el cobro con el turno, para poder retirarlo si se deshace */
-    registrar(partes, c.servicio + ' · ' + c.cliente, { barbero: barbero.value, cita: c.hora });
+    /* El cobro, el turno y el pago quedan a nombre de la sesión: no se lee nada del formulario.
+       "cita" enlaza el cobro con el turno, para poder retirarlo si se deshace. */
+    registrar(partes, c.servicio + ' · ' + c.cliente, { barbero: yo, cita: c.id });
     /* En un pago mixto hay dos movimientos: el pago al barbero se anota una sola vez */
     movimientos[movimientos.length - partes.length].paga = pagaCita;
     c.estado = 'completada';
@@ -849,9 +809,12 @@
 
   pintar();
 
+  /* Una reserva online (u otra pestaña del panel) cambió los datos: la agenda se repinta sola */
+  document.addEventListener('turnio:datos', pintar);
+
   /* citas.html?agendar=11:00 abre la hoja con esa hora */
   var pedida = new URLSearchParams(location.search).get('agendar');
-  if (pedida) abrir('manual', pedida);
+  if (pedida) abrir(pedida);
 })();
 </script>
 
