@@ -33,17 +33,60 @@
     return Math.min(monto, precio);
   }
 
-  var api = { pesos: pesos, precioVenta: precioVenta, pctGanancia: pctGanancia, pagoBarbero: pagoBarbero };
+  /* ── Agenda por profesional ──
+     Un profesional está ocupado a una hora si tiene un turno vigente (reservado o bloqueado).
+     Un turno completado ya no ocupa: al cobrar, queda libre otra vez. */
+  function ocupado(citas, hora, barbero) {
+    return citas.some(function (c) {
+      return c.hora === hora && c.barbero === barbero && (c.estado === 'reservada' || c.estado === 'bloqueada');
+    });
+  }
+
+  function horasAgenda(citas) {
+    return citas.map(function (c) { return c.hora; })
+      .filter(function (h, i, todas) { return todas.indexOf(h) === i; }).sort();
+  }
+
+  /* Lo único que ve el cliente final: nombre y si está libre. Nada de correo ni pagos.
+     Es el mismo contrato de GET /api/public/:slug/availability. */
+  function disponibilidad(citas, barberos, hora) {
+    return barberos.map(function (b) {
+      return { nombre: b.nombre, disponible: !ocupado(citas, hora, b.nombre) };
+    });
+  }
+
+  /* Reserva hora + profesional. Devuelve la cita, o null si ya está ocupado
+     o esa hora no existe en su agenda. */
+  function reservar(citas, hora, barbero, d) {
+    if (ocupado(citas, hora, barbero)) return null;
+    var c = null, ultimo = -1;
+    citas.forEach(function (x, i) {
+      if (x.hora !== hora || x.barbero !== barbero) return;
+      ultimo = i;
+      if (x.estado === 'disponible') c = x;
+    });
+    if (ultimo < 0) return null;
+    if (!c) {
+      /* La franja solo tiene turnos ya completados: el nuevo va justo después */
+      c = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), hora: hora, barbero: barbero };
+      citas.splice(ultimo + 1, 0, c);
+    }
+    c.cliente = d.cliente; c.tel = d.tel; c.servicio = d.servicio; c.precio = d.precio;
+    c.estado = 'reservada';
+    return c;
+  }
+
+  var api = {
+    pesos: pesos, precioVenta: precioVenta, pctGanancia: pctGanancia, pagoBarbero: pagoBarbero,
+    ocupado: ocupado, horasAgenda: horasAgenda, disponibilidad: disponibilidad, reservar: reservar
+  };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window === 'undefined') return;   /* Node: hasta aquí */
 
   /* ══════════ Sólo navegador ══════════ */
 
-  window.pesos = pesos;
-  window.precioVenta = precioVenta;
-  window.pctGanancia = pctGanancia;
-  window.pagoBarbero = pagoBarbero;
+  Object.keys(api).forEach(function (k) { window[k] = api[k]; });
 
   /* Feedback breve en un botón sin perder su etiqueta original (Nielsen #1). */
   window.avisar = function (el, texto, ms) {

@@ -3,23 +3,35 @@
    Cuando exista backend, window.datos se llena desde la API y guardar() hace el POST. */
 
 (function () {
-  var CLAVE = 'turnio-datos-v3';   /* subir la versión cuando cambie la forma de los datos */
+  var CLAVE = 'turnio-datos-v4';   /* subir la versión cuando cambie la forma de los datos */
+  var SESION = 'turnio-sesion';
+
+  /* Cada profesional tiene su propia agenda: una fila por hora, libre salvo lo que se indique. */
+  var HORAS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
+  var ALMUERZO = { cliente: 'Almuerzo', servicio: 'No reservable online', estado: 'bloqueada' };
+
+  function agenda(barbero, ocupadas) {
+    return HORAS.map(function (h) {
+      return Object.assign({ id: barbero + '-' + h, hora: h, barbero: barbero, cliente: '', servicio: '', precio: 0, tel: '', estado: 'disponible' }, ocupadas[h]);
+    });
+  }
 
   var SEMILLA = {
-    citas: [
-      { hora: '08:00', cliente: 'Andrés Mejía',    servicio: 'Corte + barba',      precio: 25000, tel: '573001112233', estado: 'completada' },
-      { hora: '09:00', cliente: 'Kevin Ríos',      servicio: 'Fade',               precio: 18000, tel: '573002223344', estado: 'completada' },
-      { hora: '10:00', cliente: 'Julián Pardo',    servicio: 'Corte clásico',      precio: 20000, tel: '573003334455', estado: 'reservada' },
-      { hora: '11:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' },
-      { hora: '12:00', cliente: 'Mateo Guzmán',    servicio: 'Corte + cejas',      precio: 22000, tel: '573004445566', estado: 'reservada' },
-      { hora: '13:00', cliente: 'Almuerzo',        servicio: 'No reservable online', precio: 0,   tel: '',            estado: 'bloqueada' },
-      { hora: '14:00', cliente: 'Santiago Lozano', servicio: 'Perfilado de barba', precio: 15000, tel: '573005556677', estado: 'reservada' },
-      { hora: '15:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' },
-      { hora: '16:00', cliente: 'Nicolás Vargas',  servicio: 'Corte + barba',      precio: 25000, tel: '573006667788', estado: 'reservada' },
-      { hora: '17:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' },
-      { hora: '18:00', cliente: 'Daniel Ospina',   servicio: 'Fade + diseño',      precio: 30000, tel: '573007778899', estado: 'reservada' },
-      { hora: '19:00', cliente: '',                servicio: '',                   precio: 0,     tel: '',            estado: 'disponible' }
-    ],
+    citas: agenda('Carlos', {
+      '08:00': { cliente: 'Andrés Mejía',    servicio: 'Corte + barba',      precio: 25000, tel: '573001112233', estado: 'completada' },
+      '10:00': { cliente: 'Julián Pardo',    servicio: 'Corte clásico',      precio: 20000, tel: '573003334455', estado: 'reservada' },
+      '12:00': { cliente: 'Mateo Guzmán',    servicio: 'Corte + cejas',      precio: 22000, tel: '573004445566', estado: 'reservada' },
+      '13:00': ALMUERZO,
+      '14:00': { cliente: 'Santiago Lozano', servicio: 'Perfilado de barba', precio: 15000, tel: '573005556677', estado: 'reservada' },
+      '16:00': { cliente: 'Nicolás Vargas',  servicio: 'Corte + barba',      precio: 25000, tel: '573006667788', estado: 'reservada' },
+      '18:00': { cliente: 'Daniel Ospina',   servicio: 'Fade + diseño',      precio: 30000, tel: '573007778899', estado: 'reservada' }
+    }).concat(agenda('Junior', {
+      '09:00': { cliente: 'Kevin Ríos',      servicio: 'Fade',               precio: 18000, tel: '573002223344', estado: 'completada' },
+      '10:00': { cliente: 'Felipe Castaño',  servicio: 'Corte clásico',      precio: 20000, tel: '573008889900', estado: 'reservada' },
+      '13:00': ALMUERZO,
+      '15:00': { cliente: 'Tomás Herrera',   servicio: 'Fade',               precio: 18000, tel: '573009990011', estado: 'reservada' },
+      '16:00': { cliente: 'Camilo Duque',    servicio: 'Corte + barba',      precio: 25000, tel: '573001230045', estado: 'reservada' }
+    })),
 
     /* Códigos de barras de demostración (EAN-13). 'vendidos' ordena la vitrina de Venta rápida. */
     productos: [
@@ -44,27 +56,66 @@
       { nombre: 'Cejas',              duracion: 15, precio: 6000,  pagoBarbero: 4000 }
     ],
 
+    /* 'correo' identifica al profesional al iniciar sesión. Nunca se pinta en la vista de clientes. */
     barberos: [
-      { nombre: 'Carlos' },
-      { nombre: 'Junior' }
+      { nombre: 'Carlos', correo: 'carlos@elcuartel.co' },
+      { nombre: 'Junior', correo: 'junior@elcuartel.co' }
     ],
 
-    /* 'cita' = hora del turno que originó el cobro (permite deshacerlo desde Citas).
+    /* 'cita' = id del turno que originó el cobro (permite deshacerlo desde Citas).
        'paga' = lo que ese cobro le deja al barbero, fijado al momento de cobrar. */
     movimientos: [
-      { tipo: 'ingreso', concepto: 'Corte + barba · Andrés M.', monto: 25000, metodo: 'efectivo',      barbero: 'Carlos', cita: '08:00', paga: 15000 },
-      { tipo: 'ingreso', concepto: 'Fade · Kevin R.',           monto: 18000, metodo: 'transferencia', barbero: 'Junior', cita: '09:00', paga: 12000 },
+      { tipo: 'ingreso', concepto: 'Corte + barba · Andrés M.', monto: 25000, metodo: 'efectivo',      barbero: 'Carlos', cita: 'Carlos-08:00', paga: 15000 },
+      { tipo: 'ingreso', concepto: 'Fade · Kevin R.',           monto: 18000, metodo: 'transferencia', barbero: 'Junior', cita: 'Junior-09:00', paga: 12000 },
       { tipo: 'ingreso', concepto: 'Cerveza x2 + snack',        monto: 13000, metodo: 'efectivo',      barbero: null },
       { tipo: 'ingreso', concepto: 'Cera para cabello',         monto: 18000, metodo: 'transferencia', barbero: null },
       { tipo: 'salida',  concepto: 'Cuchillas y talco',         monto: 35000, metodo: 'efectivo',      barbero: null }
     ]
   };
 
-  var d = null;
-  try { d = JSON.parse(localStorage.getItem(CLAVE)); } catch (e) { /* modo privado o dato corrupto: se usa la semilla */ }
-  window.datos = d || SEMILLA;
+  function leer() {
+    try { return JSON.parse(localStorage.getItem(CLAVE)); } catch (e) { return null; /* modo privado o dato corrupto */ }
+  }
+
+  window.datos = leer() || SEMILLA;
 
   window.guardar = function () {
     try { localStorage.setItem(CLAVE, JSON.stringify(window.datos)); } catch (e) { /* sin almacenamiento: sigue en memoria */ }
+  };
+
+  /* Tiempo real entre pestañas: cuando otra pestaña guarda, el navegador avisa con 'storage'.
+     Se rellenan las mismas listas (las pantallas guardan referencias a ellas) y cada pantalla
+     repinta al oír 'turnio:datos'.
+     ponytail: solo sincroniza pestañas del mismo navegador. Con backend: Supabase Realtime sobre appointments. */
+  window.addEventListener('storage', function (e) {
+    if (e.key !== CLAVE) return;
+    var nuevo = leer();
+    if (!nuevo) return;
+    Object.keys(nuevo).forEach(function (k) {
+      window.datos[k].length = 0;
+      Array.prototype.push.apply(window.datos[k], nuevo[k]);
+    });
+    document.dispatchEvent(new Event('turnio:datos'));
+  });
+
+  /* ── Sesión ──
+     ponytail: demo sin backend. El nombre guardado aquí lo puede cambiar cualquiera desde el navegador,
+     así que solo sirve para la demo. En producción quien cobra lo decide el JWT en el servidor
+     (POST /api/appointments/:id/complete), no un dato del cliente. */
+  window.entrar = function (correo) {
+    var b = window.datos.barberos.find(function (x) { return x.correo === String(correo).trim().toLowerCase(); });
+    try { localStorage.setItem(SESION, (b || window.datos.barberos[0]).nombre); } catch (e) {}
+  };
+
+  window.salir = function () {
+    try { localStorage.removeItem(SESION); } catch (e) {}
+  };
+
+  /* Nombre del profesional con la sesión abierta. Sin sesión (panel de demo): el primero. */
+  window.sesion = function () {
+    var n = null;
+    try { n = localStorage.getItem(SESION); } catch (e) {}
+    var b = window.datos.barberos.find(function (x) { return x.nombre === n; }) || window.datos.barberos[0];
+    return b.nombre;
   };
 })();
