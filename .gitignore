@@ -1,6 +1,25 @@
+.DS_Store
 node_modules/
+
+# Secretos: .env lleva SECRET_KEY y las claves de la base y del correo.
 .env
 .env.*
 !.env.example
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Sesiones de Flask-Session en desarrollo (id de usuario y rol dentro).
+flask_session/
+
+# Volcados: llevan datos de clientes. migrations/ si viaja.
+*.dump
+*.sql.gz
+backups/
+
+logs/
 *.log
-.DS_Store
+dump.rdb
