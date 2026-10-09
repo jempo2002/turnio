@@ -21,6 +21,14 @@ Toda alerta, error, confirmación o mensaje vacío de Turnio sigue estas reglas,
 | `error` | No se pudo hacer lo que pidió | Rojo, círculo con ! | 8 s, con botón para cerrar |
 
 - Siempre **icono + texto**: el color solo nunca basta (daltonismo, sol en la pantalla).
+- **Misma familia visual que el panel.** Todo aviso es una pieza del sistema, no un estilo aparte:
+  - Tarjeta blanca `rounded-3xl` con borde `slate-200` y sombra `lift` (el aviso flotante) o `soft` (la guía), como las tarjetas de cada pantalla.
+  - El icono va en una **baldosa de color suave** (`rounded-2xl`): verde `emerald-50`, azul `brand-lightest`, ámbar `amber-50`, rojo `rose-50`. Son los mismos tonos de las tarjetas "Libres" y "Por atender".
+  - Botones con la forma del panel (`rounded-2xl`, 44 px, semibold): primario `bg-brand-dark`, peligro `rose-700`, secundario con borde `brand-light`, y de texto para "Saltar guía". En CSS: `.tn-btn` + `.tn-btn-primario | -peligro | -borde | -texto`.
+  - Las confirmaciones son una hoja inferior como las del panel: `rounded-t-3xl` y agarradera.
+  - Los mensajes del servidor (login, registro) usan la baldosa sobre el fondo suave del tipo, sin barras ni bordes de color.
+  - Los colores y sombras salen de `frontend/tailwind.config.js` y están copiados como variables `--tn-*` en `static/css/avisos.css`. Si cambia uno, cambian los dos.
+- El aviso flotante muestra una línea fina con el tiempo que le queda, y espera mientras el dedo o el mouse está encima.
 - Los avisos flotantes salen **arriba**, para no tapar la barra inferior ni los botones del pulgar.
 - Áreas táctiles de 44 px como mínimo; texto secundario con contraste de 4,5:1 o más (`text-brand-darkest/70`).
 - Los errores usan `role="alert"` (el lector de pantalla los lee de inmediato); el resto, `role="status"`.

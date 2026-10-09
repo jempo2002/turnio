@@ -255,10 +255,11 @@
     var a = (e && e.aviso) || explicar(e && e.status, e && e.message);
     contenedor.removeAttribute('aria-busy');
     T.pintar(contenedor, T.h`
-      <div class="rounded-3xl border border-rose-200 bg-white p-6 text-center shadow-soft" role="alert">
-        <p class="text-sm font-semibold text-rose-700">No pudimos cargar esta parte · ${a.titulo}</p>
-        <p class="mt-1 text-xs text-brand-darkest/70">${a.detalle}</p>
-        <button type="button" data-reintentar class="mt-4 rounded-xl bg-brand-dark px-5 text-sm font-semibold text-white transition hover:bg-brand-darkest active:scale-95">Reintentar</button>
+      <div class="flex flex-col items-center rounded-3xl border border-rose-200 bg-white p-6 text-center shadow-soft" role="alert">
+        ${icono(a.tipo === 'aviso' ? 'aviso' : 'error')}
+        <p class="mt-3 text-sm font-semibold tracking-tight">No pudimos cargar esta parte</p>
+        <p class="mt-1 text-xs text-brand-darkest/70">${a.titulo}. ${a.detalle}</p>
+        <button type="button" data-reintentar class="tn-btn tn-btn-primario mt-4">Reintentar</button>
       </div>`);
     contenedor.querySelector('[data-reintentar]').addEventListener('click', reintentar);
   };
@@ -285,6 +286,12 @@
   };
   var DURACION = { exito: 3200, info: 4500, aviso: 7000, error: 8000 };
 
+  /* Icono en su baldosa de color (avisos.css: .tn-icono .tn-<tipo>). */
+  function icono(tipo) {
+    return T.h`<span class="tn-icono tn-${tipo}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ICONOS[tipo]}</svg></span>`;
+  }
+  T.icono = icono;
+
   T.aviso = function (o) {
     var tipo = ICONOS[o.tipo] ? o.tipo : 'info';
     var t = document.getElementById('toast');
@@ -298,14 +305,15 @@
     t.className = tipo;
     var accion = o.accion;
     T.pintar(t, T.h`
-      <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONOS[tipo]}</svg>
+      ${icono(tipo)}
       <div class="texto"><p class="titulo">${o.titulo}</p>${o.detalle && T.h`<p class="detalle">${o.detalle}</p>`}</div>
       ${accion && (accion.href
-        ? T.h`<a class="accion" href="${accion.href}">${accion.texto}</a>`
-        : T.h`<button type="button" class="accion">${accion.texto}</button>`)}
+        ? T.h`<a class="accion tn-btn tn-btn-primario" href="${accion.href}">${accion.texto}</a>`
+        : T.h`<button type="button" class="accion tn-btn tn-btn-primario">${accion.texto}</button>`)}
       <button type="button" class="cerrar" aria-label="Cerrar aviso">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
-      </button>`);
+      </button>
+      <span class="tiempo" aria-hidden="true"></span>`);
     function cerrar() { t.classList.remove('ver'); }
     t.querySelector('.cerrar').addEventListener('click', cerrar);
     var btn = t.querySelector('button.accion');
@@ -316,10 +324,17 @@
         else if (accion.fn) accion.fn();
       });
     }
+    var dura = o.ms || DURACION[tipo];
+    t.style.setProperty('--tn-dura', dura + 'ms');
+    t.classList.remove('ver');
     void t.offsetWidth;   /* reinicia la animación si ya había un aviso visible */
     t.classList.add('ver');
+    /* Con el dedo o el mouse encima, el aviso espera (igual que la línea de tiempo). */
+    var restante = dura, desde = Date.now();
     clearTimeout(t._t);
-    t._t = setTimeout(cerrar, o.ms || DURACION[tipo]);
+    t._t = setTimeout(cerrar, restante);
+    t.onmouseenter = t.onfocusin = function () { clearTimeout(t._t); restante -= Date.now() - desde; };
+    t.onmouseleave = t.onfocusout = function () { desde = Date.now(); clearTimeout(t._t); t._t = setTimeout(cerrar, Math.max(restante, 1500)); };
   };
 
   /* Atajo para un aviso de una línea. Sin tipo = éxito. */
@@ -338,9 +353,15 @@
     return new Promise(function (resolve) {
       var d = document.createElement('dialog');
       d.className = 'confirmar';
-      T.pintar(d, T.h`<form method="dialog"><h2>${titulo}</h2><p>${detalle || ''}</p>
-        ${opciones.deshacer === false && T.h`<p class="irreversible">Esto no se puede deshacer.</p>`}
-        <button value="ok" class="${peligro ? 'ok' : 'ok normal'}">${textoOk || 'Confirmar'}</button><button value="no" autofocus>Cancelar</button></form>`);
+      T.pintar(d, T.h`<form method="dialog">
+        <div class="agarradera" aria-hidden="true"></div>
+        ${icono(peligro ? 'error' : 'info')}
+        <h2>${titulo}</h2>${detalle && T.h`<p>${detalle}</p>`}
+        ${opciones.deshacer === false && T.h`<p class="irreversible">Esto no se puede deshacer</p>`}
+        <div class="botones">
+          <button value="ok" class="tn-btn ${peligro ? 'tn-btn-peligro' : 'tn-btn-primario'}">${textoOk || 'Confirmar'}</button>
+          <button value="no" class="tn-btn tn-btn-borde" autofocus>Cancelar</button>
+        </div></form>`);
       d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
       d.addEventListener('close', function () { resolve(d.returnValue === 'ok'); d.remove(); });
       document.body.appendChild(d);
@@ -376,12 +397,15 @@
     function pintar() {
       var p = pasos[i], ultimo = i === pasos.length - 1;
       T.pintar(caja, T.h`
-        <p class="paso-guia">${pasos.length > 1 ? 'Guía rápida · ' + (i + 1) + ' de ' + pasos.length : 'Guía rápida'}</p>
+        <div class="cabeza">
+          <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path></svg>Guía rápida</span>
+          ${pasos.length > 1 && T.h`<span class="puntos" role="img" aria-label="${'Paso ' + (i + 1) + ' de ' + pasos.length}">${pasos.map(function (_, j) { return T.h`<span class="${j === i ? 'activo' : ''}"></span>`; })}</span>`}
+        </div>
         <p class="titulo">${p.titulo}</p>
         <p class="texto">${p.texto}</p>
         <div class="botones">
-          ${!ultimo && T.h`<button type="button" data-saltar class="saltar">Saltar guía</button>`}
-          <button type="button" data-seguir class="seguir">${ultimo ? '¡Entendido!' : 'Siguiente'}</button>
+          ${!ultimo && T.h`<button type="button" data-saltar class="tn-btn tn-btn-texto">Saltar guía</button>`}
+          <button type="button" data-seguir class="tn-btn tn-btn-primario">${ultimo ? '¡Entendido!' : 'Siguiente'}</button>
         </div>`);
       var saltar = caja.querySelector('[data-saltar]');
       if (saltar) saltar.addEventListener('click', cerrar);
