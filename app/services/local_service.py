@@ -133,7 +133,7 @@ def _parse_hora(raw, etiqueta: str, opcional: bool = False) -> time | None:
         hora, minuto = texto.split(":")[:2]
         return time(int(hora), int(minuto))
     except (TypeError, ValueError) as exc:
-        raise ValueError(f"{etiqueta}: hora invalida (usa HH:MM).") from exc
+        raise ValueError(f"{etiqueta}: revisa la hora (ej. 09:30).") from exc
 
 
 def _parse_dia(item) -> tuple:

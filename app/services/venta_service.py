@@ -86,7 +86,8 @@ def vender(id_tienda: int, id_sede: int, id_usuario: int, data: dict) -> dict:
                 "VALUES (%s, %s, %s, %s, %s)",
                 (id_venta, pid, consumo[pid], productos[pid]["precio"], productos[pid]["costo"]),
             )
-            cur.execute("UPDATE productos SET vendidos = vendidos + %s WHERE id_producto = %s", (consumo[pid], pid))
+            cur.execute("UPDATE productos SET vendidos = vendidos + %s WHERE id_producto = %s AND id_tienda = %s",
+                        (consumo[pid], pid, id_tienda))
         concepto = " + ".join(
             productos[pid]["nombre"] + (f" x{consumo[pid]}" if consumo[pid] > 1 else "") for pid in sorted(consumo)
         )
@@ -111,7 +112,7 @@ def anular(id_tienda: int, id_venta: int, id_usuario: int, sedes_permitidas: lis
         if not venta or (sedes_permitidas is not None and venta["id_sede"] not in sedes_permitidas):
             raise NoEncontrado("Venta no encontrada.")
         caja_service.bloquear_dia(cur, id_tienda, venta["id_sede"], venta["dia"])
-        cur.execute("SELECT estado FROM ventas WHERE id_venta = %s FOR UPDATE", (id_venta,))
+        cur.execute("SELECT estado FROM ventas WHERE id_venta = %s AND id_tienda = %s FOR UPDATE", (id_venta, id_tienda))
         if cur.fetchone()["estado"] != "pagada":
             raise Conflicto("Esa venta ya está anulada.")
         cur.execute("SELECT id_producto, cantidad FROM venta_productos WHERE id_venta = %s ORDER BY id_producto",
@@ -120,12 +121,13 @@ def anular(id_tienda: int, id_venta: int, id_usuario: int, sedes_permitidas: lis
             antes = inventario_service.bloquear_stock(cur, venta["id_sede"], linea["id_producto"])
             inventario_service.mover(cur, id_tienda, venta["id_sede"], linea["id_producto"], id_usuario, "Anulacion",
                                      linea["cantidad"], antes, antes + linea["cantidad"], "Venta anulada", id_venta)
-            cur.execute("UPDATE productos SET vendidos = GREATEST(vendidos - %s, 0) WHERE id_producto = %s",
-                        (linea["cantidad"], linea["id_producto"]))
-        cur.execute("DELETE FROM movimientos_caja WHERE id_venta = %s", (id_venta,))
+            cur.execute("UPDATE productos SET vendidos = GREATEST(vendidos - %s, 0) WHERE id_producto = %s "
+                        "AND id_tienda = %s", (linea["cantidad"], linea["id_producto"], id_tienda))
+        cur.execute("DELETE FROM movimientos_caja WHERE id_venta = %s AND id_tienda = %s", (id_venta, id_tienda))
         cur.execute(
-            "UPDATE ventas SET estado = 'anulada', id_usuario_anula = %s, fecha_anulacion = %s WHERE id_venta = %s",
-            (id_usuario, ahora_local(), id_venta),
+            "UPDATE ventas SET estado = 'anulada', id_usuario_anula = %s, fecha_anulacion = %s "
+            "WHERE id_venta = %s AND id_tienda = %s",
+            (id_usuario, ahora_local(), id_venta, id_tienda),
         )
         conn.commit()
     except Exception:

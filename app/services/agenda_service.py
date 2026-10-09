@@ -40,7 +40,7 @@ def parse_fecha(raw, etiqueta: str = "La fecha") -> date:
     try:
         return date.fromisoformat(str(raw or "").strip()[:10])
     except ValueError as exc:
-        raise ValueError(f"{etiqueta}: fecha invalida (usa AAAA-MM-DD).") from exc
+        raise ValueError(f"{etiqueta}: revisa la fecha y vuelve a elegirla.") from exc
 
 
 def parse_momento(raw, etiqueta: str = "La hora") -> datetime:
@@ -51,7 +51,7 @@ def parse_momento(raw, etiqueta: str = "La hora") -> datetime:
     try:
         momento = datetime.fromisoformat(texto)
     except ValueError as exc:
-        raise ValueError(f"{etiqueta}: fecha y hora invalidas (usa AAAA-MM-DDTHH:MM).") from exc
+        raise ValueError(f"{etiqueta}: revisa la fecha y la hora y vuelve a elegirlas.") from exc
     if momento.tzinfo is not None:
         momento = momento.astimezone(ZONA_NEGOCIO).replace(tzinfo=None)
     return momento.replace(second=0, microsecond=0)
@@ -357,8 +357,8 @@ def reprogramar(id_tienda: int, id_sede: int, id_cita: int, data: dict) -> None:
         _sin_cruces(cur, id_tienda, id_sede, profesional["id_usuario"], inicio, fin, excluir=id_cita)
         cur.execute(
             "UPDATE citas SET inicio = %s, fin = %s, id_profesional = %s, id_servicio = %s, precio = %s "
-            "WHERE id_cita = %s",
-            (inicio, fin, profesional["id_usuario"], servicio["id_servicio"], servicio["precio"], id_cita),
+            "WHERE id_cita = %s AND id_tienda = %s",
+            (inicio, fin, profesional["id_usuario"], servicio["id_servicio"], servicio["precio"], id_cita, id_tienda),
         )
 
     _escribir(_mover)
@@ -369,8 +369,8 @@ def cancelar(id_tienda: int, id_sede: int, id_cita: int, motivo=None) -> None:
 
     def _cancelar(cur):
         _cita_para_cambiar(cur, id_tienda, id_sede, id_cita)
-        cur.execute("UPDATE citas SET estado = 'cancelada', motivo_cancelacion = %s WHERE id_cita = %s",
-                    (motivo, id_cita))
+        cur.execute("UPDATE citas SET estado = 'cancelada', motivo_cancelacion = %s WHERE id_cita = %s AND id_tienda = %s",
+                    (motivo, id_cita, id_tienda))
 
     _escribir(_cancelar)
 
@@ -380,7 +380,7 @@ def marcar_no_asistio(id_tienda: int, id_sede: int, id_cita: int) -> None:
         cita = _cita_para_cambiar(cur, id_tienda, id_sede, id_cita)
         if cita["inicio"] > ahora_local():
             raise ErrorServicio("La cita todavía no empieza.")
-        cur.execute("UPDATE citas SET estado = 'no_asistio' WHERE id_cita = %s", (id_cita,))
+        cur.execute("UPDATE citas SET estado = 'no_asistio' WHERE id_cita = %s AND id_tienda = %s", (id_cita, id_tienda))
 
     _escribir(_marcar)
 
@@ -426,7 +426,7 @@ def quitar_bloqueo(id_tienda: int, id_sede: int, id_cita: int) -> None:
     def _quitar(cur):
         _cita_para_cambiar(cur, id_tienda, id_sede, id_cita, estados=("bloqueada",))
         # Un bloqueo no es historia del negocio: se borra.
-        cur.execute("DELETE FROM citas WHERE id_cita = %s", (id_cita,))
+        cur.execute("DELETE FROM citas WHERE id_cita = %s AND id_tienda = %s", (id_cita, id_tienda))
 
     _escribir(_quitar)
 

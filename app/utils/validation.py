@@ -68,9 +68,13 @@ def parse_int(
     max_value: int | None = None,
     allow_zero: bool = True,
 ) -> int:
+    # En JSON, true/false llegaban como 1/0 y 2.9 como 2; 1e400 es infinito
+    # y int() lanzaba OverflowError (un 500). Todos se rechazan.
+    if isinstance(raw_value, bool) or (isinstance(raw_value, float) and not raw_value.is_integer()):
+        raise ValueError(f"Revisa {_campo(field_label)}: escribe un número entero.")
     try:
         value = int(raw_value)
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         if field_label in _ELEGIDOS:
             raise ValueError(f"Elige {_campo(field_label)} de la lista.") from exc
         raise ValueError(f"Revisa {_campo(field_label)}: escribe solo números.") from exc
@@ -93,9 +97,11 @@ def parse_float(
     max_value: float | None = None,
     allow_zero: bool = True,
 ) -> float:
+    if isinstance(raw_value, bool):
+        raise ValueError(f"Revisa {_campo(field_label)}: escribe solo números.")
     try:
         value = float(raw_value)
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise ValueError(f"Revisa {_campo(field_label)}: escribe solo números.") from exc
     # float() acepta "nan" e "inf": NaN pasaba cualquier comparacion de rango.
     if not math.isfinite(value):

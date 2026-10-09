@@ -193,8 +193,8 @@ def eliminar_sede(id_tienda: int, id_sede: int) -> None:
         if cur.fetchone()["n"]:
             raise SedeError("La sede tiene usuarios activos. Muévelos a otra sede o desactívalos primero.", 409)
         cur.execute(
-            "UPDATE sedes SET estado = 'Eliminada', fecha_eliminacion = %s WHERE id_sede = %s",
-            (ahora_local(), id_sede),
+            "UPDATE sedes SET estado = 'Eliminada', fecha_eliminacion = %s WHERE id_sede = %s AND id_tienda = %s",
+            (ahora_local(), id_sede, id_tienda),
         )
         conn.commit()
     except Exception:
