@@ -40,6 +40,12 @@ Lo propio de Turnio:
   - `POST/DELETE /api/usuarios/<id>/foto` y `/api/negocio/logo` (multipart, campo `imagen`): PNG, JPG o WebP de hasta 2 MB, guardados en la base y servidos en `/img/<id>`.
   - `GET/PUT /api/negocio`: nombre, tipo de negocio, WhatsApp y enlace de reservas (`slug`). La dirección es de cada sede.
   - `GET/PUT /api/horario` (`?id_sede=` para otra sede): los 7 días con apertura, cierre y almuerzo. Toda sede nueva nace con lunes a sábado de 8 a. m. a 7 p. m.
+- **Agenda** (T6, `app/routes/agenda.py`): todo en hora de Colombia; si llega una hora con zona (`...Z`), se convierte. Admin y Recepción manejan la agenda de todos; un Profesional ve la de su sede pero solo toca lo suyo.
+  - `GET /api/citas?fecha=` (por defecto hoy) o `?desde=&hasta=` (semana, hasta 42 días), opcional `&id_profesional=`. `GET /api/citas/<id>`.
+  - `POST /api/citas`: profesional, servicio, `inicio`, cliente. Ocupa la duración real del servicio (o `duracion_min` propia), así que bloquea los huecos siguientes; tiene que caber en el horario de la sede y fuera del almuerzo. Dos reservas a la vez en la misma sede se atienden en fila (`FOR UPDATE`): solo entra una.
+  - `PUT /api/citas/<id>`: reprogramar (hora, profesional o servicio). `POST /api/citas/<id>/cancelar` (`motivo` opcional) libera el horario. `POST /api/citas/<id>/no-asistio`. Cobrar la cita es de la caja (T5).
+  - `POST /api/bloqueos` (`desde`, `hasta`, `motivo`, `id_profesional` opcional: sin él bloquea toda la sede; hasta 31 días) y `DELETE /api/bloqueos/<id>`. No se bloquea encima de citas reservadas.
+  - `GET /api/agenda/disponibilidad?id_servicio=&fecha=`: horas libres de cada profesional que hace ese servicio, cada 15 minutos.
 - **Negocios**: cada uno tiene `slug` (su página pública de reservas, `/r/<slug>`, en T8) y `tipo_negocio` (barbería, peluquería, uñas, cejas y pestañas, estética).
 - **Esquema** (`migrations/`): negocios, sedes y usuarios; horario por sede; servicios con duración, precio y pago al profesional; citas con candado por profesional y hora; productos con código de barras; movimientos de caja con la comisión de cada cobro.
 

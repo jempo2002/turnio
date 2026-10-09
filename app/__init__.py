@@ -95,12 +95,14 @@ def create_app() -> Flask:
     init_security(app)
     init_pool_from_app(app)
 
+    from app.routes.agenda import agenda
     from app.routes.auth import auth
     from app.routes.catalogo import catalogo
     from app.routes.core import core
     from app.routes.master import master
     from app.routes.negocio import negocio
 
+    app.register_blueprint(agenda)
     app.register_blueprint(auth)
     app.register_blueprint(catalogo)
     app.register_blueprint(core)
