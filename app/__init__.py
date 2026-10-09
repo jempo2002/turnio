@@ -77,6 +77,8 @@ def create_app() -> Flask:
         DB_USER=_required_env("DB_USER"),
         DB_PASSWORD=_required_env("DB_PASSWORD", allow_empty=True),
         DB_NAME=_required_env("DB_NAME"),
+        # Lo mas grande que se sube es una imagen de 2 MB (imagen_service).
+        MAX_CONTENT_LENGTH=3 * 1024 * 1024,
     )
     if redis_url:
         import redis
@@ -94,11 +96,13 @@ def create_app() -> Flask:
     init_pool_from_app(app)
 
     from app.routes.auth import auth
+    from app.routes.catalogo import catalogo
     from app.routes.core import core
     from app.routes.master import master
     from app.routes.negocio import negocio
 
     app.register_blueprint(auth)
+    app.register_blueprint(catalogo)
     app.register_blueprint(core)
     app.register_blueprint(master)
     app.register_blueprint(negocio)
@@ -139,6 +143,10 @@ def create_app() -> Flask:
             jsonify({"ok": False, "msg": "Demasiados intentos. Espera un momento e intenta de nuevo."}),
             429,
         )
+
+    @app.errorhandler(413)
+    def archivo_muy_grande(_err):
+        return jsonify({"ok": False, "msg": "El archivo es demasiado grande."}), 413
 
     @app.errorhandler(500)
     def error_interno(_err):

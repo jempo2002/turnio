@@ -29,7 +29,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 _ENTORNOS_DEV = {"development", "dev", "local", "testing", "test"}
 
 # Rutas publicas: su respuesta si se puede cachear (no depende de la sesion).
-_PREFIJOS_PUBLICOS = ("/static/", "/favicon.ico", "/health")
+_PREFIJOS_PUBLICOS = ("/static/", "/favicon.ico", "/health", "/img/")
 
 
 def cerrar_sesion_publica() -> None:

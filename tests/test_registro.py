@@ -177,10 +177,14 @@ def test_crear_con_contrasena_sigue_funcionando(client, crear):
 def test_invitar_respeta_el_tope_de_profesionales(client, crear):
     _admin_con_negocio(client)
     crear.fila("UPDATE tiendas SET plan_id = 'basico'")
-    for i in range(3):
+    # La duena atiende (tiene agenda): ocupa uno de los 3 cupos del Basico.
+    for i in range(2):
         assert _invitar(client, correo=f"p{i}@unas.co", cc=f"11440000{i}0").status_code == 201
     r = _invitar(client, correo="p9@unas.co", cc="1144000990")
     assert r.status_code == 403 and r.get_json()["code"] == "limite_plan"
+    duena = crear.fila("SELECT id_usuario FROM usuarios WHERE rol = 'Admin'")["id_usuario"]
+    assert client.put(f"/api/profesionales/{duena}", json={"atiende": False}).status_code == 200
+    assert _invitar(client, correo="p9@unas.co", cc="1144000990").status_code == 201
 
 
 # ---------- Aislamiento entre negocios ----------

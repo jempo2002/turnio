@@ -115,9 +115,12 @@ def sembrar(clave: str) -> int | None:
         id_sede = cur.fetchone()["id_sede"]
         cur.execute("SELECT id_usuario FROM usuarios WHERE id_tienda = %s AND rol = 'Admin'", (id_tienda,))
         id_admin = cur.fetchone()["id_usuario"]
+        # En la demo atienden Carlos y Junior; el Admin no tiene agenda.
+        cur.execute("UPDATE usuarios SET atiende = 0 WHERE id_usuario = %s", (id_admin,))
 
         cur.executemany(
-            "INSERT INTO horarios_sede (id_sede, dia, abierto, abre, cierra, almuerzo_desde, almuerzo_hasta) "
+            # REPLACE: la sede ya nace con el horario de fabrica.
+            "REPLACE INTO horarios_sede (id_sede, dia, abierto, abre, cierra, almuerzo_desde, almuerzo_hasta) "
             "VALUES (%s, %s, %s, %s, %s, %s, %s)",
             [(id_sede, dia, abierto, abre, cierra, "13:00" if abierto else None, "14:00" if abierto else None)
              for dia, abierto, abre, cierra in HORARIO],

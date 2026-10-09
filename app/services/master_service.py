@@ -23,6 +23,7 @@ from app.services.auth_service import (
     is_valid_email,
     liberar_datos_inactivos,
 )
+from app.services.sede_service import sembrar_horario
 from app.services.usuario_service import _parse_cc
 from app.utils.helpers import ahora_local, hoy_local, normalize_phone
 from app.utils.validation import sanitize_optional_text, sanitize_text
@@ -162,10 +163,13 @@ def crear_negocio(data: dict) -> int:
             "INSERT INTO sedes (id_tienda, nombre, direccion, telefono, es_principal) VALUES (%s, %s, %s, %s, 1)",
             (id_tienda, sede_nombre, sede_direccion, telefono),
         )
+        sembrar_horario(cur, cur.lastrowid)
         cur.execute(
-            # Admin sin sede fija (NULL): ve todas las sedes del negocio.
-            "INSERT INTO usuarios (id_tienda, id_sede, nombre_completo, correo, clave_hash, rol, cc) "
-            "VALUES (%s, NULL, %s, %s, %s, 'Admin', %s)",
+            # Admin sin sede fija (NULL): ve todas las sedes del negocio. En
+            # un negocio que empieza el dueno casi siempre atiende (atiende =
+            # 1, tiene agenda); si no, lo apaga en Ajustes.
+            "INSERT INTO usuarios (id_tienda, id_sede, nombre_completo, correo, clave_hash, rol, cc, atiende) "
+            "VALUES (%s, NULL, %s, %s, %s, 'Admin', %s, 1)",
             (id_tienda, admin_nombre, admin_correo, generate_password_hash(password), admin_cc),
         )
         conn.commit()

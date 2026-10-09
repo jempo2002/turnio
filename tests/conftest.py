@@ -41,7 +41,13 @@ os.environ.update(
 def _conectar(**extra):
     import mysql.connector
 
-    return mysql.connector.connect(**DB, charset="utf8mb4", collation="utf8mb4_unicode_ci", **extra)
+    from app.utils.helpers import ZONA_MYSQL
+
+    # Misma zona que la app (database.py): si no, CURDATE() de las pruebas cae
+    # en el dia siguiente despues de las 7 p. m. de Colombia.
+    return mysql.connector.connect(
+        **DB, charset="utf8mb4", collation="utf8mb4_unicode_ci", time_zone=ZONA_MYSQL, **extra
+    )
 
 
 def base_vacia(nombre: str):
@@ -75,7 +81,8 @@ def db(base):
     cur = conn.cursor()
     cur.execute("SET FOREIGN_KEY_CHECKS = 0")
     for tabla in (
-        "movimientos_caja", "citas", "productos", "servicios", "horarios_sede", "usuarios", "sedes", "tiendas",
+        "movimientos_caja", "citas", "productos", "profesional_servicios", "servicios", "horarios_sede",
+        "imagenes", "usuarios", "sedes", "tiendas",
     ):
         cur.execute(f"TRUNCATE `{tabla}`")
     cur.execute("SET FOREIGN_KEY_CHECKS = 1")
@@ -125,9 +132,10 @@ def crear(db):
 
         def usuario(self, correo, rol="Admin", id_tienda=None, id_sede=None):
             cur.execute(
-                "INSERT INTO usuarios (id_tienda, id_sede, nombre_completo, correo, clave_hash, rol) "
-                "VALUES (%s, %s, %s, %s, %s, %s)",
-                (id_tienda, id_sede, correo.split("@")[0].title(), correo, hash_clave, rol),
+                # Como la app: todo Profesional atiende (tiene agenda).
+                "INSERT INTO usuarios (id_tienda, id_sede, nombre_completo, correo, clave_hash, rol, atiende) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (id_tienda, id_sede, correo.split("@")[0].title(), correo, hash_clave, rol, int(rol == "Profesional")),
             )
             return cur.lastrowid
 
