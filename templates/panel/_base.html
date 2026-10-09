@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>{% block title %}{% endblock %} · Turnio</title>
+<title>{% block title %}{% endblock %} · {{ negocio.nombre_negocio }}</title>
 <meta name="theme-color" content="{% block color %}#F1F5F9{% endblock %}">
 <meta name="robots" content="noindex">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
+{% include "_pwa.html" %}
 <script src="{{ url_for('static', filename='js/panel/turnio.js') }}" defer></script>
 {% block scripts %}{% endblock %}
 </head>
@@ -17,7 +18,7 @@
 <body class="min-h-screen bg-slate-100 font-sans text-brand-darkest antialiased"
       data-yo-id="{{ yo.id }}" data-yo-nombre="{{ yo.nombre }}" data-yo-rol="{{ yo.rol }}"
       data-yo-atiende="{{ '1' if yo.atiende else '0' }}" data-yo-funciones="{{ yo.funciones }}"
-      data-negocio="{{ negocio.nombre_negocio }}">
+      data-negocio="{{ negocio.nombre_negocio }}" data-voc-profesional="{{ negocio.voc.profesional }}">
 
 <a href="#contenido" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-xl focus:bg-brand-darkest focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
   Saltar al contenido
@@ -45,7 +46,7 @@
     {% for p in pestanas %}
       {% set actual = p == activa %}
       <li><a href="{{ url_for('panel.' ~ p) }}"{% if actual %} aria-current="page"{% endif %}
-             class="flex flex-col items-center gap-1 py-2.5 transition {{ 'text-brand-dark' if actual else 'text-brand-darkest/45 hover:text-brand-dark' }}">
+             class="flex flex-col items-center gap-1 py-2.5 transition {{ 'text-brand-dark' if actual else 'text-brand-darkest/70 hover:text-brand-dark' }}">
         {{ iconos.pestana(p) }}
         <span class="text-[10px] {{ 'font-semibold' if actual else 'font-medium' }}">{{ etiquetas[p] }}</span>
       </a></li>

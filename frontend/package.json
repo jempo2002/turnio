@@ -1,9 +1,11 @@
 {
   "name": "turnio-panel-css",
   "private": true,
-  "description": "Compila el CSS del panel (Tailwind) a static/css/panel.css. El resultado se sube al repo: Railway solo corre Python.",
+  "description": "Compila el CSS del panel y del landing (Tailwind) a static/css/. El resultado se sube al repo: Railway solo corre Python.",
   "scripts": {
-    "css": "tailwindcss -c tailwind.config.js -i panel.css -o ../static/css/panel.css --minify",
+    "css": "npm run css:panel && npm run css:landing",
+    "css:panel": "tailwindcss -c tailwind.config.js -i panel.css -o ../static/css/panel.css --minify",
+    "css:landing": "tailwindcss -c tailwind.config.js -i landing.css -o ../static/css/landing.css --content ../templates/landing.html,../static/js/landing.js --minify",
     "css:watch": "tailwindcss -c tailwind.config.js -i panel.css -o ../static/css/panel.css --watch"
   },
   "devDependencies": {

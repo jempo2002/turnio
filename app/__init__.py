@@ -5,12 +5,13 @@ import os
 from datetime import timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, flash, g, jsonify, redirect, request, session, url_for
+from flask import Flask, flash, g, jsonify, redirect, render_template, request, session, url_for
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_session import Session
 from flask_wtf.csrf import CSRFProtect
 
+from app.performance import init_rendimiento
 from app.security import es_desarrollo, init_security
 from app.utils.decorators import _is_api_request, log_seguridad
 from database import init_pool_from_app
@@ -93,6 +94,7 @@ def create_app() -> Flask:
     server_session.init_app(app)
     limiter.init_app(app)
     init_security(app)
+    init_rendimiento(app)
     init_pool_from_app(app)
 
     from app.routes.agenda import agenda
@@ -104,6 +106,7 @@ def create_app() -> Flask:
     from app.routes.negocio import negocio
     from app.routes.panel import panel
     from app.routes.publico import publico
+    from app.routes.pwa import pwa
 
     app.register_blueprint(agenda)
     app.register_blueprint(auth)
@@ -114,6 +117,7 @@ def create_app() -> Flask:
     app.register_blueprint(negocio)
     app.register_blueprint(panel)
     app.register_blueprint(publico)
+    app.register_blueprint(pwa)
 
     from app.utils.helpers import fmt_money
 
@@ -134,7 +138,11 @@ def create_app() -> Flask:
 
     @app.get("/")
     def index():
-        return redirect(url_for("auth.login"))
+        # Landing publica (T9). Con sesion abierta, directo al panel: es lo
+        # que abre la app instalada si el navegador la arranca en la raiz.
+        if session.get("id_usuario"):
+            return redirect(url_for("core.inicio"))
+        return render_template("landing.html")
 
     @app.get("/health")
     def health() -> tuple[dict, int]:

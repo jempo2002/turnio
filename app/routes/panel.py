@@ -16,7 +16,7 @@ from flask import Blueprint, g, jsonify, render_template, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import limiter
-from app.services import local_service, master_service, plan_service
+from app.services import local_service, plan_service, vertical_service
 from app.services.auth_service import first_password_policy_error
 from app.services.usuario_service import ROLES_NEGOCIO
 from app.utils.decorators import log_seguridad, login_required, roles_required
@@ -98,7 +98,7 @@ def ajustes():
         (texto, plan_service.tiene_funcion(g.plan_id, clave))
         for clave, texto in plan_service.NOMBRE_FUNCION.items()
     ]
-    return _pagina("panel/ajustes.html", "ajustes", plan=plan, funciones=funciones, tipos=master_service.TIPOS_NEGOCIO)
+    return _pagina("panel/ajustes.html", "ajustes", plan=plan, funciones=funciones, tipos=vertical_service.TIPOS_NEGOCIO)
 
 
 # ── Cuenta propia ───────────────────────────────────────────────────

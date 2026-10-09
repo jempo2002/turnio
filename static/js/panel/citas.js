@@ -51,7 +51,7 @@
     var ahora = ahoraHHMM();
     var abierto = d.abierto && ahora >= d.abre && ahora < d.cierra;
     est.className = 'mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ' +
-      (abierto ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-brand-darkest/60');
+      (abierto ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-brand-darkest/70');
     T.pintar(est, T.h`<span class="h-1.5 w-1.5 rounded-full ${abierto ? 'bg-emerald-500' : 'bg-slate-400'}" aria-hidden="true"></span>${abierto ? 'Abierto' : 'Cerrado'}`);
   }
 
@@ -116,11 +116,11 @@
   /* ══ Línea de tiempo ══
      Color por hora: verde = libre, rojo tenue = reservada, gris = ya pasó o no se atiende. */
   var COLOR_HORA = {
-    disponible: 'text-emerald-600',
-    reservada:  'text-rose-600',
-    completada: 'text-brand-darkest/40',
-    no_asistio: 'text-brand-darkest/40',
-    bloqueada:  'text-brand-darkest/40'
+    disponible: 'text-emerald-700',
+    reservada:  'text-rose-700',
+    completada: 'text-brand-darkest/70',
+    no_asistio: 'text-brand-darkest/70',
+    bloqueada:  'text-brand-darkest/70'
   };
   var BTN = 'flex min-w-0 flex-1 items-center justify-center rounded-xl px-1 text-xs font-semibold transition active:scale-[.98] ';
 
@@ -162,15 +162,15 @@
     if (c.estado === 'bloqueada') {
       var texto = c.cliente_nombre === 'Almuerzo' && !c.id_cita ? 'Almuerzo · No reservable'
         : (c.toda_la_sede ? 'Local cerrado' : 'Bloqueado') + (c.nota ? ' · ' + c.nota : '') + ' · hasta ' + c.hasta;
-      return T.h`<li class="flex gap-3">${hora}<div class="min-w-0 flex-1 truncate rounded-2xl bg-slate-200/60 px-4 py-3.5 text-xs font-medium text-brand-darkest/55">${texto}</div></li>`;
+      return T.h`<li class="flex gap-3">${hora}<div class="min-w-0 flex-1 truncate rounded-2xl bg-slate-200/60 px-4 py-3.5 text-xs font-medium text-brand-darkest/70">${texto}</div></li>`;
     }
 
     var hecha = c.estado !== 'reservada';
     var acciones;
     if (c.estado === 'completada') {
       acciones = T.h`<div class="mt-2 flex items-center justify-between gap-2">
-          <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-darkest/55">Completada</span>
-          <button type="button" data-accion="reabrir" data-id="${c.id_cita}" class="rounded-xl px-3 text-xs font-medium text-brand-darkest/55 transition hover:bg-slate-100">Deshacer</button>
+          <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-darkest/70">Completada</span>
+          <button type="button" data-accion="reabrir" data-id="${c.id_cita}" class="rounded-xl px-3 text-xs font-medium text-brand-darkest/70 transition hover:bg-slate-100">Deshacer</button>
         </div>`;
     } else if (c.estado === 'no_asistio') {
       acciones = T.h`<div class="mt-2"><span class="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800">No asistió</span></div>`;
@@ -186,11 +186,11 @@
     }
 
     return T.h`<li class="flex gap-3">${hora}
-      <div class="min-w-0 flex-1 rounded-2xl border border-slate-200 border-l-4 bg-white p-4 ${hecha ? 'border-l-slate-300 opacity-60' : 'border-l-rose-300 shadow-soft'}">
+      <div class="min-w-0 flex-1 rounded-2xl border border-slate-200 border-l-4 p-4 ${hecha ? 'border-l-slate-300 bg-slate-50' : 'border-l-rose-300 bg-white shadow-soft'}">
         <div class="flex items-start gap-2">
           <div class="min-w-0 flex-1">
             <p class="truncate text-base font-semibold${c.estado === 'completada' ? ' line-through decoration-brand-darkest/30' : ''}">${c.cliente_nombre}</p>
-            <p class="mt-0.5 truncate text-xs text-brand-darkest/55">${c.servicio || ''} · hasta ${c.hasta}${c.origen === 'publica' && T.h` · <span class="font-semibold text-brand-dark">Reservó online</span>`}</p>
+            <p class="mt-0.5 truncate text-xs text-brand-darkest/70">${c.servicio || ''} · hasta ${c.hasta}${c.origen === 'publica' && T.h` · <span class="font-semibold text-brand-dark">Reservó online</span>`}</p>
           </div>
           <p class="shrink-0 text-sm font-semibold">${pesos(c.precio)}</p>
         </div>
@@ -237,7 +237,7 @@
       var activo = b.dataset.filtro === filtro;
       b.setAttribute('aria-pressed', activo);
       b.className = 'filtro min-w-0 truncate rounded-full px-1 text-sm font-semibold transition ' +
-        (activo ? 'bg-brand-darkest text-white' : 'bg-slate-100 text-brand-darkest/60 hover:bg-slate-200');
+        (activo ? 'bg-brand-darkest text-white' : 'bg-slate-100 text-brand-darkest/70 hover:bg-slate-200');
     });
   }
 
@@ -312,7 +312,7 @@
     T.pintar($('servicios'), serviciosDe().map(function (s) {
       return T.h`<label class="flex min-h-[56px] cursor-pointer items-center gap-3 rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:bg-brand-lightest/50">
         <input type="radio" name="servicio" value="${s.id_servicio}" required class="h-5 w-5 shrink-0 accent-brand-dark">
-        <span class="min-w-0 flex-1 truncate text-sm font-medium">${s.nombre}<span class="block text-xs font-normal text-brand-darkest/55">${s.duracion_min} min</span></span>
+        <span class="min-w-0 flex-1 truncate text-sm font-medium">${s.nombre}<span class="block text-xs font-normal text-brand-darkest/70">${s.duracion_min} min</span></span>
         <span class="shrink-0 text-sm font-semibold">${pesos(s.precio)}</span>
       </label>`;
     }));
@@ -346,7 +346,7 @@
 
   function abrir(hora) {
     if (!serviciosDe().length) {
-      T.toast(T.yo.rol === 'Admin' ? 'Crea primero un servicio en Inventario' : 'Este profesional no tiene servicios asignados', 'error');
+      T.toast(T.yo.rol === 'Admin' ? 'Crea primero un servicio en Inventario' : 'Este ' + T.voc.profesional + ' no tiene servicios asignados', 'error');
       return;
     }
     horaPedida = hora || null;
@@ -512,7 +512,7 @@
         <span class="block text-2xl" aria-hidden="true">${p.emoji || '📦'}</span>
         <span class="mt-1 block truncate text-xs font-semibold">${p.nombre}</span>
         <span class="block text-xs text-brand-dark">${pesos(p.precio)}</span>
-        <span class="block text-[10px] text-brand-darkest/45">${p.stock ? 'Quedan ' + quedan : 'Agotado'}</span>
+        <span class="block text-[10px] text-brand-darkest/70">${p.stock ? 'Quedan ' + quedan : 'Agotado'}</span>
       </button>`;
     }));
 
@@ -615,7 +615,8 @@
     return new Promise(function (ok, mal) {
       if (window.Html5Qrcode) return ok();
       var s = document.createElement('script');
-      s.src = '/static/lib/html5-qrcode.min.js';
+      /* URL versionada (cache de un año), la pone la plantilla */
+      s.src = document.querySelector('meta[name="turnio-lector"]').content;
       s.onload = ok;
       s.onerror = mal;
       document.head.appendChild(s);

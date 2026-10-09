@@ -24,7 +24,7 @@
       var activo = b.dataset.tab === tab;
       b.setAttribute('aria-selected', activo);
       b.className = 'tab rounded-xl py-3 text-center text-sm transition ' +
-        (activo ? 'bg-white font-semibold text-brand-dark shadow-soft' : 'font-medium text-brand-darkest/55 hover:bg-white/70');
+        (activo ? 'bg-white font-semibold text-brand-dark shadow-soft' : 'font-medium text-brand-darkest/70 hover:bg-white/70');
     });
     $('panel-productos').hidden = tab !== 'productos';
     $('panel-servicios').hidden = tab !== 'servicios';
@@ -72,15 +72,15 @@
       var borde = agotado ? 'border-rose-200' : bajo ? 'border-amber-200' : 'border-slate-200';
       var nombre = p.nombre;
 
-      return T.h`<li class="rounded-2xl border ${borde} bg-white p-4 shadow-soft${agotado ? ' opacity-75' : ''}">
+      return T.h`<li class="rounded-2xl border ${borde} bg-white p-4 shadow-soft">
         <div class="flex items-center gap-3">
           <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-lightest/70 text-xl" aria-hidden="true">${p.emoji || '📦'}</span>
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
               <p class="truncate text-sm font-semibold">${nombre}</p>${aviso}
             </div>
-            <p class="mt-0.5 text-xs text-brand-darkest/55">Compra ${pesos(p.costo)} · Venta ${pesos(p.precio)} · <span class="font-medium text-brand-dark">+${pesos(p.precio - p.costo)}</span></p>
-            ${p.codigo_barras && T.h`<p class="mt-0.5 truncate text-[11px] tabular-nums text-brand-darkest/40">Cód. ${p.codigo_barras}</p>`}
+            <p class="mt-0.5 text-xs text-brand-darkest/70">Compra ${pesos(p.costo)} · Venta ${pesos(p.precio)} · <span class="font-medium text-brand-dark">+${pesos(p.precio - p.costo)}</span></p>
+            ${p.codigo_barras && T.h`<p class="mt-0.5 truncate text-[11px] tabular-nums text-brand-darkest/70">Cód. ${p.codigo_barras}</p>`}
           </div>
         </div>
         <div class="mt-3 flex items-center gap-1 border-t border-brand-light/40 pt-3">
@@ -92,7 +92,7 @@
           </div>
         </div>
       </li>`;
-    }) : T.h`<li class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-brand-darkest/60">${ADMIN ? 'Todavía no hay productos. Toca “Producto” para agregar el primero.' : 'Todavía no hay productos.'}</li>`);
+    }) : T.h`<li class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-brand-darkest/70">${ADMIN ? 'Todavía no hay productos. Toca “Producto” para agregar el primero.' : 'Todavía no hay productos.'}</li>`);
 
     var partes = [];
     if (agotados) partes.push(agotados + ' agotado' + (agotados > 1 ? 's' : ''));
@@ -162,7 +162,7 @@
         <div class="flex items-start gap-3">
           <div class="min-w-0 flex-1">
             <p class="truncate text-sm font-semibold">${nombre}</p>
-            <p class="mt-0.5 truncate text-xs text-brand-darkest/55">${s.duracion_min} min · Profesional ${pesos(paga)} · Local ${pesos(s.precio - paga)}</p>
+            <p class="mt-0.5 truncate text-xs text-brand-darkest/70">${s.duracion_min} min · ${T.voc.Profesional} ${pesos(paga)} · Local ${pesos(s.precio - paga)}</p>
           </div>
           <p class="shrink-0 text-base font-semibold">${pesos(s.precio)}</p>
         </div>
@@ -171,7 +171,7 @@
           <button type="button" data-eliminar="${s.id_servicio}" class="${BTN_ELIMINAR}" aria-label="Eliminar ${nombre}">Eliminar</button>
         </div>`}
       </li>`;
-    }) : T.h`<li class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-brand-darkest/60">${ADMIN ? 'Todavía no hay servicios. Toca “Servicio” para crear el primero.' : 'Todavía no hay servicios.'}</li>`);
+    }) : T.h`<li class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-brand-darkest/70">${ADMIN ? 'Todavía no hay servicios. Toca “Servicio” para crear el primero.' : 'Todavía no hay servicios.'}</li>`);
   }
 
   $('servicios').addEventListener('click', function (e) {

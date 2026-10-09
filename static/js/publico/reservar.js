@@ -60,7 +60,7 @@
     var a = $('aviso');
     T.pintar(a, T.h`
       <p class="text-base font-semibold">${titulo}</p>
-      <p class="mt-1 text-sm text-brand-darkest/60">${detalle}</p>
+      <p class="mt-1 text-sm text-brand-darkest/70">${detalle}</p>
       ${whatsapp && T.h`<a href="${'https://wa.me/' + wa(whatsapp)}" target="_blank" rel="noopener" class="mt-5 flex min-h-[52px] items-center justify-center rounded-2xl bg-emerald-600 px-4 text-base font-semibold text-white transition hover:bg-emerald-700">Escribir por WhatsApp</a>`}`);
     a.classList.remove('hidden');
   }
@@ -78,7 +78,7 @@
     var h = s.horario[diaSemana(hoy)];
     var e = $('estado-hoy');
     e.className = 'mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ' +
-      (h.abierto ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-brand-darkest/60');
+      (h.abierto ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-brand-darkest/70');
     T.pintar(e, T.h`<span class="h-1.5 w-1.5 rounded-full ${h.abierto ? 'bg-emerald-500' : 'bg-slate-400'}" aria-hidden="true"></span>${h.abierto ? 'Hoy atiende de ' + h.abre + ' a ' + h.cierra : 'Hoy no atiende'}`);
   }
 
@@ -91,7 +91,7 @@
     T.pintar($('sedes'), datos.sedes.map(function (s) {
       return T.h`<label class="${RADIO} min-h-[56px]">
         <input type="radio" name="sede" value="${s.id_sede}" required class="h-5 w-5 shrink-0 accent-brand-dark"${String(s.id_sede) === antes ? T.h` checked` : ''}>
-        <span class="min-w-0 flex-1 text-sm font-medium">${s.nombre}${s.direccion && T.h`<span class="block truncate text-xs font-normal text-brand-darkest/55">${s.direccion}</span>`}</span>
+        <span class="min-w-0 flex-1 text-sm font-medium">${s.nombre}${s.direccion && T.h`<span class="block truncate text-xs font-normal text-brand-darkest/70">${s.direccion}</span>`}</span>
       </label>`;
     }));
   }
@@ -102,10 +102,10 @@
     T.pintar($('servicios'), lista.length ? lista.map(function (s) {
       return T.h`<label class="${RADIO} min-h-[56px]">
         <input type="radio" name="servicio" value="${s.id_servicio}" required class="h-5 w-5 shrink-0 accent-brand-dark">
-        <span class="min-w-0 flex-1 truncate text-sm font-medium">${s.nombre}<span class="block text-xs font-normal text-brand-darkest/55">${s.duracion_min} min</span></span>
+        <span class="min-w-0 flex-1 truncate text-sm font-medium">${s.nombre}<span class="block text-xs font-normal text-brand-darkest/70">${s.duracion_min} min</span></span>
         <span class="shrink-0 text-sm font-semibold">${T.pesos(s.precio)}</span>
       </label>`;
-    }) : T.h`<p class="text-sm text-brand-darkest/55">Esta sede aún no publica servicios para reservar en línea.</p>`);
+    }) : T.h`<p class="text-sm text-brand-darkest/70">Esta sede aún no publica servicios para reservar en línea.</p>`);
   }
 
   /* ── 3. Día: semanas de 7 días desde hoy, hasta max_dias ── */
@@ -210,8 +210,8 @@
           : 'cursor-not-allowed border-slate-200 bg-slate-200/50'}">
         <input type="radio" name="profesional" value="${p.id_profesional}" class="h-5 w-5 shrink-0 accent-brand-dark"${x.libre ? '' : T.h` disabled`}${x.libre && String(p.id_profesional) === antes ? T.h` checked` : ''}>
         ${avatar(p, x.libre)}
-        <span class="min-w-0 flex-1 truncate text-sm font-semibold${x.libre ? '' : ' text-brand-darkest/50'}">${p.nombre}</span>
-        <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${x.libre ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200 text-brand-darkest/55'}">${x.libre ? 'Libre' : 'Ocupado'}</span>
+        <span class="min-w-0 flex-1 truncate text-sm font-semibold${x.libre ? '' : ' text-brand-darkest/70'}">${p.nombre}</span>
+        <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${x.libre ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200 text-brand-darkest/70'}">${x.libre ? 'Libre' : 'Ocupado'}</span>
       </label>`;
     });
     if (nLibres > 1) {
@@ -220,7 +220,7 @@
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-lightest text-brand-dark" aria-hidden="true">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"></path></svg>
         </span>
-        <span class="min-w-0 flex-1 truncate text-sm font-semibold">Cualquiera disponible<span class="block text-xs font-normal text-brand-darkest/55">${nLibres} libres a esa hora</span></span>
+        <span class="min-w-0 flex-1 truncate text-sm font-semibold">Cualquiera disponible<span class="block text-xs font-normal text-brand-darkest/70">${nLibres} libres a esa hora</span></span>
       </label>`);
     }
     T.pintar($('pros'), filas);

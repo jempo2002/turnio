@@ -33,11 +33,15 @@ def _campos(data: dict) -> tuple[str, str | None, str | None]:
     return nombre, direccion, telefono
 
 
-def sembrar_horario(cur, id_sede: int) -> None:
-    """Horario de fabrica para una sede nueva (misma transaccion que la crea)."""
+def sembrar_horario(cur, id_sede: int, semana=None) -> None:
+    """Horario inicial de una sede nueva (misma transaccion que la crea).
+    `semana`: 7 tuplas (abierto, abre, cierra) de lunes a domingo, las de
+    vertical_service.horario(); sin ella, el de fabrica."""
+    if semana is None:
+        semana = [(dia < 6, ABRE, CIERRA) for dia in range(7)]
     cur.executemany(
         "INSERT IGNORE INTO horarios_sede (id_sede, dia, abierto, abre, cierra) VALUES (%s, %s, %s, %s, %s)",
-        [(id_sede, dia, int(dia < 6), ABRE, CIERRA) for dia in range(7)],
+        [(id_sede, dia, int(abierto), abre, cierra) for dia, (abierto, abre, cierra) in enumerate(semana)],
     )
 
 
@@ -107,6 +111,16 @@ def crear_sede(id_tienda: int, data: dict) -> int:
             (id_tienda, nombre, direccion, telefono, montaje),
         )
         id_sede = cur.lastrowid
+        # La sede nueva arranca con el horario de la principal (T9: el de su
+        # tipo de negocio o el que el dueno ya ajusto); sin principal, el de
+        # fabrica.
+        cur.execute(
+            "INSERT INTO horarios_sede (id_sede, dia, abierto, abre, cierra, almuerzo_desde, almuerzo_hasta) "
+            "SELECT %s, h.dia, h.abierto, h.abre, h.cierra, h.almuerzo_desde, h.almuerzo_hasta "
+            "FROM horarios_sede h JOIN sedes s ON s.id_sede = h.id_sede "
+            "WHERE s.id_tienda = %s AND s.es_principal = 1 AND s.estado = 'Activa'",
+            (id_sede, id_tienda),
+        )
         sembrar_horario(cur, id_sede)
         conn.commit()
         return id_sede

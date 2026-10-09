@@ -1,12 +1,21 @@
+{#- Landing publica (T9): era index.html de la raiz con Tailwind por CDN.
+    CSS compilado en static/css/landing.css (frontend/, `npm run css`) y JS en
+    static/js/landing.js: la CSP no deja scripts ni estilos inline. -#}
 <!DOCTYPE html>
 <html lang="es" class="scroll-smooth">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Turnio — Agenda y caja para salones, barberías, uñas, pestañas y estética</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Turnio: agenda y caja para salones, barberías, uñas, pestañas y estética</title>
 <meta name="description" content="Turnio digitaliza las citas de tu salón de belleza, barbería, estudio de uñas, pestañas o estética: reservas 24/7, caja y venta de productos desde el celular. Desde $49.000 COP al mes, con 14 días gratis del plan Pro.">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="theme.js"></script>
+<link rel="canonical" href="{{ url_for('index', _external=True) }}">
+<meta property="og:title" content="Turnio: agenda y caja para negocios de belleza">
+<meta property="og:description" content="Reservas 24/7, caja y productos desde el celular. 14 días gratis del plan Pro.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_CO">
+{% include "_pwa.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+<script src="{{ url_for('static', filename='js/landing.js') }}" defer></script>
 </head>
 
 <body class="min-h-screen bg-white font-sans text-brand-darkest antialiased selection:bg-brand-lightest">
@@ -37,7 +46,7 @@
       <li><a class="transition hover:text-brand-dark" href="#demo">Demo</a></li>
     </ul>
 
-    <a href="login.html"
+    <a href="{{ url_for('auth.login') }}"
        class="inline-flex items-center gap-2 rounded-2xl bg-brand-dark px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-darkest hover:shadow-lift active:scale-[.98] sm:px-5">
       <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
@@ -87,7 +96,7 @@
           </a>
         </div>
 
-        <p class="mt-5 text-xs text-brand-darkest/50">
+        <p class="mt-5 text-xs text-brand-darkest/70">
           15 minutos por videollamada · Sin tarjeta · Migramos tu cuaderno contigo
         </p>
       </div>
@@ -99,7 +108,7 @@
 
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs font-medium uppercase tracking-wide text-brand-darkest/45">Hoy, martes</p>
+                <p class="text-xs font-medium uppercase tracking-wide text-brand-darkest/70">Hoy, martes</p>
                 <p class="text-xl font-semibold tracking-tight">Tu agenda</p>
               </div>
               <span class="rounded-full bg-brand-lightest px-3 py-1 text-xs font-semibold text-brand-dark">8 turnos</span>
@@ -117,8 +126,8 @@
                 <span class="shrink-0 text-sm font-semibold text-brand-darkest/70">$25.000</span>
               </li>
               <li class="flex items-center gap-3 rounded-2xl border border-dashed border-brand-light p-3">
-                <span class="w-12 shrink-0 text-sm font-semibold text-brand-darkest/40">11:00</span>
-                <span class="flex-1 text-sm text-brand-darkest/45">Libre — reservable online</span>
+                <span class="w-12 shrink-0 text-sm font-semibold text-brand-darkest/70">11:00</span>
+                <span class="flex-1 text-sm text-brand-darkest/70">Libre — reservable online</span>
               </li>
             </ul>
 
@@ -306,11 +315,11 @@
       <div class="mt-12 grid gap-5 lg:grid-cols-2">
 
         <div class="rounded-3xl border border-slate-200 bg-white/70 p-7 sm:p-8">
-          <h3 class="flex items-center gap-2.5 text-lg font-semibold text-brand-darkest/60">
+          <h3 class="flex items-center gap-2.5 text-lg font-semibold text-brand-darkest/70">
             <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
             Con cuaderno y WhatsApp
           </h3>
-          <ul class="mt-6 space-y-4 text-sm leading-relaxed text-brand-darkest/60">
+          <ul class="mt-6 space-y-4 text-sm leading-relaxed text-brand-darkest/70">
             <li>Contestas mensajes entre un cliente y otro, o pierdes la reserva.</li>
             <li>Turnos duplicados, letra ilegible y hojas que se mojan.</li>
             <li>Clientes que no aparecen porque nadie los llamó a confirmar.</li>
@@ -339,18 +348,18 @@
       <dl class="mt-12 grid gap-5 sm:grid-cols-3">
         <div class="rounded-3xl bg-white p-7 text-center shadow-soft">
           <dt class="text-3xl font-semibold tracking-tight text-brand-dark">−40%</dt>
-          <dd class="mt-1.5 text-sm text-brand-darkest/60">de clientes que no se presentan</dd>
+          <dd class="mt-1.5 text-sm text-brand-darkest/70">de clientes que no se presentan</dd>
         </div>
         <div class="rounded-3xl bg-white p-7 text-center shadow-soft">
           <dt class="text-3xl font-semibold tracking-tight text-brand-dark">+6 h</dt>
-          <dd class="mt-1.5 text-sm text-brand-darkest/60">al mes que dejas de gastar coordinando turnos</dd>
+          <dd class="mt-1.5 text-sm text-brand-darkest/70">al mes que dejas de gastar coordinando turnos</dd>
         </div>
         <div class="rounded-3xl bg-white p-7 text-center shadow-soft">
           <dt class="text-3xl font-semibold tracking-tight text-brand-dark">+18%</dt>
-          <dd class="mt-1.5 text-sm text-brand-darkest/60">en ventas extra al ofrecerlas dentro del ticket</dd>
+          <dd class="mt-1.5 text-sm text-brand-darkest/70">en ventas extra al ofrecerlas dentro del ticket</dd>
         </div>
       </dl>
-      <p class="mt-4 text-xs text-brand-darkest/45">
+      <p class="mt-4 text-xs text-brand-darkest/70">
         Promedios de barberías de 2 a 5 sillas durante sus primeros 90 días con Turnio.
       </p>
     </div>
@@ -387,12 +396,12 @@
         <!-- Básico -->
         <article data-reveal class="flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-brand hover:shadow-lift sm:p-8" data-plan='{"1":{"total":49000,"mes":49000,"ahorro":0},"3":{"total":132000,"mes":44000,"ahorro":15000},"6":{"total":245000,"mes":40833,"ahorro":49000},"12":{"total":470000,"mes":39167,"ahorro":118000}}'>
           <h3 class="text-xl font-semibold tracking-tight">Plan Básico</h3>
-          <p class="mt-1 text-sm text-brand-darkest/60">Para independientes y locales pequeños</p>
+          <p class="mt-1 text-sm text-brand-darkest/70">Para independientes y locales pequeños</p>
           <p class="mt-6 flex flex-wrap items-baseline gap-x-2">
             <span class="text-4xl font-semibold tracking-tight" data-monto>$49.000</span>
-            <span class="text-sm font-medium text-brand-darkest/60">COP / mes</span>
+            <span class="text-sm font-medium text-brand-darkest/70">COP / mes</span>
           </p>
-          <p class="mt-2 min-h-[2.5rem] text-sm text-brand-darkest/60" data-nota data-nota-mensual="Menos de $1.700 al día.">Menos de $1.700 al día.</p>
+          <p class="mt-2 min-h-[2.5rem] text-sm text-brand-darkest/70" data-nota data-nota-mensual="Menos de $1.700 al día.">Menos de $1.700 al día.</p>
           <p class="mt-4 rounded-xl bg-brand-lightest/60 px-3 py-2 text-xs font-medium text-brand-dark">1 sede · Hasta 3 profesionales · 1 administrador</p>
 
           <ul class="mt-6 space-y-3.5 text-sm leading-relaxed">
@@ -404,9 +413,9 @@
             <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6.5L9.5 17 4 11.5"></path></svg>Gastos y reportes del día y del mes</li>
           </ul>
 
-          <a href="mailto:hola@turnio.app?subject=Quiero%20el%20plan%20B%C3%A1sico%20de%20Turnio"
+          <a href="{{ url_for('auth.registro') }}"
              class="mt-8 inline-flex w-full items-center justify-center rounded-2xl border border-brand-dark px-6 py-4 text-base font-semibold text-brand-dark transition duration-200 hover:bg-brand-lightest active:scale-[.98] md:mt-auto">
-            Quiero el plan Básico
+            Probar gratis 14 días
           </a>
         </article>
 
@@ -414,12 +423,12 @@
         <article data-reveal="120" class="relative flex flex-col rounded-3xl border-2 border-brand-dark bg-white p-7 shadow-lift transition duration-300 hover:-translate-y-1 sm:p-8" data-plan='{"1":{"total":89000,"mes":89000,"ahorro":0},"3":{"total":237000,"mes":79000,"ahorro":30000},"6":{"total":445000,"mes":74167,"ahorro":89000},"12":{"total":828000,"mes":69000,"ahorro":240000}}'>
           <p class="absolute -top-3 left-7 rounded-full bg-brand-dark px-3 py-1 text-xs font-semibold text-white sm:left-8">El más recomendado</p>
           <h3 class="text-xl font-semibold tracking-tight">Plan Pro</h3>
-          <p class="mt-1 text-sm text-brand-darkest/60">Para salones y barberías con equipo</p>
+          <p class="mt-1 text-sm text-brand-darkest/70">Para salones y barberías con equipo</p>
           <p class="mt-6 flex flex-wrap items-baseline gap-x-2">
             <span class="text-4xl font-semibold tracking-tight" data-monto>$89.000</span>
-            <span class="text-sm font-medium text-brand-darkest/60">COP / mes</span>
+            <span class="text-sm font-medium text-brand-darkest/70">COP / mes</span>
           </p>
-          <p class="mt-2 min-h-[2.5rem] text-sm text-brand-darkest/60" data-nota data-nota-mensual="Menos de $3.000 al día.">Menos de $3.000 al día.</p>
+          <p class="mt-2 min-h-[2.5rem] text-sm text-brand-darkest/70" data-nota data-nota-mensual="Menos de $3.000 al día.">Menos de $3.000 al día.</p>
           <p class="mt-4 rounded-xl bg-brand-lightest/60 px-3 py-2 text-xs font-medium text-brand-dark">1 sede · Hasta 10 profesionales · 2 administradores</p>
 
           <ul class="mt-6 space-y-3.5 text-sm leading-relaxed">
@@ -432,21 +441,21 @@
             <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6.5L9.5 17 4 11.5"></path></svg>Soporte prioritario por WhatsApp</li>
           </ul>
 
-          <a href="mailto:hola@turnio.app?subject=Quiero%20el%20plan%20Pro%20de%20Turnio"
+          <a href="{{ url_for('auth.registro') }}"
              class="mt-8 inline-flex w-full items-center justify-center rounded-2xl bg-brand-dark px-6 py-4 text-base font-semibold text-white shadow-soft transition duration-200 hover:bg-brand-darkest hover:shadow-lift active:scale-[.98] md:mt-auto">
-            Quiero el plan Pro
+            Probar gratis 14 días
           </a>
         </article>
 
         <!-- Multisede -->
         <article data-reveal="240" class="flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-brand hover:shadow-lift sm:p-8" data-plan='{"1":{"total":139000,"mes":139000,"ahorro":0},"3":{"total":375000,"mes":125000,"ahorro":42000},"6":{"total":695000,"mes":115833,"ahorro":139000},"12":{"total":1330000,"mes":110833,"ahorro":338000}}'>
           <h3 class="text-xl font-semibold tracking-tight">Plan Multisede</h3>
-          <p class="mt-1 text-sm text-brand-darkest/60">Para el negocio que ya abrió otro local</p>
+          <p class="mt-1 text-sm text-brand-darkest/70">Para el negocio que ya abrió otro local</p>
           <p class="mt-6 flex flex-wrap items-baseline gap-x-2">
             <span class="text-4xl font-semibold tracking-tight" data-monto>$139.000</span>
-            <span class="text-sm font-medium text-brand-darkest/60">COP / mes</span>
+            <span class="text-sm font-medium text-brand-darkest/70">COP / mes</span>
           </p>
-          <p class="mt-2 min-h-[2.5rem] text-sm text-brand-darkest/60" data-nota data-nota-mensual="Menos de $4.700 al día.">Menos de $4.700 al día.</p>
+          <p class="mt-2 min-h-[2.5rem] text-sm text-brand-darkest/70" data-nota data-nota-mensual="Menos de $4.700 al día.">Menos de $4.700 al día.</p>
           <p class="mt-4 rounded-xl bg-brand-lightest/60 px-3 py-2 text-xs font-medium text-brand-dark">2 sedes incluidas, hasta 5 · 10 profesionales por sede</p>
 
           <ul class="mt-6 space-y-3.5 text-sm leading-relaxed">
@@ -458,14 +467,14 @@
             <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6.5L9.5 17 4 11.5"></path></svg>Sede extra: $45.000 al mes y $79.000 de montaje</li>
           </ul>
 
-          <a href="mailto:hola@turnio.app?subject=Quiero%20el%20plan%20Multisede%20de%20Turnio"
+          <a href="{{ url_for('auth.registro') }}"
              class="mt-8 inline-flex w-full items-center justify-center rounded-2xl border border-brand-dark px-6 py-4 text-base font-semibold text-brand-dark transition duration-200 hover:bg-brand-lightest active:scale-[.98] md:mt-auto">
-            Quiero el plan Multisede
+            Probar gratis 14 días
           </a>
         </article>
       </div>
 
-      <p class="mx-auto mt-6 max-w-3xl text-center text-xs leading-relaxed text-brand-darkest/50">
+      <p class="mx-auto mt-6 max-w-3xl text-center text-xs leading-relaxed text-brand-darkest/70">
         Precios en pesos colombianos, por negocio. Montaje remoto gratis: cargamos contigo servicios, precios y equipo.
         Montaje presencial $79.000 una vez (Cali y área metropolitana). Profesional extra $9.000 al mes.
         Más de 5 sedes: escríbenos.
@@ -505,25 +514,26 @@
           </span>
           <span class="text-lg font-semibold tracking-tight">Turnio</span>
         </a>
-        <p class="mt-4 max-w-xs text-sm leading-relaxed text-brand-darkest/60">
+        <p class="mt-4 max-w-xs text-sm leading-relaxed text-brand-darkest/70">
           La agenda y la caja de tu negocio de belleza, en el bolsillo.
         </p>
       </div>
 
       <nav aria-labelledby="footer-producto">
         <h2 id="footer-producto" class="text-sm font-semibold">Producto</h2>
-        <ul class="mt-4 space-y-3 text-sm text-brand-darkest/60">
+        <ul class="mt-4 space-y-3 text-sm text-brand-darkest/70">
           <li><a class="transition hover:text-brand-dark" href="#beneficios">Beneficios</a></li>
           <li><a class="transition hover:text-brand-dark" href="#comparativa">Vs. el cuaderno</a></li>
           <li><a class="transition hover:text-brand-dark" href="#planes">Planes y precios</a></li>
           <li><a class="transition hover:text-brand-dark" href="#demo">Agendar demo</a></li>
-          <li><a class="transition hover:text-brand-dark" href="login.html">Iniciar sesión</a></li>
+          <li><a class="transition hover:text-brand-dark" href="{{ url_for('auth.registro') }}">Crear cuenta gratis</a></li>
+          <li><a class="transition hover:text-brand-dark" href="{{ url_for('auth.login') }}">Iniciar sesión</a></li>
         </ul>
       </nav>
 
       <nav aria-labelledby="footer-contacto">
         <h2 id="footer-contacto" class="text-sm font-semibold">Contacto</h2>
-        <ul class="mt-4 space-y-3 text-sm text-brand-darkest/60">
+        <ul class="mt-4 space-y-3 text-sm text-brand-darkest/70">
           <li><a class="transition hover:text-brand-dark" href="mailto:hola@turnio.app">hola@turnio.app</a></li>
           <li><a class="transition hover:text-brand-dark" href="#">Soporte por WhatsApp</a></li>
           <li><a class="transition hover:text-brand-dark" href="#">Términos y privacidad</a></li>
@@ -531,62 +541,12 @@
       </nav>
     </div>
 
-    <div class="mt-12 flex flex-col gap-3 border-t border-brand-light/40 pt-7 text-xs text-brand-darkest/50 sm:flex-row sm:items-center sm:justify-between">
+    <div class="mt-12 flex flex-col gap-3 border-t border-brand-light/40 pt-7 text-xs text-brand-darkest/70 sm:flex-row sm:items-center sm:justify-between">
       <p>© 2026 Turnio. Todos los derechos reservados.</p>
       <p>Hecho para negocios de belleza que odian el papeleo.</p>
     </div>
   </div>
 </footer>
-
-<script>
-/* Aparición suave al hacer scroll. Solo opacity y transform (los anima la GPU, no recalculan layout).
-   Sin JS, sin IntersectionObserver o con "reducir movimiento" activado, todo queda visible tal cual. */
-(function () {
-  if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  var io = new IntersectionObserver(function (entradas) {
-    entradas.forEach(function (e) {
-      if (!e.isIntersecting) return;
-      io.unobserve(e.target);
-      e.target.style.opacity = '';
-      e.target.animate(
-        [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }],
-        { duration: 500, easing: 'cubic-bezier(.2,.7,.2,1)', delay: Number(e.target.dataset.reveal) || 0, fill: 'backwards' }
-      );
-    });
-  }, { threshold: 0.15 });
-
-  document.querySelectorAll('[data-reveal]').forEach(function (el) {
-    if (el.getBoundingClientRect().top < innerHeight) return;   /* ya está a la vista al cargar: no se esconde */
-    el.style.opacity = '0';
-    io.observe(el);
-  });
-})();
-</script>
-
-<script>
-/* Selector de periodo de los planes (como el de jemPOS): cambia el valor
-   mensual equivalente y la nota de cada tarjeta. Sin JS queda el mensual. */
-(function () {
-  var cop = function (n) { return '$' + n.toLocaleString('es-CO'); };
-  var meses = { 3: 'cada 3 meses', 6: 'cada 6 meses', 12: 'al año' };
-  var botones = document.querySelectorAll('[data-periodos] [data-periodo]');
-  botones.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var m = btn.dataset.periodo;
-      botones.forEach(function (b) { b.setAttribute('aria-selected', b === btn ? 'true' : 'false'); });
-      document.querySelectorAll('[data-plan]').forEach(function (card) {
-        var p = JSON.parse(card.dataset.plan)[m];
-        var nota = card.querySelector('[data-nota]');
-        card.querySelector('[data-monto]').textContent = cop(p.mes);
-        if (m === '1') { nota.textContent = nota.dataset.notaMensual; return; }
-        var ahorro = m === '6' ? '1 mes gratis' : 'ahorras ' + cop(p.ahorro);
-        nota.textContent = 'Pagas ' + cop(p.total) + ' ' + meses[m] + ': ' + ahorro + '.';
-      });
-    });
-  });
-})();
-</script>
 
 </body>
 </html>

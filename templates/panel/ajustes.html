@@ -10,10 +10,10 @@
   <!-- ═══════════ HEADER ═══════════ -->
   <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/80 px-5 pb-3 pt-5 backdrop-blur-xl backdrop-saturate-150">
     <h1 class="text-xl font-semibold tracking-tight">Ajustes</h1>
-    <p class="text-xs text-brand-darkest/55">{{ 'Tu negocio, tu cuenta y tus horarios' if yo.rol == 'Admin' else 'Tu cuenta' }}</p>
+    <p class="text-xs text-brand-darkest/70">{{ 'Tu negocio, tu cuenta y tus horarios' if yo.rol == 'Admin' else 'Tu cuenta' }}</p>
   </header>
 
-  <div id="contenido" class="space-y-4 px-5 {{ 'pb-40' if yo.rol == 'Admin' else 'pb-28' }} pt-5">
+  <main id="contenido" class="space-y-4 px-5 {{ 'pb-40' if yo.rol == 'Admin' else 'pb-28' }} pt-5">
 
     {% if yo.rol == 'Admin' %}
     <form id="form-ajustes" class="space-y-4" aria-busy="true">
@@ -21,7 +21,7 @@
       <!-- ═══ PERSONALIZACIÓN ═══ -->
       <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
         <h2 class="text-base font-semibold tracking-tight">Tu negocio</h2>
-        <p class="mt-1 text-xs text-brand-darkest/55">Así te ven tus clientes en el link público.</p>
+        <p class="mt-1 text-xs text-brand-darkest/70">Así te ven tus clientes en el link público.</p>
 
         <!-- Logo: se sube apenas se elige -->
         <div class="mt-5 flex items-center gap-4">
@@ -34,7 +34,7 @@
               Cambiar foto
             </label>
             <input id="logo" type="file" accept="image/png,image/jpeg,image/webp" class="sr-only">
-            <p class="mt-1.5 text-xs text-brand-darkest/50">PNG, JPG o WebP, cuadrada. Máx. 2 MB.</p>
+            <p class="mt-1.5 text-xs text-brand-darkest/70">PNG, JPG o WebP, cuadrada. Máx. 2 MB.</p>
             <p id="logo-error" class="mt-1 hidden text-xs font-medium text-rose-700" role="alert"></p>
           </div>
         </div>
@@ -61,7 +61,7 @@
           <div>
             <label for="slug" class="block text-sm font-medium">Tu link de reservas</label>
             <div class="mt-2 flex items-center gap-1 rounded-xl border border-brand-light bg-brand-lightest/40 p-2 pl-4">
-              <span class="shrink-0 font-mono text-xs text-brand-darkest/50">{{ request.host }}/r/</span>
+              <span class="shrink-0 font-mono text-xs text-brand-darkest/70">{{ request.host }}/r/</span>
               <input id="slug" name="slug" type="text" required minlength="3" maxlength="60" pattern="[a-z0-9]+(-[a-z0-9]+)*" value="{{ negocio.slug }}"
                      autocapitalize="none" spellcheck="false" data-base="{{ request.host_url }}r/"
                      class="min-w-0 flex-1 rounded-lg bg-transparent px-1 font-mono text-xs text-brand-darkest/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30">
@@ -69,7 +69,7 @@
                 Copiar
               </button>
             </div>
-            <p class="mt-1.5 text-xs text-brand-darkest/50">Solo minúsculas, números y guiones.</p>
+            <p class="mt-1.5 text-xs text-brand-darkest/70">Solo minúsculas, números y guiones.</p>
             <a id="btn-whatsapp" href="#" target="_blank" rel="noopener"
                class="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-lightest py-3 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/60 active:scale-[.98]">
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.6 4.8-1.3A10 10 0 1 0 12 2Zm5.6 14c-.2.6-1.2 1.2-1.7 1.2-.4 0-1 .1-3.1-.8-2.6-1.1-4.3-3.8-4.4-4-.1-.2-1-1.4-1-2.6s.6-1.8.9-2.1c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 1.9c.1.2.1.4 0 .6l-.4.5c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.2.1.4.1.5-.1l.8-.9c.2-.2.3-.2.6-.1l1.8.9c.3.1.5.2.5.4v1.2Z"/></svg>
@@ -82,7 +82,7 @@
       <!-- ═══ HORARIOS ═══ -->
       <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
         <h2 class="text-base font-semibold tracking-tight">Horarios de atención{% if yo.sede %} · {{ yo.sede }}{% endif %}</h2>
-        <p class="mt-1 text-xs text-brand-darkest/55">Fuera de estas horas (y del almuerzo) nadie puede reservar.</p>
+        <p class="mt-1 text-xs text-brand-darkest/70">Fuera de estas horas (y del almuerzo) nadie puede reservar.</p>
 
         <ul id="horarios" class="mt-5 space-y-2">{% for _ in range(7) %}<li class="esqueleto h-14"></li>{% endfor %}</ul>
 
@@ -103,16 +103,24 @@
     </section>
     {% endif %}
 
+    <!-- ═══ INSTALAR (T9): static/js/pwa.js lo muestra solo si se puede ═══ -->
+    <section data-instalar-caja hidden class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="text-base font-semibold tracking-tight">Turnio en tu pantalla de inicio</h2>
+      <p class="mt-1 text-sm text-brand-darkest/65">Ábrelo como una app, sin buscar el enlace ni la barra del navegador.</p>
+      <button type="button" data-instalar hidden class="mt-4 w-full rounded-2xl bg-brand-dark py-3.5 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98]">Instalar Turnio</button>
+      <p data-instalar-ios hidden class="mt-4 rounded-2xl bg-brand-lightest px-4 py-3 text-sm text-brand-darkest">En Safari toca <strong>Compartir</strong> y luego <strong>Agregar a inicio</strong>.</p>
+    </section>
+
     <!-- ═══ PLAN ═══ -->
     <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="text-base font-semibold tracking-tight">Plan {{ plan.nombre }}</h2>
       {% if dias_suscripcion is not none %}
-        <p class="mt-1 text-xs text-brand-darkest/55">{{ 'Venció: la cuenta está en modo lectura.' if tienda_vencida else 'Vence en ' ~ dias_suscripcion ~ ' día' ~ ('' if dias_suscripcion == 1 else 's') ~ '.' }}</p>
+        <p class="mt-1 text-xs text-brand-darkest/70">{{ 'Venció: la cuenta está en modo lectura.' if tienda_vencida else 'Vence en ' ~ dias_suscripcion ~ ' día' ~ ('' if dias_suscripcion == 1 else 's') ~ '.' }}</p>
       {% endif %}
       <ul class="mt-4 space-y-1.5 text-sm">
         {% for texto, incluida in funciones %}
-          <li class="flex items-start gap-2 {{ '' if incluida else 'text-brand-darkest/45' }}">
-            <span class="mt-0.5 shrink-0 font-bold {{ 'text-emerald-600' if incluida else 'text-brand-darkest/30' }}" aria-hidden="true">{{ '✓' if incluida else '–' }}</span>
+          <li class="flex items-start gap-2 {{ '' if incluida else 'text-brand-darkest/70' }}">
+            <span class="mt-0.5 shrink-0 font-bold {{ 'text-emerald-700' if incluida else 'text-brand-darkest/30' }}" aria-hidden="true">{{ '✓' if incluida else '–' }}</span>
             <span>{{ texto }}{% if not incluida %} <span class="sr-only">(no incluida)</span>{% endif %}</span>
           </li>
         {% endfor %}
@@ -127,8 +135,8 @@
         <span id="cuenta-iniciales" class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-dark text-sm font-bold text-white"></span>
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-semibold">{{ yo.nombre }}</p>
-          <p class="truncate text-xs text-brand-darkest/55">{{ yo.correo }}</p>
-          <p class="truncate text-xs text-brand-darkest/55">{{ {'Admin': 'Administrador · acceso total', 'Recepcion': 'Recepción · agenda y caja', 'Profesional': 'Profesional · tu agenda'}.get(yo.rol, yo.rol) }}</p>
+          <p class="truncate text-xs text-brand-darkest/70">{{ yo.correo }}</p>
+          <p class="truncate text-xs text-brand-darkest/70">{{ {'Admin': 'Administrador · acceso total', 'Recepcion': 'Recepción · agenda y caja', 'Profesional': 'Profesional · tu agenda'}.get(yo.rol, yo.rol) }}</p>
         </div>
       </div>
 
@@ -143,8 +151,8 @@
       </button>
     </section>
 
-    <p class="text-center text-xs text-brand-darkest/50">Turnio</p>
-  </div>
+    <p class="text-center text-xs text-brand-darkest/70">Turnio</p>
+  </main>
 </div>
 
 {% if yo.rol == 'Admin' %}
@@ -182,7 +190,7 @@
       <div>
         <label for="clave-nueva" class="block text-sm font-medium">Contraseña nueva</label>
         <input id="clave-nueva" name="nueva" type="password" required autocomplete="new-password" minlength="8" maxlength="128" class="{{ campo }}">
-        <p class="mt-1.5 text-xs text-brand-darkest/50">Mínimo 8 caracteres, con mayúscula, minúscula y número.</p>
+        <p class="mt-1.5 text-xs text-brand-darkest/70">Mínimo 8 caracteres, con mayúscula, minúscula y número.</p>
       </div>
       <div>
         <label for="clave-repetir" class="block text-sm font-medium">Repite la nueva</label>
