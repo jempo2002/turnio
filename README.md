@@ -34,6 +34,12 @@ Lo propio de Turnio:
   - Pro $89.000/mes: 1 sede, hasta 10 profesionales, 2 Admin, productos sin tope, asistente con IA, comisiones y recordatorios automáticos por WhatsApp (500 mensajes al mes).
   - Multisede $139.000/mes: todo lo del Pro con 2 sedes incluidas y hasta 5 (cada sede extra suma $45.000/mes y $79.000 de montaje), 10 profesionales por sede y 1.000 mensajes.
   - Todo negocio nuevo arranca con 14 días gratis del Pro; al registrar el primer pago el Master le pone el plan elegido. Recepción no tiene tope. Profesional extra $9.000/mes y paquete de 500 mensajes $15.000 (los cobra el Master por ahora).
+- **Catálogo y configuración** (T4, `app/routes/catalogo.py`): leer es para todo el equipo; cambiar, del Admin.
+  - `GET/POST /api/servicios`, `PUT/DELETE /api/servicios/<id>`: nombre, duración, precio y lo que gana quien lo hace. Eliminar es soft delete.
+  - `GET /api/profesionales` (quienes atienden en la sede, con sus servicios) y `PUT /api/profesionales/<id>`: `atiende`, `reserva_online` y `servicios` (`"todos"` o la lista, cada uno con su pago propio opcional). Todo Profesional atiende; el Admin o Recepción que también atiende tiene agenda y cuenta en el tope del plan. El dueño que se registra empieza atendiendo.
+  - `POST/DELETE /api/usuarios/<id>/foto` y `/api/negocio/logo` (multipart, campo `imagen`): PNG, JPG o WebP de hasta 2 MB, guardados en la base y servidos en `/img/<id>`.
+  - `GET/PUT /api/negocio`: nombre, tipo de negocio, WhatsApp y enlace de reservas (`slug`). La dirección es de cada sede.
+  - `GET/PUT /api/horario` (`?id_sede=` para otra sede): los 7 días con apertura, cierre y almuerzo. Toda sede nueva nace con lunes a sábado de 8 a. m. a 7 p. m.
 - **Negocios**: cada uno tiene `slug` (su página pública de reservas, `/r/<slug>`, en T8) y `tipo_negocio` (barbería, peluquería, uñas, cejas y pestañas, estética).
 - **Esquema** (`migrations/`): negocios, sedes y usuarios; horario por sede; servicios con duración, precio y pago al profesional; citas con candado por profesional y hora; productos con código de barras; movimientos de caja con la comisión de cada cobro.
 

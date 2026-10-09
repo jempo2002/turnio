@@ -12,7 +12,8 @@ los del landing (index.html, seccion #planes), en COP por mes:
                       montaje de $79.000), 10 profesionales por sede, 2 Admin.
                       Todo lo del Pro, con 1.000 mensajes/mes.
 
-Los topes son de profesionales (rol Profesional: quien tiene agenda) y de
+Los topes son de profesionales (quien tiene agenda: todo Profesional y el
+Admin o Recepcion que tambien atiende, `usuarios.atiende`) y de
 administradores (rol Admin). Recepcion no tiene tope: es el encargado de
 cada sede. Los productos solo topan en el Basico, igual que en jemPOS.
 
@@ -251,7 +252,9 @@ def _contar_sedes(cur, id_tienda: int) -> int:
 _CONTEO = {
     "profesionales": (
         "SELECT COUNT(*) AS n FROM usuarios "
-        "WHERE id_tienda = %s AND estado_activo = 1 AND rol = 'Profesional'"
+        # Todo Profesional atiende; un Admin o Recepcion con agenda tambien
+        # cuenta (si no, Recepcion, que no topa, abriria agendas sin limite).
+        "WHERE id_tienda = %s AND estado_activo = 1 AND atiende = 1"
     ),
     "administradores": (
         "SELECT COUNT(*) AS n FROM usuarios "

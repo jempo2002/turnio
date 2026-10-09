@@ -130,9 +130,10 @@ def crear_usuario(id_tienda: int, data: dict) -> int:
         id_sede = _parse_sede(cur, id_tienda, rol, data.get("id_sede"))
         plan_service.verificar_limite_rol(cur, id_tienda, rol)
         cur.execute(
-            "INSERT INTO usuarios (id_tienda, id_sede, nombre_completo, correo, clave_hash, rol, cc, telefono, "
-            "invitacion_pendiente) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (id_tienda, id_sede, nombre, correo, generate_password_hash(password), rol, cc, telefono, int(invitar)),
+            "INSERT INTO usuarios (id_tienda, id_sede, nombre_completo, correo, clave_hash, rol, atiende, cc, "
+            "telefono, invitacion_pendiente) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (id_tienda, id_sede, nombre, correo, generate_password_hash(password), rol, int(rol == "Profesional"),
+             cc, telefono, int(invitar)),
         )
         id_usuario = cur.lastrowid
         conn.commit()
@@ -150,7 +151,7 @@ def crear_usuario(id_tienda: int, data: dict) -> int:
 
 def _usuario_de_tienda(cur, id_tienda: int, id_usuario: int) -> dict:
     cur.execute(
-        "SELECT id_usuario, rol FROM usuarios "
+        "SELECT id_usuario, rol, atiende FROM usuarios "
         "WHERE id_usuario = %s AND id_tienda = %s AND estado_activo = 1 AND rol <> 'Master' FOR UPDATE",
         (id_usuario, id_tienda),
     )
@@ -181,12 +182,15 @@ def actualizar_usuario(id_tienda: int, id_actor: int, id_usuario: int, data: dic
                 raise UsuarioError("No puedes quitarte el rol de Admin a ti mismo.")
             if _es_ultimo_admin(cur, id_tienda, id_usuario):
                 raise UsuarioError("El negocio debe tener al menos un Admin.")
-        if rol != usuario["rol"]:
+        # Quien ya atendia ya cuenta como profesional.
+        if rol != usuario["rol"] and not (rol == "Profesional" and usuario["atiende"]):
             plan_service.verificar_limite_rol(cur, id_tienda, rol)
         id_sede = _parse_sede(cur, id_tienda, rol, data.get("id_sede"))
         cur.execute(
-            "UPDATE usuarios SET nombre_completo = %s, rol = %s, id_sede = %s WHERE id_usuario = %s",
-            (nombre, rol, id_sede, id_usuario),
+            # Todo Profesional atiende; los otros roles conservan lo que tenian.
+            "UPDATE usuarios SET nombre_completo = %s, rol = %s, id_sede = %s, "
+            "atiende = IF(%s = 'Profesional', 1, atiende) WHERE id_usuario = %s",
+            (nombre, rol, id_sede, rol, id_usuario),
         )
         conn.commit()
     except Exception:

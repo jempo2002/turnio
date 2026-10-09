@@ -15,6 +15,11 @@ ERRNO_TRIGGER = 1644
 _LIMITE_BASE = "El plan no admite más sedes."
 
 
+# Horario de fabrica de una sede nueva: lunes a sabado de 8 a. m. a 7 p. m.,
+# domingo cerrado (dia 0 = lunes ... 6 = domingo).
+ABRE, CIERRA = "08:00", "19:00"
+
+
 class SedeError(Exception):
     def __init__(self, msg: str, status: int = 400):
         super().__init__(msg)
@@ -26,6 +31,14 @@ def _campos(data: dict) -> tuple[str, str | None, str | None]:
     direccion = sanitize_optional_text(data.get("direccion"), "La direccion", max_len=200)
     telefono = normalize_phone(data.get("telefono"), max_len=20)
     return nombre, direccion, telefono
+
+
+def sembrar_horario(cur, id_sede: int) -> None:
+    """Horario de fabrica para una sede nueva (misma transaccion que la crea)."""
+    cur.executemany(
+        "INSERT IGNORE INTO horarios_sede (id_sede, dia, abierto, abre, cierra) VALUES (%s, %s, %s, %s, %s)",
+        [(id_sede, dia, int(dia < 6), ABRE, CIERRA) for dia in range(7)],
+    )
 
 
 def resumen_sedes(id_tienda: int) -> dict:
@@ -94,6 +107,7 @@ def crear_sede(id_tienda: int, data: dict) -> int:
             (id_tienda, nombre, direccion, telefono, montaje),
         )
         id_sede = cur.lastrowid
+        sembrar_horario(cur, id_sede)
         conn.commit()
         return id_sede
     except IntegrityError as exc:
