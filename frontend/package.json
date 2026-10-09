@@ -1,0 +1,12 @@
+{
+  "name": "turnio-panel-css",
+  "private": true,
+  "description": "Compila el CSS del panel (Tailwind) a static/css/panel.css. El resultado se sube al repo: Railway solo corre Python.",
+  "scripts": {
+    "css": "tailwindcss -c tailwind.config.js -i panel.css -o ../static/css/panel.css --minify",
+    "css:watch": "tailwindcss -c tailwind.config.js -i panel.css -o ../static/css/panel.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

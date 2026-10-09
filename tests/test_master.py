@@ -32,7 +32,7 @@ def test_crear_negocio_con_sede_admin_y_slug(client, crear):
     assert "Barbería El Cuartel" in client.get("/panel-master").get_data(as_text=True)
 
     nuevo = client.application.test_client()
-    assert entrar(nuevo, "ana@turnio.co").location.endswith("/inicio")
+    assert entrar(nuevo, "ana@turnio.co").location.endswith("/citas")
 
 
 def test_slug_repetido_recibe_numero(client, crear):
@@ -92,7 +92,7 @@ def test_eliminar_negocio_saca_a_sus_usuarios(client, crear):
     otro = client.application.test_client()
     entrar(otro, "admin@turnio.co")
     assert client.delete(f"/api/master/negocios/{id_tienda}").status_code == 200
-    assert otro.get("/inicio").location.endswith("/login")
+    assert otro.get("/citas").location.endswith("/login")
     assert crear.fila("SELECT estado FROM sedes WHERE id_sede = %s", (sede,))["estado"] == "Eliminada"
 
 

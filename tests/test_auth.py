@@ -14,10 +14,10 @@ def test_login_correcto_y_contrasena_incorrecta(client, crear):
     assert r.status_code == 302 and r.location.endswith("/login")
 
     r = entrar(client, "admin@turnio.co")
-    assert r.location.endswith("/inicio")
+    assert r.location.endswith("/citas")
     with client.session_transaction() as s:
         assert s["id_sede"] == sede  # una sola sede: se elige sola
-    assert client.get("/inicio").status_code == 200
+    assert client.get("/citas").status_code == 200
 
 
 def test_admin_con_varias_sedes_elige_sede(client, crear):
@@ -26,12 +26,12 @@ def test_admin_con_varias_sedes_elige_sede(client, crear):
 
     r = entrar(client, "admin@turnio.co")
     assert r.location.endswith("/seleccionar-sede")
-    assert client.get("/inicio").location.endswith("/seleccionar-sede")
+    assert client.get("/citas").location.endswith("/seleccionar-sede")
     assert client.get("/sedes", headers={"Accept": "application/json"}).status_code == 409
 
     r = client.post("/seleccionar-sede", data={"id_sede": norte})
-    assert r.location.endswith("/inicio")
-    assert b"Norte" in client.get("/inicio").data
+    assert r.location.endswith("/citas")
+    assert b"Norte" in client.get("/citas").data
 
 
 def test_no_se_puede_elegir_sede_de_otro_negocio(client, crear):
@@ -47,7 +47,7 @@ def test_profesional_entra_a_su_sede_y_pierde_sesion_si_lo_mueven(client, crear,
     id_tienda, (centro, norte) = crear.tienda("pro", sedes=("Centro", "Norte"))
     id_profesional = crear.usuario("carlos@turnio.co", "Profesional", id_tienda, norte)
 
-    assert entrar(client, "carlos@turnio.co").location.endswith("/inicio")
+    assert entrar(client, "carlos@turnio.co").location.endswith("/citas")
     with client.session_transaction() as s:
         assert s["id_sede"] == norte
     # Su sede fija no se puede cambiar por la otra.
@@ -55,7 +55,7 @@ def test_profesional_entra_a_su_sede_y_pierde_sesion_si_lo_mueven(client, crear,
 
     entrar(client, "carlos@turnio.co")
     db.cursor().execute("UPDATE usuarios SET id_sede = %s WHERE id_usuario = %s", (centro, id_profesional))
-    r = client.get("/inicio")
+    r = client.get("/citas")
     assert r.status_code == 302 and r.location.endswith("/login")
 
 
@@ -87,7 +87,7 @@ def test_logout_es_post_con_csrf(app, client, crear):
     assert client.post("/logout").status_code == 400  # sin token
     app.config["WTF_CSRF_ENABLED"] = False
     client.post("/logout")
-    assert client.get("/inicio").location.endswith("/login")
+    assert client.get("/citas").location.endswith("/login")
 
 
 def test_limite_de_intentos_de_login(client, crear):

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>{% block title %}{% endblock %} · Turnio</title>
+<meta name="theme-color" content="{% block color %}#F1F5F9{% endblock %}">
+<meta name="robots" content="noindex">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
+<script src="{{ url_for('static', filename='js/panel/turnio.js') }}" defer></script>
+{% block scripts %}{% endblock %}
+</head>
+
+{#- Lo que el JS sabe de la sesion. Solo para pintar: cada permiso lo vuelve a
+    revisar la API con la sesion del servidor. -#}
+<body class="min-h-screen bg-slate-100 font-sans text-brand-darkest antialiased"
+      data-yo-id="{{ yo.id }}" data-yo-nombre="{{ yo.nombre }}" data-yo-rol="{{ yo.rol }}"
+      data-yo-atiende="{{ '1' if yo.atiende else '0' }}" data-yo-funciones="{{ yo.funciones }}"
+      data-negocio="{{ negocio.nombre_negocio }}">
+
+<a href="#contenido" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-xl focus:bg-brand-darkest focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
+  Saltar al contenido
+</a>
+
+{% if tienda_vencida %}
+  <p class="bg-rose-700 px-5 py-2.5 text-center text-xs font-semibold text-white" role="alert">Tu suscripción venció. La cuenta queda en modo lectura hasta renovar.</p>
+{% elif dias_suscripcion is not none and dias_suscripcion <= 5 %}
+  <p class="bg-amber-100 px-5 py-2.5 text-center text-xs font-semibold text-amber-900">Tu suscripción vence en {{ dias_suscripcion }} día{{ '' if dias_suscripcion == 1 else 's' }}.</p>
+{% endif %}
+{% with mensajes = get_flashed_messages(with_categories=true) %}
+  {% for categoria, mensaje in mensajes %}
+    <p class="{{ 'bg-rose-50 text-rose-800' if categoria == 'error' else 'bg-emerald-50 text-emerald-800' }} px-5 py-3 text-center text-sm font-medium" role="status">{{ mensaje }}</p>
+  {% endfor %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+{#- Barra inferior: solo las pestanas del rol (panel.PESTANAS). -#}
+{% import "panel/_iconos.html" as iconos %}
+{% set etiquetas = {'citas': 'Citas', 'caja': 'Caja', 'inventario': 'Inventario', 'ajustes': 'Ajustes'} %}
+{% set pestanas = yo.pestanas.split() %}
+<nav aria-label="Navegación principal" class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150">
+  <ul class="mx-auto grid max-w-md {{ {2: 'grid-cols-2', 3: 'grid-cols-3'}.get(pestanas|length, 'grid-cols-4') }}">
+    {% for p in pestanas %}
+      {% set actual = p == activa %}
+      <li><a href="{{ url_for('panel.' ~ p) }}"{% if actual %} aria-current="page"{% endif %}
+             class="flex flex-col items-center gap-1 py-2.5 transition {{ 'text-brand-dark' if actual else 'text-brand-darkest/45 hover:text-brand-dark' }}">
+        {{ iconos.pestana(p) }}
+        <span class="text-[10px] {{ 'font-semibold' if actual else 'font-medium' }}">{{ etiquetas[p] }}</span>
+      </a></li>
+    {% endfor %}
+  </ul>
+</nav>
+
+</body>
+</html>

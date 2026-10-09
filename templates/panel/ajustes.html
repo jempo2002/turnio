@@ -1,0 +1,198 @@
+{% extends "panel/_base.html" %}
+{% import "panel/_iconos.html" as iconos %}
+{% block title %}Ajustes{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/panel/ajustes.js') }}" defer></script>{% endblock %}
+{% set campo = 'mt-2 block w-full rounded-xl border border-brand-light bg-slate-50 px-4 py-3.5 text-base transition focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/25' %}
+{% set enlace = 'flex min-h-[44px] items-center justify-between gap-2 rounded-xl px-4 text-sm font-semibold text-brand-dark transition hover:bg-brand-lightest/50' %}
+{% block content %}
+<div class="mx-auto max-w-md">
+
+  <!-- ═══════════ HEADER ═══════════ -->
+  <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/80 px-5 pb-3 pt-5 backdrop-blur-xl backdrop-saturate-150">
+    <h1 class="text-xl font-semibold tracking-tight">Ajustes</h1>
+    <p class="text-xs text-brand-darkest/55">{{ 'Tu negocio, tu cuenta y tus horarios' if yo.rol == 'Admin' else 'Tu cuenta' }}</p>
+  </header>
+
+  <div id="contenido" class="space-y-4 px-5 {{ 'pb-40' if yo.rol == 'Admin' else 'pb-28' }} pt-5">
+
+    {% if yo.rol == 'Admin' %}
+    <form id="form-ajustes" class="space-y-4" aria-busy="true">
+
+      <!-- ═══ PERSONALIZACIÓN ═══ -->
+      <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
+        <h2 class="text-base font-semibold tracking-tight">Tu negocio</h2>
+        <p class="mt-1 text-xs text-brand-darkest/55">Así te ven tus clientes en el link público.</p>
+
+        <!-- Logo: se sube apenas se elige -->
+        <div class="mt-5 flex items-center gap-4">
+          <span class="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-3xl bg-brand-dark text-2xl font-bold text-white">
+            <img id="logo-img" alt="" class="{{ '' if negocio.logo_url else 'hidden ' }}h-full w-full object-cover" {% if negocio.logo_url %}src="{{ negocio.logo_url }}"{% endif %}>
+            <span id="logo-iniciales" class="{{ 'hidden' if negocio.logo_url else '' }}">{{ negocio.nombre_negocio[:2]|upper }}</span>
+          </span>
+          <div class="min-w-0">
+            <label for="logo" id="logo-boton" class="inline-block cursor-pointer rounded-xl border border-brand-light bg-white px-4 py-3 text-sm font-semibold text-brand-dark transition hover:bg-brand-lightest/50">
+              Cambiar foto
+            </label>
+            <input id="logo" type="file" accept="image/png,image/jpeg,image/webp" class="sr-only">
+            <p class="mt-1.5 text-xs text-brand-darkest/50">PNG, JPG o WebP, cuadrada. Máx. 2 MB.</p>
+            <p id="logo-error" class="mt-1 hidden text-xs font-medium text-rose-700" role="alert"></p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+          <div>
+            <label for="negocio" class="block text-sm font-medium">Nombre del negocio</label>
+            <input id="negocio" name="nombre_negocio" type="text" required maxlength="150" value="{{ negocio.nombre_negocio }}" class="{{ campo }}">
+          </div>
+
+          <div>
+            <label for="tipo" class="block text-sm font-medium">Tipo de negocio</label>
+            <select id="tipo" name="tipo_negocio" class="{{ campo }}">
+              {% for clave, texto in tipos.items() %}<option value="{{ clave }}"{% if clave == negocio.tipo_negocio %} selected{% endif %}>{{ texto }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label for="whatsapp" class="block text-sm font-medium">WhatsApp del negocio</label>
+            <input id="whatsapp" name="telefono" type="tel" inputmode="tel" autocomplete="tel" pattern="[0-9+ \(\)\-]{7,20}" maxlength="20" value="{{ negocio.telefono or '' }}" class="{{ campo }}">
+          </div>
+
+          <!-- Enlace público -->
+          <div>
+            <label for="slug" class="block text-sm font-medium">Tu link de reservas</label>
+            <div class="mt-2 flex items-center gap-1 rounded-xl border border-brand-light bg-brand-lightest/40 p-2 pl-4">
+              <span class="shrink-0 font-mono text-xs text-brand-darkest/50">{{ request.host }}/r/</span>
+              <input id="slug" name="slug" type="text" required minlength="3" maxlength="60" pattern="[a-z0-9]+(-[a-z0-9]+)*" value="{{ negocio.slug }}"
+                     autocapitalize="none" spellcheck="false" data-base="{{ request.host_url }}r/"
+                     class="min-w-0 flex-1 rounded-lg bg-transparent px-1 font-mono text-xs text-brand-darkest/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/30">
+              <button type="button" id="btn-copiar" class="shrink-0 rounded-lg bg-brand-dark px-3 py-2 text-xs font-semibold text-white transition hover:bg-brand-darkest active:scale-95">
+                Copiar
+              </button>
+            </div>
+            <p class="mt-1.5 text-xs text-brand-darkest/50">Solo minúsculas, números y guiones.</p>
+            <a id="btn-whatsapp" href="#" target="_blank" rel="noopener"
+               class="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-lightest py-3 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/60 active:scale-[.98]">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.6 4.8-1.3A10 10 0 1 0 12 2Zm5.6 14c-.2.6-1.2 1.2-1.7 1.2-.4 0-1 .1-3.1-.8-2.6-1.1-4.3-3.8-4.4-4-.1-.2-1-1.4-1-2.6s.6-1.8.9-2.1c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 1.9c.1.2.1.4 0 .6l-.4.5c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.2.1.4.1.5-.1l.8-.9c.2-.2.3-.2.6-.1l1.8.9c.3.1.5.2.5.4v1.2Z"/></svg>
+              Compartir por WhatsApp
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ HORARIOS ═══ -->
+      <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
+        <h2 class="text-base font-semibold tracking-tight">Horarios de atención{% if yo.sede %} · {{ yo.sede }}{% endif %}</h2>
+        <p class="mt-1 text-xs text-brand-darkest/55">Fuera de estas horas (y del almuerzo) nadie puede reservar.</p>
+
+        <ul id="horarios" class="mt-5 space-y-2">{% for _ in range(7) %}<li class="esqueleto h-14"></li>{% endfor %}</ul>
+
+        <button type="button" id="btn-copiar-lunes"
+                class="mt-4 w-full rounded-xl border border-brand-light py-2.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-lightest/50">
+          Aplicar el horario del lunes a toda la semana
+        </button>
+      </section>
+    </form>
+
+    <!-- ═══ EQUIPO Y SEDES ═══ -->
+    <section class="rounded-3xl border border-slate-200 bg-white p-3 shadow-soft">
+      <a href="{{ url_for('negocio.equipo_page') }}" class="{{ enlace }}">Equipo e invitaciones {{ iconos.flecha() }}</a>
+      <a href="{{ url_for('negocio.sedes_page') }}" class="{{ enlace }}">Sedes {{ iconos.flecha() }}</a>
+      {% if yo.cambia_sede %}
+      <a href="{{ url_for('auth.seleccionar_sede') }}" class="{{ enlace }}">Cambiar de sede{% if yo.sede %} (estás en {{ yo.sede }}){% endif %} {{ iconos.flecha() }}</a>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <!-- ═══ PLAN ═══ -->
+    <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="text-base font-semibold tracking-tight">Plan {{ plan.nombre }}</h2>
+      {% if dias_suscripcion is not none %}
+        <p class="mt-1 text-xs text-brand-darkest/55">{{ 'Venció: la cuenta está en modo lectura.' if tienda_vencida else 'Vence en ' ~ dias_suscripcion ~ ' día' ~ ('' if dias_suscripcion == 1 else 's') ~ '.' }}</p>
+      {% endif %}
+      <ul class="mt-4 space-y-1.5 text-sm">
+        {% for texto, incluida in funciones %}
+          <li class="flex items-start gap-2 {{ '' if incluida else 'text-brand-darkest/45' }}">
+            <span class="mt-0.5 shrink-0 font-bold {{ 'text-emerald-600' if incluida else 'text-brand-darkest/30' }}" aria-hidden="true">{{ '✓' if incluida else '–' }}</span>
+            <span>{{ texto }}{% if not incluida %} <span class="sr-only">(no incluida)</span>{% endif %}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <!-- ═══ CUENTA ═══ -->
+    <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="text-base font-semibold tracking-tight">Tu cuenta</h2>
+
+      <div class="mt-4 flex items-center gap-3 rounded-2xl bg-brand-lightest/50 p-4">
+        <span id="cuenta-iniciales" class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-dark text-sm font-bold text-white"></span>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-semibold">{{ yo.nombre }}</p>
+          <p class="truncate text-xs text-brand-darkest/55">{{ yo.correo }}</p>
+          <p class="truncate text-xs text-brand-darkest/55">{{ {'Admin': 'Administrador · acceso total', 'Recepcion': 'Recepción · agenda y caja', 'Profesional': 'Profesional · tu agenda'}.get(yo.rol, yo.rol) }}</p>
+        </div>
+      </div>
+
+      <button type="button" id="btn-clave"
+              class="mt-4 w-full rounded-xl border border-brand-light py-3 text-sm font-semibold text-brand-dark transition hover:bg-brand-lightest/50">
+        Cambiar contraseña
+      </button>
+
+      <button type="button" id="btn-salir"
+              class="mt-2 w-full rounded-xl py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-50">
+        Cerrar sesión
+      </button>
+    </section>
+
+    <p class="text-center text-xs text-brand-darkest/50">Turnio</p>
+  </div>
+</div>
+
+{% if yo.rol == 'Admin' %}
+<!-- Guardar: fijo sobre la nav para no obligar a bajar hasta el final (Nielsen #7) -->
+<div class="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30">
+  <div class="mx-auto max-w-md px-5">
+    <button type="submit" form="form-ajustes" id="btn-guardar"
+            class="w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white shadow-lift transition hover:bg-brand-darkest active:scale-[.98]">
+      Guardar cambios
+    </button>
+  </div>
+</div>
+{% endif %}
+
+<!-- ═══════════ HOJA: CAMBIAR CONTRASEÑA ═══════════ -->
+<dialog id="sheet-clave" aria-labelledby="clave-titulo"
+        class="mx-auto mb-0 mt-auto w-full max-w-md rounded-t-3xl bg-white p-0 text-brand-darkest shadow-lift">
+  <div class="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
+
+    <div class="mx-auto h-1.5 w-10 rounded-full bg-brand-light" aria-hidden="true"></div>
+
+    <div class="mt-4 flex items-center justify-between">
+      <h2 id="clave-titulo" class="text-lg font-semibold tracking-tight">Cambiar contraseña</h2>
+      <form method="dialog">
+        <button class="grid h-11 w-11 place-items-center rounded-full bg-brand-lightest/70 transition hover:bg-brand-light/60" aria-label="Cerrar">{{ iconos.cerrar() }}</button>
+      </form>
+    </div>
+
+    <form id="form-clave" class="mt-5 space-y-4">
+      <input type="text" name="usuario" autocomplete="username" value="{{ yo.correo }}" class="hidden" aria-hidden="true" tabindex="-1">
+      <div>
+        <label for="clave-actual" class="block text-sm font-medium">Contraseña actual</label>
+        <input id="clave-actual" name="actual" type="password" required autocomplete="current-password" maxlength="128" class="{{ campo }}">
+      </div>
+      <div>
+        <label for="clave-nueva" class="block text-sm font-medium">Contraseña nueva</label>
+        <input id="clave-nueva" name="nueva" type="password" required autocomplete="new-password" minlength="8" maxlength="128" class="{{ campo }}">
+        <p class="mt-1.5 text-xs text-brand-darkest/50">Mínimo 8 caracteres, con mayúscula, minúscula y número.</p>
+      </div>
+      <div>
+        <label for="clave-repetir" class="block text-sm font-medium">Repite la nueva</label>
+        <input id="clave-repetir" name="repetir" type="password" required autocomplete="new-password" minlength="8" maxlength="128" class="{{ campo }}">
+        <p id="clave-error" class="mt-1.5 hidden text-xs font-medium text-rose-700" role="alert">Las dos contraseñas nuevas no coinciden.</p>
+      </div>
+      <button type="submit" id="btn-guardar-clave" class="w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98]">
+        Actualizar contraseña
+      </button>
+    </form>
+  </div>
+</dialog>
+{% endblock %}

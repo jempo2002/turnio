@@ -106,5 +106,10 @@ def test_plantillas_no_desactivan_el_escape():
 
 def test_js_de_la_app_no_inyecta_html():
     peligroso = re.compile(r"\.(innerHTML|outerHTML)\s*\+?=|insertAdjacentHTML|document\.write")
-    hallazgos = [ruta for ruta, texto in _archivos("static", ".js") if peligroso.search(texto)]
-    assert not hallazgos, f"innerHTML en {hallazgos}: usa textContent o createElement"
+    # static/lib/ es codigo de terceros (html5-qrcode, minificado): no se edita.
+    # El panel pinta HTML solo con T.h (escapa cada dato) y T.pintar (turnio.js).
+    hallazgos = [
+        ruta for ruta, texto in _archivos("static", ".js")
+        if f"{os.sep}lib{os.sep}" not in ruta and peligroso.search(texto)
+    ]
+    assert not hallazgos, f"innerHTML en {hallazgos}: usa textContent, createElement o T.h + T.pintar"

@@ -12,7 +12,7 @@
       {% if usuario.rol == 'Master' %}
         <a href="{{ url_for('master.panel') }}">Negocios</a>
       {% else %}
-        <a href="{{ url_for('core.inicio') }}">Inicio</a>
+        <a href="{{ url_for('panel.citas') }}">Panel</a>
         {% if usuario.rol == 'Admin' %}
           <a href="{{ url_for('negocio.sedes_page') }}">Sedes</a>
           <a href="{{ url_for('negocio.equipo_page') }}">Equipo</a>
