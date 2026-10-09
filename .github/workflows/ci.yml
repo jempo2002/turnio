@@ -29,10 +29,10 @@ jobs:
         # tienen que correr, y repetirse, en los dos.
         base:
           - nombre: MariaDB 10.11
-            imagen: mariadb:10.11
+            imagen: public.ecr.aws/docker/library/mariadb:10.11
             salud: healthcheck.sh --connect --innodb_initialized
           - nombre: MySQL 8.0
-            imagen: mysql:8.0
+            imagen: public.ecr.aws/docker/library/mysql:8.0
             salud: mysqladmin ping -h 127.0.0.1 -proot
     services:
       mariadb:
@@ -45,7 +45,7 @@ jobs:
           --health-cmd="${{ matrix.base.salud }}"
           --health-interval=5s --health-timeout=5s --health-retries=30
       redis:
-        image: redis:7
+        image: public.ecr.aws/docker/library/redis:7
         ports: ["6379:6379"]
         options: >-
           --health-cmd="redis-cli ping"
