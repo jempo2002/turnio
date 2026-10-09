@@ -46,7 +46,7 @@ PRECIO_PROFESIONAL_EXTRA = 9000
 # Paquete de mensajes de WhatsApp automaticos extra: (mensajes, precio).
 PAQUETE_WHATSAPP = (500, 15000)
 
-_FUNCIONES_PRO = frozenset({"asistente_ia", "whatsapp_auto", "comisiones"})
+_FUNCIONES_PRO = frozenset({"asistente_ia", "whatsapp_auto", "comisiones", "alerta_stock"})
 
 PLANES: dict[str, dict] = {
     "basico": {
@@ -92,6 +92,7 @@ NOMBRE_FUNCION = {
     "asistente_ia": "El asistente con IA",
     "whatsapp_auto": "Los recordatorios y la confirmación automática por WhatsApp",
     "comisiones": "Las comisiones y la liquidación por profesional",
+    "alerta_stock": "La alerta de stock bajo",
     "multisede": "Tener varias sedes",
 }
 

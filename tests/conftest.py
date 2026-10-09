@@ -81,7 +81,8 @@ def db(base):
     cur = conn.cursor()
     cur.execute("SET FOREIGN_KEY_CHECKS = 0")
     for tabla in (
-        "movimientos_caja", "citas", "productos", "profesional_servicios", "servicios", "horarios_sede",
+        "movimientos_caja", "liquidaciones", "cajas_dia", "movimientos_inventario", "venta_productos", "ventas",
+        "stock_sedes", "citas", "productos", "profesional_servicios", "servicios", "horarios_sede",
         "imagenes", "usuarios", "sedes", "tiendas",
     ):
         cur.execute(f"TRUNCATE `{tabla}`")
