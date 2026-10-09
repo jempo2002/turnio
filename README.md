@@ -33,7 +33,7 @@ Lo propio de Turnio:
 - **Planes** (aprobados el 2026-10-08, los mismos del landing; fuente única en `app/services/plan_service.py`):
   - Básico $49.000/mes: 1 sede, hasta 3 profesionales con agenda, 1 Admin y 150 productos.
   - Pro $89.000/mes: 1 sede, hasta 10 profesionales, 2 Admin, productos sin tope, asistente con IA, comisiones y recordatorios automáticos por WhatsApp (500 mensajes al mes).
-  - Multisede $139.000/mes: todo lo del Pro con 2 sedes incluidas y hasta 5 (cada sede extra suma $45.000/mes y $79.000 de montaje), 10 profesionales por sede y 1.000 mensajes.
+  - Multisede $139.000/mes: todo lo del Pro con 2 sedes (el máximo; el mismo Admin las maneja), 10 profesionales por sede y 1.000 mensajes.
   - Todo negocio nuevo arranca con 14 días gratis del Pro; al registrar el primer pago el Master le pone el plan elegido. Recepción no tiene tope. Profesional extra $9.000/mes y paquete de 500 mensajes $15.000 (los cobra el Master por ahora).
 - **Catálogo y configuración** (T4, `app/routes/catalogo.py`): leer es para todo el equipo; cambiar, del Admin.
   - `GET/POST /api/servicios`, `PUT/DELETE /api/servicios/<id>`: nombre, duración, precio y lo que gana quien lo hace. Eliminar es soft delete.

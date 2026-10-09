@@ -8,8 +8,8 @@ los del landing (index.html, seccion #planes), en COP por mes:
                       Agenda, caja, inventario y recordatorios manuales.
   Pro        $89.000  1 sede, 10 profesionales, 2 Admin, productos sin tope.
                       + asistente con IA y WhatsApp automatico (500 msgs/mes).
-  Multisede $139.000  2 sedes incluidas y hasta 5 (cada extra $45.000/mes y
-                      montaje de $79.000), 10 profesionales por sede, 2 Admin.
+  Multisede $139.000  2 sedes (el maximo, sin sedes extra pagas: jempo,
+                      2026-10-09), 10 profesionales por sede, 2 Admin.
                       Todo lo del Pro, con 1.000 mensajes/mes.
 
 Los topes son de profesionales (quien tiene agenda: todo Profesional y el
@@ -35,12 +35,10 @@ PLAN_POR_DEFECTO = "basico"
 PLAN_PRUEBA = "pro"
 DIAS_PRUEBA = 14
 
-# Tope absoluto de sedes activas (lo repiten los triggers de `sedes`).
-MAX_SEDES = 5
-# Montaje de cada sede por encima de las incluidas en el plan.
-COSTO_MONTAJE_SEDE = 79000
-# Mensualidad de cada sede por encima de las incluidas (50 % del Pro).
-PRECIO_SEDE_EXTRA = 45000
+# Tope absoluto de sedes activas (lo repiten los triggers de `sedes`). Regla
+# de jempo para todos sus productos (2026-10-09): hasta 2 sedes, el mismo
+# Admin las maneja y hasta 2 Admin.
+MAX_SEDES = 2
 # Cada profesional por encima del tope del plan, al mes (lo cobra el Master).
 PRECIO_PROFESIONAL_EXTRA = 9000
 # Paquete de mensajes de WhatsApp automaticos extra: (mensajes, precio).
@@ -83,8 +81,6 @@ PLANES: dict[str, dict] = {
         "funciones": _FUNCIONES_PRO | {"multisede"},
     },
 }
-for _plan in PLANES.values():
-    _plan["sede_extra"] = PRECIO_SEDE_EXTRA if _plan["max_sedes"] > _plan["sedes_incluidas"] else None
 PLANES_VALIDOS = tuple(PLANES)
 
 # Para el mensaje de "esta funcion no viene en tu plan".
@@ -107,7 +103,7 @@ _BENEFICIOS = {
         "Asistente con IA e inventario ilimitado",
     ),
     "multisede": (
-        "2 sedes incluidas y hasta 5",
+        "2 sedes con un mismo Admin",
         "Caja, inventario y reportes por sede y consolidados",
         "1.000 mensajes automáticos de WhatsApp al mes",
     ),
@@ -127,7 +123,7 @@ def tiene_funcion(plan_id: str | None, funcion: str) -> bool:
 
 
 def tope_sedes(plan_id: str | None) -> int:
-    """Maximo de sedes activas: 1 en Basico y Pro, MAX_SEDES en Multisede."""
+    """Maximo de sedes activas: 1 en Basico y Pro, MAX_SEDES (2) en Multisede."""
     return plan_de(plan_id)["max_sedes"]
 
 
@@ -157,20 +153,9 @@ def recurso_de_rol(rol: str) -> str | None:
     return None
 
 
-def sedes_extra(plan_id: str | None, sedes_activas: int) -> int:
-    """Sedes por encima de las incluidas en el precio del plan."""
-    return max(0, int(sedes_activas) - plan_de(plan_id)["sedes_incluidas"])
-
-
-def mensualidad(plan_id: str | None, sedes_activas: int) -> int:
-    """Lo que paga el negocio al mes: plan + PRECIO_SEDE_EXTRA por sede extra."""
-    plan = plan_de(plan_id)
-    return plan["precio"] + sedes_extra(plan_id, sedes_activas) * (plan["sede_extra"] or 0)
-
-
-def costo_montaje_nueva_sede(plan_id: str | None, sedes_activas: int) -> int:
-    """Montaje de la proxima sede: gratis si entra en las incluidas."""
-    return COSTO_MONTAJE_SEDE if sedes_extra(plan_id, int(sedes_activas) + 1) else 0
+def mensualidad(plan_id: str | None) -> int:
+    """Lo que paga el negocio al mes: el precio del plan (no hay sedes extra)."""
+    return plan_de(plan_id)["precio"]
 
 
 _QUE = {"profesionales": "profesionales con agenda", "administradores": "administradores",

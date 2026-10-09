@@ -70,45 +70,23 @@ def resumen_sedes(id_tienda: int) -> dict:
         "sedes": sedes,
         "plan_id": plan_id,
         "plan_nombre": plan["nombre"],
-        "sede_extra": plan["sede_extra"],
         "max_sedes": tope,
         "puede_crear": n < tope,
         "multisede": plan_service.tiene_funcion(plan_id, "multisede"),
-        "costo_montaje": plan_service.costo_montaje_nueva_sede(plan_id, n),
-        "montaje_sede_extra": plan_service.COSTO_MONTAJE_SEDE,
-        "sede_incluida": not plan_service.sedes_extra(plan_id, n + 1),
-        "sedes_incluidas": plan["sedes_incluidas"],
-        "sedes_extra": plan_service.sedes_extra(plan_id, n),
-        "mensualidad": plan_service.mensualidad(plan_id, n),
+        "mensualidad": plan_service.mensualidad(plan_id),
     }
 
 
-def _plan_y_sedes(cur, id_tienda: int) -> tuple[str, int]:
-    cur.execute(
-        "SELECT t.plan_id, (SELECT COUNT(*) FROM sedes s WHERE s.id_tienda = t.id_tienda "
-        "AND s.estado = 'Activa') AS n FROM tiendas t WHERE t.id_tienda = %s",
-        (id_tienda,),
-    )
-    fila = cur.fetchone() or {}
-    return plan_service.normalizar_plan(fila.get("plan_id")), int(fila.get("n") or 0)
-
-
 def crear_sede(id_tienda: int, data: dict) -> int:
-    """Lanza ValueError (datos), LimitePlanError (tope) o SedeError.
-
-    Una sede por encima de las incluidas en el plan nace con su montaje
-    pendiente (COSTO_MONTAJE_SEDE): el Master lo marca pagado en su panel
-    cuando lo recibe. Las incluidas no pagan montaje."""
+    """Lanza ValueError (datos), LimitePlanError (tope) o SedeError."""
     nombre, direccion, telefono = _campos(data)
     conn = get_db()
     try:
         cur = conn.cursor(dictionary=True)
         plan_service.verificar_limite(cur, id_tienda, "sedes")
-        montaje = plan_service.costo_montaje_nueva_sede(*_plan_y_sedes(cur, id_tienda))
         cur.execute(
-            "INSERT INTO sedes (id_tienda, nombre, direccion, telefono, costo_montaje) "
-            "VALUES (%s, %s, %s, %s, %s)",
-            (id_tienda, nombre, direccion, telefono, montaje),
+            "INSERT INTO sedes (id_tienda, nombre, direccion, telefono) VALUES (%s, %s, %s, %s)",
+            (id_tienda, nombre, direccion, telefono),
         )
         id_sede = cur.lastrowid
         # La sede nueva arranca con el horario de la principal (T9: el de su

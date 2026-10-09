@@ -24,26 +24,21 @@ def test_basico_y_pro_son_de_una_sede(client, crear, plan):
     assert "sola sede" in client.get("/sedes").get_data(as_text=True)
 
 
-def test_multisede_incluye_dos_sedes_y_cobra_las_extra(client, crear):
+def test_multisede_llega_a_dos_sedes_sin_cobro_extra(client, crear):
     id_tienda, _ = _admin(client, crear, "multisede")
-    assert "incluye 2 sedes" in client.get("/sedes").get_data(as_text=True)
+    pagina = client.get("/sedes").get_data(as_text=True)
+    assert "hasta 2 sedes sin costo extra" in pagina and "$139.000" in pagina
     assert client.post("/api/sedes", json={"nombre": "Norte"}).status_code == 201
-    assert client.post("/api/sedes", json={"nombre": "Sur"}).status_code == 201
-    montajes = crear.fila(
-        "SELECT GROUP_CONCAT(costo_montaje ORDER BY id_sede) AS m FROM sedes WHERE id_tienda = %s", (id_tienda,)
-    )["m"]
-    assert montajes == "0,0,79000"
-    for nombre in ("Este", "Oeste"):
-        assert client.post("/api/sedes", json={"nombre": nombre}).status_code == 201
-    r = client.post("/api/sedes", json={"nombre": "Sexta"})
-    assert r.status_code == 403 and "máximo de 5" in r.get_json()["msg"]
-    assert "$274.000" in client.get("/sedes").get_data(as_text=True)  # 139.000 + 3 x 45.000
+    r = client.post("/api/sedes", json={"nombre": "Sur"})
+    assert r.status_code == 403 and "máximo de 2" in r.get_json()["msg"]
+    assert "Llegaste al máximo de 2 sedes" in client.get("/sedes").get_data(as_text=True)
+    assert crear.fila("SELECT SUM(costo_montaje) AS m FROM sedes WHERE id_tienda = %s", (id_tienda,))["m"] == 0
 
 
-def test_la_base_rechaza_una_sexta_sede(crear):
-    id_tienda, _ = crear.tienda("multisede", sedes=("A", "B", "C", "D", "E"))
+def test_la_base_rechaza_una_tercera_sede(crear):
+    id_tienda, _ = crear.tienda("multisede", sedes=("A", "B"))
     with pytest.raises(mysql.connector.Error) as exc:
-        crear.sede(id_tienda, "F")
+        crear.sede(id_tienda, "C")
     assert exc.value.errno == 1644
 
 

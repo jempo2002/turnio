@@ -34,13 +34,10 @@ def test_topes_por_plan():
 def test_sedes_y_mensualidad():
     for plan in ("basico", "pro"):
         assert ps.tope_sedes(plan) == 1
-        assert ps.mensualidad(plan, 1) == ps.PLANES[plan]["precio"]
-    assert ps.tope_sedes("multisede") == ps.MAX_SEDES == 5
-    # 2 sedes incluidas; de la 3.a a la 5.a, $45.000 al mes y $79.000 de montaje.
-    assert ps.mensualidad("multisede", 2) == 139000
-    assert ps.mensualidad("multisede", 5) == 139000 + 3 * 45000
-    assert ps.costo_montaje_nueva_sede("multisede", 1) == 0
-    assert ps.costo_montaje_nueva_sede("multisede", 2) == 79000
+        assert ps.mensualidad(plan) == ps.PLANES[plan]["precio"]
+    # Regla de jempo (2026-10-09): hasta 2 sedes, sin sedes extra pagas.
+    assert ps.tope_sedes("multisede") == ps.MAX_SEDES == 2
+    assert ps.mensualidad("multisede") == 139000
 
 
 def test_prueba_gratis_es_del_pro():
@@ -58,7 +55,7 @@ def test_limite_de_sedes_ofrece_multisede():
     assert status == 403 and cuerpo["code"] == "limite_plan"
     assert cuerpo["accion_texto"] == "Pasarme al Plan Multisede"
     assert cuerpo["accion_url"].startswith("https://wa.me/") and "Turnio" in cuerpo["accion_url"]
-    cuerpo, _ = ps.LimitePlanError("sedes", "multisede", 5).respuesta()
+    cuerpo, _ = ps.LimitePlanError("sedes", "multisede", 2).respuesta()
     assert cuerpo["accion_texto"] == "Escribirnos por WhatsApp"
 
 

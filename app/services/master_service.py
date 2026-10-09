@@ -106,7 +106,7 @@ def listar_negocios() -> list[dict]:
     hoy = hoy_local()
     for f in filas:
         f["plan_nombre"] = plan_service.plan_de(f["plan_id"])["nombre"]
-        f["mensualidad"] = plan_service.mensualidad(f["plan_id"], f["sedes"])
+        f["mensualidad"] = plan_service.mensualidad(f["plan_id"])
         f["montaje_pendiente"] = int(f["montaje_pendiente"])
         f["en_prueba"] = f["fecha_fin_suscripcion"] is None and f["trial_ends_at"] is not None
         f["vence"] = f["fecha_fin_suscripcion"] or f["trial_ends_at"]
