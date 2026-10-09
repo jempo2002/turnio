@@ -32,6 +32,16 @@ Cada entorno tiene sus propios tres servicios: **web** (este repo), **MySQL** y 
 
 ## 2. Variables del servicio web
 
+Ninguna contraseña va en el repositorio. Cada dato vive en el servicio que lo
+guarda, y el servicio web solo lo referencia:
+
+| Dónde vive | Qué guarda | Quién lo define |
+|---|---|---|
+| **Repositorio** (git) | Código, `requirements.txt`, `Procfile`, `railway.json`, `.env.example` (plantilla sin valores) | Se sube con `git push` |
+| **MySQL** (servicio de Railway) | Usuario, contraseña, host y base. Y los datos del negocio | Railway lo crea solo |
+| **Redis** (servicio de Railway) | Sesiones de usuario y contadores de intentos de login. No guarda datos de negocio | Railway lo crea solo |
+| **Servicio web** → Variables | Las variables de la tabla de abajo | Tú, en el panel |
+
 Servicio web → **Variables** → **Raw Editor**, y pega:
 
 ```
@@ -44,11 +54,25 @@ DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 DB_NAME=${{MySQL.MYSQLDATABASE}}
 REDIS_URL=${{Redis.REDIS_URL}}
 APP_UTC_OFFSET=-5
+LOG_DIR=logs
 ```
+
+| Variable | Obligatoria | Valor | Qué hace |
+|---|---|---|---|
+| `SECRET_KEY` | Sí | Generada (ver abajo) | Firma las cookies de sesión |
+| `FLASK_ENV` | Sí | `production` | Fuerza HTTPS, HSTS y cookie `Secure`. Con `development` se apaga |
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | Sí | Referencias a MySQL | Conexión a la base. Si el valor es una IP, está mal |
+| `REDIS_URL` | Sí en producción | Referencia a Redis | Sesiones y límites de intentos compartidos entre workers. Sin ella la app no arranca en producción |
+| `APP_UTC_OFFSET` | No (por defecto `-5`) | `-5` | Hora del negocio: Colombia |
+| `LOG_DIR` | No (por defecto `logs`) | `logs` | Carpeta de logs de correo |
+| `EMAIL_SENDER`, `EMAIL_PASSWORD` | No | Correo y contraseña de aplicación de Google | Recuperar contraseña e invitaciones por correo. Sin ellas el enlace de invitación igual sale por WhatsApp |
+| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT` | No (por defecto Gmail) | `smtp.gmail.com`, `587` | Servidor de correo |
+| `SESSION_HORAS` | No (por defecto `12`) | Horas sin actividad | Cuánto dura una sesión inactiva |
+| `WEB_CONCURRENCY`, `GUNICORN_THREADS`, `DB_POOL_SIZE` | No | Ver `Procfile` | Solo si se necesita más capacidad. Por defecto 4 workers x 4 hilos |
 
 - `SECRET_KEY`: `python -c "import secrets; print(secrets.token_hex(32))"`. Una distinta por entorno, y nunca la de tu `.env` local.
 - Las `${{...}}` van tal cual, con las llaves: Railway las cambia por el host interno. Si el log dice `Can't connect to MySQL server on '127.0.0.1'`, se copiaron valores locales en vez de las referencias.
-- Recuperar contraseña e invitaciones por correo (opcional; sin esto el enlace de invitación igual sale por WhatsApp): `EMAIL_SENDER`, `EMAIL_PASSWORD` (contraseña de aplicación de Google), `EMAIL_SMTP_HOST=smtp.gmail.com`, `EMAIL_SMTP_PORT=587`.
+- Si tu servicio de base o de Redis tiene otro nombre distinto de `MySQL` o `Redis`, cámbialo en las referencias.
 
 Al guardar, Railway redespliega: migra la base de cero y arranca. En **Deployments → Logs** debe verse `N migraciones aplicadas.` y el arranque de gunicorn.
 
