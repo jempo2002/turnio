@@ -3,7 +3,7 @@
    inline). Recompilar con `npm run css` al tocar clases en las plantillas o
    en static/js/panel/. */
 module.exports = {
-  content: ['../templates/panel/**/*.html', '../templates/auth/login.html', '../static/js/panel/**/*.js'],
+  content: ['../templates/panel/**/*.html', '../templates/publico/**/*.html', '../templates/auth/login.html', '../static/js/panel/**/*.js', '../static/js/publico/**/*.js'],
   theme: {
     extend: {
       colors: {

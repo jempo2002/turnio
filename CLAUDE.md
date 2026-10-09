@@ -16,7 +16,6 @@ La auditoría y las tareas (T1 a T15) están en `docs/auditoria-y-workflow.md`.
 
 ## Backend
 - El backend es la app Flask de la raíz (`app/`), construida sobre jemPOS Chef. Se conservan sus nombres (`tiendas`, `id_tienda`) para que las piezas de jemPOS se porten sin renombrar.
-- `backend/` (Node) ya no se desarrolla: solo se consulta para portar sus piezas y se borra al terminar T8.
 - Cambios de la base: un archivo nuevo en `migrations/` (nunca editar uno aplicado) y `python scripts/migrar.py`.
 
 ## Pruebas

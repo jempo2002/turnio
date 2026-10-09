@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import html
-from urllib.parse import quote
 
 from flask import Blueprint, current_app, jsonify, render_template, request, session, url_for
 
@@ -10,6 +9,7 @@ from app.services import sede_service, usuario_service
 from app.services.auth_service import DIAS_INVITACION, create_invite_token
 from app.services.plan_service import LimitePlanError
 from app.utils.decorators import login_required, roles_required
+from app.utils.helpers import enlace_whatsapp
 from app.utils.mail import send_invite_email_async
 
 negocio = Blueprint("negocio", __name__)
@@ -86,13 +86,6 @@ def equipo_page():
     )
 
 
-def _enlace_whatsapp(telefono: str | None, texto: str) -> str:
-    """wa.me al numero si es un celular colombiano; si no, WhatsApp abre para
-    elegir el contacto."""
-    destino = f"57{telefono}" if telefono and len(telefono) == 10 and telefono.startswith("3") else ""
-    return f"https://wa.me/{destino}?text={quote(texto)}"
-
-
 def _invitacion(id_usuario: int) -> dict:
     """Arma el enlace de invitacion, lo manda por correo (si hay SMTP) y lo
     devuelve para que el Admin lo comparta por WhatsApp."""
@@ -106,7 +99,7 @@ def _invitacion(id_usuario: int) -> dict:
         f"Hola {nombre}, te invito a {negocio} en Turnio. "
         f"Elige tu contraseña aquí (vale {DIAS_INVITACION} días): {enlace}"
     )
-    return {"enlace": enlace, "whatsapp": _enlace_whatsapp(usuario["telefono"], texto)}
+    return {"enlace": enlace, "whatsapp": enlace_whatsapp(usuario["telefono"], texto)}
 
 
 @negocio.post("/api/usuarios")

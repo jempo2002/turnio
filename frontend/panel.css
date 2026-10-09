@@ -27,6 +27,10 @@ dialog.confirmar p { margin: .375rem 0 1.25rem; font-size: .875rem; line-height:
 dialog.confirmar button { display: block; width: 100%; min-height: 52px; border-radius: 1rem; font-size: 1rem; font-weight: 600; }
 dialog.confirmar .ok { margin-bottom: .5rem; background: #be123c; color: #fff; }
 
+/* Pasos numerados de la reserva publica: un paso oculto (una sola sede) no cuenta */
+#form-reserva { counter-reset: paso; }
+#form-reserva .paso::before { counter-increment: paso; content: counter(paso) ". "; }
+
 /* Spinner: basta con poner aria-busy="true" en el botón */
 button[aria-busy=true] { pointer-events: none; opacity: .85; }
 button[aria-busy=true]::before { content: ""; display: inline-block; width: 1em; height: 1em; margin-right: .5em; vertical-align: -.15em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: giro .6s linear infinite; }
