@@ -1,0 +1,254 @@
+{% extends "panel/_base.html" %}
+{% block title %}Citas{% endblock %}
+{% block color %}#FFFFFF{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/panel/citas.js') }}" defer></script>{% endblock %}
+{% set cerrar_svg = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>' %}
+{% block content %}
+<div class="mx-auto max-w-md">
+
+  <!-- ═══════════ CABECERA (se va con el scroll; solo los filtros quedan fijos) ═══════════ -->
+  <header class="bg-white px-5 pb-4 pt-5">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <p id="saludo" class="text-xs font-medium text-brand-darkest/50"></p>
+        <h1 class="truncate text-xl font-semibold tracking-tight">{{ negocio.nombre_negocio }}</h1>
+        <p class="truncate text-xs text-brand-darkest/55">{% if yo.sede %}<span class="font-medium">{{ yo.sede }}</span> · {% endif %}<span id="fecha" class="inline-block first-letter:uppercase"></span></p>
+      </div>
+      <p id="estado-local" class="mt-1 hidden shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"></p>
+    </div>
+
+    <!-- Día y agenda que se están viendo -->
+    <div class="mt-4 flex items-center gap-2">
+      <button type="button" id="dia-ant" class="grid w-11 shrink-0 place-items-center rounded-xl border border-brand-light bg-white transition hover:bg-slate-50 active:scale-95" aria-label="Día anterior">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      </button>
+      <button type="button" id="dia-hoy" class="min-w-0 flex-1 truncate rounded-xl border border-brand-light bg-white px-2 text-sm font-semibold transition hover:bg-slate-50" aria-live="polite">Hoy</button>
+      <button type="button" id="dia-sig" class="grid w-11 shrink-0 place-items-center rounded-xl border border-brand-light bg-white transition hover:bg-slate-50 active:scale-95" aria-label="Día siguiente">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </button>
+    </div>
+    <div id="caja-profesional" class="mt-2 hidden">
+      <label for="profesional" class="sr-only">Agenda de</label>
+      <select id="profesional" class="block w-full rounded-xl border border-brand-light bg-white px-4 text-sm font-semibold transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25"></select>
+    </div>
+
+    <!-- Estado del día de un vistazo -->
+    <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+      <div class="rounded-2xl bg-rose-50 px-2 py-3">
+        <p id="n-reservadas" class="text-xl font-semibold tracking-tight text-rose-700">–</p>
+        <p class="text-[11px] font-medium text-rose-700/80">Por atender</p>
+      </div>
+      <div class="rounded-2xl bg-emerald-50 px-2 py-3">
+        <p id="n-libres" class="text-xl font-semibold tracking-tight text-emerald-700">–</p>
+        <p class="text-[11px] font-medium text-emerald-700/80">Libres</p>
+      </div>
+      {% if yo.rol in ('Admin', 'Recepcion') %}
+      <a href="{{ url_for('panel.caja') }}" class="rounded-2xl bg-slate-100 px-2 py-3 transition hover:bg-slate-200">
+        <p id="n-caja" class="truncate text-xl font-semibold tracking-tight">–</p>
+        <p class="text-[11px] font-medium text-brand-darkest/55">En caja hoy</p>
+      </a>
+      {% else %}
+      <div class="rounded-2xl bg-slate-100 px-2 py-3">
+        <p id="n-atendidas" class="truncate text-xl font-semibold tracking-tight">–</p>
+        <p class="text-[11px] font-medium text-brand-darkest/55">Atendidas</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="mt-2 grid grid-cols-2 gap-2">
+      <button type="button" id="btn-copiar" data-link="{{ request.host_url }}r/{{ negocio.slug }}"
+              class="flex items-center justify-center gap-2 rounded-2xl border border-brand-light bg-white px-2 text-xs font-semibold transition hover:bg-slate-50 active:scale-95">
+        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path>
+        </svg>
+        Copiar link
+      </button>
+      {#- ponytail: la pagina publica /r/<slug> llega con T8. -#}
+      <a href="/r/{{ negocio.slug }}" target="_blank" rel="noopener"
+         class="flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border border-brand-light bg-white px-2 text-xs font-semibold transition hover:bg-slate-50 active:scale-95">
+        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle>
+        </svg>
+        Vista cliente
+      </a>
+    </div>
+  </header>
+
+  <!-- ═══════════ FILTROS (rejilla fija de 3: nunca hay scroll lateral) ═══════════ -->
+  <div class="sticky top-0 z-30 grid grid-cols-3 gap-2 border-b border-slate-200 bg-white/90 px-5 py-2 backdrop-blur-xl backdrop-saturate-150" role="group" aria-label="Filtrar por estado">
+    <button type="button" class="filtro" data-filtro="todas">Todas</button>
+    <button type="button" class="filtro" data-filtro="disponible">Disponibles</button>
+    <button type="button" class="filtro" data-filtro="reservada">Reservadas</button>
+  </div>
+
+  <!-- ═══════════ LÍNEA DE TIEMPO ═══════════ -->
+  <main id="contenido" class="px-5 pb-44 pt-4">
+    <h2 class="sr-only">Citas del día</h2>
+    <ol id="citas" class="space-y-2.5" aria-busy="true">
+      {% for _ in range(4) %}<li class="flex gap-3"><span class="w-11 shrink-0"></span><div class="esqueleto h-24 flex-1"></div></li>{% endfor %}
+    </ol>
+
+    <p id="vacio" class="hidden rounded-3xl border border-slate-200 bg-white p-8 text-center text-sm text-brand-darkest/60"></p>
+  </main>
+
+</div>
+
+<!-- ═══════════ FAB: VENTA RÁPIDA (esquina del pulgar) ═══════════ -->
+<button type="button" id="btn-venta"
+        class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-[max(1.25rem,calc(50vw-13rem))] z-40 flex items-center gap-2 rounded-2xl bg-brand-dark px-5 py-4 text-sm font-semibold text-white shadow-lift transition hover:bg-brand-darkest active:scale-95">
+  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14" stroke-width="1.6"></path><path d="M21 5v14" stroke-width="2.6"></path>
+  </svg>
+  Venta rápida
+</button>
+
+<!-- ═══════════ HOJA: VENTA RÁPIDA ═══════════ -->
+<dialog id="sheet-venta" aria-labelledby="venta-titulo"
+        class="mx-auto mb-0 mt-auto max-h-[92vh] w-full max-w-md overflow-y-auto overflow-x-hidden rounded-t-3xl bg-white p-0 text-brand-darkest shadow-lift">
+  <div class="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
+
+    <div class="mx-auto h-1.5 w-10 rounded-full bg-brand-light" aria-hidden="true"></div>
+
+    <div class="mt-4 flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <h2 id="venta-titulo" class="text-lg font-semibold tracking-tight">Venta rápida</h2>
+        <p class="text-xs text-brand-darkest/55">Toca un producto, búscalo o escanea su código.</p>
+      </div>
+      <form method="dialog">
+        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar venta rápida">{{ cerrar_svg|safe }}</button>
+      </form>
+    </div>
+
+    <!-- Código o nombre a mano (Enter agrega), o código con la cámara -->
+    <form id="form-codigo" class="mt-4 flex gap-2">
+      <label for="codigo" class="sr-only">Código de barras o nombre del producto</label>
+      <input id="codigo" type="text" autocomplete="off" enterkeyhint="done" maxlength="40" placeholder="Código o nombre"
+             class="block min-w-0 flex-1 rounded-xl border border-brand-light bg-slate-50 px-4 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/25">
+      <button type="button" id="btn-escanear"
+              class="flex shrink-0 items-center gap-2 rounded-xl bg-brand-darkest px-4 text-sm font-semibold text-white transition active:scale-95">
+        Escanear
+      </button>
+    </form>
+    <div id="lector" class="mt-3 hidden overflow-hidden rounded-2xl bg-black"></div>
+
+    <!-- 2 filas de 3: los más vendidos, o los resultados de la búsqueda -->
+    <p id="productos-titulo" class="mt-4 text-xs font-semibold uppercase tracking-wide text-brand-darkest/50"></p>
+    <div id="productos" class="mt-2 grid grid-cols-3 gap-2"></div>
+
+    <!-- Carrito -->
+    <div class="mt-4 rounded-2xl bg-slate-100 p-4">
+      <ul id="carrito" class="space-y-1"></ul>
+      <div class="flex items-baseline justify-between">
+        <p id="carrito-vacio" class="text-xs text-brand-darkest/55">Nada seleccionado todavía</p>
+        <p class="ml-auto text-xs text-brand-darkest/55">Total</p>
+        <p id="total" class="ml-2 text-xl font-semibold tracking-tight">$0</p>
+      </div>
+    </div>
+
+    <div id="pago-venta" class="mt-3"></div>
+
+    <button type="button" id="btn-cobrar" disabled
+            class="mt-3 w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400">
+      Cobrar
+    </button>
+  </div>
+</dialog>
+
+<!-- ═══════════ HOJA: COBRAR CITA ═══════════ -->
+<dialog id="sheet-pago" aria-labelledby="pago-titulo"
+        class="mx-auto mb-0 mt-auto max-h-[92vh] w-full max-w-md overflow-y-auto overflow-x-hidden rounded-t-3xl bg-white p-0 text-brand-darkest shadow-lift">
+  <div class="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
+
+    <div class="mx-auto h-1.5 w-10 rounded-full bg-brand-light" aria-hidden="true"></div>
+
+    <div class="mt-4 flex items-center justify-between gap-3">
+      <h2 id="pago-titulo" class="text-lg font-semibold tracking-tight">Completar cita</h2>
+      <form method="dialog">
+        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar">{{ cerrar_svg|safe }}</button>
+      </form>
+    </div>
+
+    <div class="mt-4 flex items-center gap-3 rounded-2xl bg-slate-100 p-4">
+      <div class="min-w-0 flex-1">
+        <p id="pago-cliente" class="truncate text-base font-semibold"></p>
+        <p id="pago-servicio" class="truncate text-xs text-brand-darkest/55"></p>
+      </div>
+      <p id="pago-total" class="shrink-0 text-2xl font-semibold tracking-tight"></p>
+    </div>
+
+    <!-- El cobro queda a nombre de quien atendió la cita (lo decide el servidor) -->
+    <div class="mt-4 flex items-center gap-3 rounded-2xl border border-brand-light p-3">
+      <span id="pago-iniciales" class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-dark text-xs font-bold text-white" aria-hidden="true"></span>
+      <div class="min-w-0 flex-1">
+        <p id="pago-atiende" class="truncate text-sm font-semibold"></p>
+        <p id="pago-reparto" class="text-xs text-brand-darkest/55"></p>
+      </div>
+    </div>
+
+    <p class="mt-4 text-sm font-semibold">¿Cómo pagó?</p>
+    <div id="pago-cita" class="mt-2"></div>
+
+    <button type="button" id="btn-pagar"
+            class="mt-4 w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98]">
+    </button>
+  </div>
+</dialog>
+
+<!-- ═══════════ HOJA: AGENDA MANUAL (la reserva del cliente final vive en /r/<slug>, T8) ═══════════ -->
+<dialog id="sheet-cliente" aria-labelledby="sheet-titulo"
+        class="mx-auto mb-0 mt-auto max-h-[92vh] w-full max-w-md overflow-y-auto overflow-x-hidden rounded-t-3xl bg-white p-0 text-brand-darkest shadow-lift">
+
+  <div class="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
+
+    <div class="mx-auto h-1.5 w-10 rounded-full bg-brand-light" aria-hidden="true"></div>
+
+    <div class="mt-4 flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <p id="sheet-eyebrow" class="truncate text-[10px] font-bold uppercase tracking-wide text-brand-dark"></p>
+        <h2 id="sheet-titulo" class="text-lg font-semibold tracking-tight">Nueva cita</h2>
+      </div>
+      <form method="dialog">
+        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar">{{ cerrar_svg|safe }}</button>
+      </form>
+    </div>
+
+    <form id="form-reserva" class="mt-5 space-y-5">
+
+      <fieldset>
+        <legend class="text-sm font-semibold">Servicio</legend>
+        <!-- Los servicios que hace este profesional -->
+        <div id="servicios" class="mt-2.5 space-y-2"></div>
+      </fieldset>
+
+      <!-- Solo se listan las horas libres para ese servicio: no se puede pedir una ocupada -->
+      <div>
+        <label for="hora" class="text-sm font-semibold">Hora</label>
+        <select id="hora" name="hora" required
+                class="mt-2.5 block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
+        </select>
+      </div>
+
+      <fieldset class="space-y-3">
+        <legend class="text-sm font-semibold">Datos</legend>
+        <div>
+          <label for="nombre" class="sr-only">Nombre</label>
+          <input id="nombre" name="nombre" type="text" required maxlength="120" autocomplete="name" placeholder="Nombre"
+                 class="block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
+        </div>
+        <div>
+          <label for="telefono" class="sr-only">WhatsApp</label>
+          <input id="telefono" name="telefono" type="tel" inputmode="tel" autocomplete="tel"
+                 pattern="[0-9+ \(\)\-]{7,20}" maxlength="20" placeholder="WhatsApp (ej. 300 111 2233)"
+                 class="block w-full rounded-xl border border-brand-light bg-white px-4 py-3.5 text-base placeholder:text-brand-darkest/35 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25">
+          <p class="mt-1.5 text-xs text-brand-darkest/50">Opcional. Sirve para mandarle el recordatorio.</p>
+        </div>
+      </fieldset>
+
+      <button type="submit" id="btn-agendar"
+              class="w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98]">
+        Agendar cita
+      </button>
+    </form>
+  </div>
+</dialog>
+{% endblock %}

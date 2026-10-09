@@ -7,7 +7,8 @@ Reglas de trabajo y ramas: [CLAUDE.md](CLAUDE.md). Plan hasta el deploy: [docs/a
 ## Qué hay en el repo
 
 - **App Flask** (`app/`, `templates/`, `static/`, `migrations/`, `scripts/`, `tests/`): el backend de Turnio, construido sobre la base de jemPOS Chef (Flask + MySQL + Redis). Hoy trae registro de negocios, login, invitaciones al equipo, recuperación de contraseña, sesiones revalidadas en cada petición, modo solo lectura al vencer la suscripción, cabeceras de seguridad, planes, panel Master, sedes y equipo, catálogo y configuración (T4), caja e inventario (T5) y agenda (T6).
-- **Prototipo del frontend** (`index.html`, `login.html`, `citas.html`, `caja.html`, `inventario.html`, `configuracion.html`, `reservar.html`): datos en `localStorage`, es el diseño de referencia de las pantallas. Para verlo: `python3 -m http.server 8000`.
+- **Panel del negocio** (T7, `templates/panel/`, `static/js/panel/`): Citas, Caja, Inventario y Ajustes, con el diseño del prototipo y los datos de la API. Ver [Panel](#panel-t7).
+- **Prototipo que queda** (`index.html` y `reservar.html`, con `theme.js` y `datos.js`): la landing y la reserva pública, todavía con datos en `localStorage`; son el diseño de referencia de T8 y T9. Para verlos: `python3 -m http.server 8000`.
 - **Backend Node** (`backend/`): el primer backend (Express + PostgreSQL). Ya no se desarrolla; queda como referencia hasta portar sus piezas (candado de reservas, cobro atómico, reservas públicas) en T6 y T8, y entonces se borra.
 
 ## App Flask
@@ -56,6 +57,18 @@ Lo propio de Turnio:
 - **Negocios**: cada uno tiene `slug` (su página pública de reservas, `/r/<slug>`, en T8) y `tipo_negocio` (barbería, peluquería, uñas, cejas y pestañas, estética).
 - **Esquema** (`migrations/`): negocios, sedes y usuarios; horario por sede; servicios con duración, precio y pago al profesional; citas con candado por profesional y hora; productos con código de barras y stock por sede con kardex; ventas; movimientos de caja con la comisión de cada cobro; caja del día con arqueo; liquidaciones de comisiones.
 
+### Panel (T7)
+
+Las pantallas del prototipo ya son de la app: `/citas`, `/caja`, `/inventario` y `/ajustes` (`app/routes/panel.py`). El HTML sale de Flask con el esqueleto y los datos llegan por `fetch` a las APIs de arriba; nada se guarda en `localStorage`.
+
+- **Sesión**: la misma cookie de jemPOS Chef (HttpOnly, en Redis, revalidada en cada petición) en vez de un JWT en el navegador: un XSS no puede robarla y desactivar a alguien lo saca al instante. Las escrituras llevan el token CSRF de la página (`X-CSRFToken`). Al entrar, el negocio llega a `/citas` (`/inicio` redirige ahí).
+- **Quién ve qué**: Citas y Ajustes, todo el equipo; Caja e Inventario, Admin y Recepción. El Profesional ve y cobra su agenda; Admin y Recepción eligen de quién es la agenda que ven. Los datos del negocio, el logo y el horario los cambia el Admin; cada quien cambia su contraseña (`PUT /api/cuenta/clave`, pide la actual).
+- **Citas**: día anterior y siguiente, horas libres en punto según el horario y el almuerzo de la sede (la hora exacta sale de `/api/agenda/disponibilidad`), agendar, liberar (cancela), recordar por WhatsApp, cobrar con pago mixto, deshacer el cobro y venta rápida con lector de códigos.
+- **Caja**: totales del día, efectivo esperado en el cajón, división por profesional, salidas, anular ventas, cierre con arqueo (el Admin puede reabrir) y el pago por servicio.
+- **Inventario**: stock de la sede con +1/−1 (kardex), producto nuevo con calculadora de precio, conteo (ajuste) al editar y mínimo por producto para "Quedan pocas"; servicios.
+- **Estados**: esqueletos mientras carga, "Reintentar" si falla, spinner en cada botón y el mensaje del servidor en un aviso. Al volver a la pestaña (y cada minuto en Citas y Caja) los datos se refrescan.
+- **CSS**: Tailwind compilado (sin CDN), así la CSP estricta de `app/security.py` sigue igual: sin JS ni estilos inline. Al cambiar clases en `templates/panel/` o `static/js/panel/`: `cd frontend && npm install && npm run css`, y se sube `static/css/panel.css` (Railway solo corre Python).
+
 ### Arrancar en local
 
 Necesitas MariaDB 10.6+ o MySQL 8 y, opcionalmente, Redis.
@@ -85,7 +98,7 @@ Necesitan una base MariaDB/MySQL (se borran y se crean `turnio_pytest` y `turnio
 TEST_DB_USER=usuario TEST_DB_PASSWORD=clave TEST_REDIS_URL=redis://localhost:6379/15 pytest
 ```
 
-Sin base, solo corren las de planes. El prototipo tiene las suyas: `node test-calculo.js`.
+Sin base, solo corren las de planes. Las fórmulas del panel y del prototipo tienen las suyas: `node test-calculo.js`.
 
 ### CI y seguridad (T10)
 

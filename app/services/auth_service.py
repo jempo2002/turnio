@@ -101,13 +101,13 @@ def sede_inicial(user: dict) -> dict | None:
     return sedes[0] if len(sedes) == 1 else None
 
 
-# Pantalla de entrada por rol. La agenda y la caja llegan en sus propias
-# tareas (T6, T7); mientras tanto todos los del negocio entran a /inicio.
+# Pantalla de entrada por rol: el Master a su panel, el negocio a la agenda
+# del dia (T7).
 _INICIO_POR_ROL = {"master": "/panel-master"}
 
 
 def resolve_post_login_redirect(rol: str) -> str:
-    return _INICIO_POR_ROL.get(str(rol or "").strip().lower(), "/inicio")
+    return _INICIO_POR_ROL.get(str(rol or "").strip().lower(), "/citas")
 
 
 def huella_clave(clave_hash: str) -> str:

@@ -102,6 +102,7 @@ def create_app() -> Flask:
     from app.routes.core import core
     from app.routes.master import master
     from app.routes.negocio import negocio
+    from app.routes.panel import panel
 
     app.register_blueprint(agenda)
     app.register_blueprint(auth)
@@ -110,6 +111,7 @@ def create_app() -> Flask:
     app.register_blueprint(core)
     app.register_blueprint(master)
     app.register_blueprint(negocio)
+    app.register_blueprint(panel)
 
     from app.utils.helpers import fmt_money
 

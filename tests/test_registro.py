@@ -31,8 +31,8 @@ def test_registro_crea_negocio_con_prueba_pro_y_entra(client, crear):
 
     assert client.get("/registro").status_code == 200
     r = _registrar(client)
-    assert r.status_code == 302 and r.location.endswith("/inicio")
-    assert "días gratis" in client.get("/inicio").get_data(as_text=True)
+    assert r.status_code == 302 and r.location.endswith("/citas")
+    assert "días gratis" in client.get("/citas").get_data(as_text=True)
 
     tienda = crear.fila("SELECT * FROM tiendas")
     assert tienda["slug"] == "unas-divinas"
@@ -48,13 +48,13 @@ def test_registro_crea_negocio_con_prueba_pro_y_entra(client, crear):
 
     # Sale y vuelve a entrar con lo que registro.
     client.post("/logout")
-    assert entrar(client, "laura@unas.co").location.endswith("/inicio")
+    assert entrar(client, "laura@unas.co").location.endswith("/citas")
 
 
 def test_registro_por_api_json(client, crear):
     r = client.post("/api/auth/register", json=_registro())
     assert r.status_code == 201
-    assert r.get_json()["redirect"] == "/inicio"
+    assert r.get_json()["redirect"] == "/citas"
     assert client.get("/equipo").status_code == 200  # ya con sesion de Admin
 
 
@@ -133,10 +133,10 @@ def test_invitar_profesional_y_aceptar(client, app, crear):
     r = invitado.post(ruta, data={"password": "Corta1", "confirm_password": "Corta1"})
     assert r.location.endswith(ruta)  # politica de clave
     r = invitado.post(ruta, data={"password": "Nueva1234", "confirm_password": "Nueva1234"})
-    assert r.location.endswith("/inicio")
+    assert r.location.endswith("/citas")
     with invitado.session_transaction() as s:
         assert s["rol"] == "Profesional"
-    assert invitado.get("/inicio").status_code == 200
+    assert invitado.get("/citas").status_code == 200
     assert invitado.get("/equipo").status_code == 302  # Profesional no administra el equipo
 
     # El enlace sirve una sola vez y ya no hay invitacion para reenviar.
@@ -144,7 +144,7 @@ def test_invitar_profesional_y_aceptar(client, app, crear):
     assert otro.get(ruta).location.endswith("/login")
     id_carlos = crear.fila("SELECT id_usuario FROM usuarios WHERE correo = 'carlos@unas.co'")["id_usuario"]
     assert client.post(f"/api/usuarios/{id_carlos}/invitacion").status_code == 400
-    assert entrar(otro, "carlos@unas.co", "Nueva1234").location.endswith("/inicio")
+    assert entrar(otro, "carlos@unas.co", "Nueva1234").location.endswith("/citas")
 
 
 def test_enlace_nuevo_y_enlace_falso(client, app, crear):
@@ -201,7 +201,7 @@ def test_un_negocio_no_ve_ni_toca_los_datos_de_otro(client, app, crear):
     r = b.post("/registro", data=_registro(
         nombre_negocio="Barbería Norte", tipo_negocio="barberia", admin_nombre="Pedro",
         admin_cc="1144555666", admin_correo="pedro@norte.co"))
-    assert r.location.endswith("/inicio")
+    assert r.location.endswith("/citas")
 
     equipo_b = b.get("/equipo").get_data(as_text=True)
     assert "Pedro" in equipo_b

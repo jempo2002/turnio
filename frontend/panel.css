@@ -1,0 +1,43 @@
+/* Fuente del CSS del panel. `npm run css` lo compila a static/css/panel.css. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS plano que antes inyectaba theme.js en un <style> (la CSP ya no lo deja). */
+:focus-visible { outline: 2px solid #17748E; outline-offset: 2px; border-radius: 8px; }
+html { background: #F1F5F9; }
+/* Navegación sólo vertical: nada puede empujar la página hacia los lados */
+body { overflow-x: hidden; }
+/* Área táctil mínima de 44px en todo control, sin depender de cada pantalla */
+button, select, input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]) { min-height: 44px; }
+/* <dialog> nativo: backdrop, cierre con ESC y foco atrapado los pone el navegador */
+dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(3px); }
+dialog[open] { animation: sheet-up .3s cubic-bezier(.32,.72,0,1); }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+/* Rojo de validación sólo tras el primer intento de envío, no mientras se escribe */
+form.enviado input:invalid, form.enviado select:invalid { border-color: #dc2626; }
+
+#toast { position: fixed; left: 50%; top: calc(.75rem + env(safe-area-inset-top)); z-index: 100; width: max-content; max-width: calc(100vw - 2rem); padding: .75rem 1.125rem; border-radius: 999px; background: #1B2B36; color: #fff; font-size: .875rem; font-weight: 600; text-align: center; box-shadow: 0 12px 32px -12px rgba(15,23,42,.5); opacity: 0; transform: translate(-50%,-150%); transition: transform .3s cubic-bezier(.32,.72,0,1), opacity .2s; pointer-events: none; }
+#toast.ver { opacity: 1; transform: translate(-50%,0); }
+#toast.error { background: #be123c; }
+
+dialog.confirmar { margin: auto auto 0; width: 100%; max-width: 28rem; border: 0; border-radius: 1.5rem 1.5rem 0 0; padding: 1.5rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom)); background: #fff; color: #1B2B36; }
+dialog.confirmar h2 { font-size: 1.125rem; font-weight: 600; }
+dialog.confirmar p { margin: .375rem 0 1.25rem; font-size: .875rem; line-height: 1.5; color: #64748b; }
+dialog.confirmar button { display: block; width: 100%; min-height: 52px; border-radius: 1rem; font-size: 1rem; font-weight: 600; }
+dialog.confirmar .ok { margin-bottom: .5rem; background: #be123c; color: #fff; }
+
+/* Spinner: basta con poner aria-busy="true" en el botón */
+button[aria-busy=true] { pointer-events: none; opacity: .85; }
+button[aria-busy=true]::before { content: ""; display: inline-block; width: 1em; height: 1em; margin-right: .5em; vertical-align: -.15em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: giro .6s linear infinite; }
+@keyframes giro { to { transform: rotate(360deg); } }
+
+/* Mientras llegan los datos: bloques grises que laten (aria-busy en el contenedor) */
+.esqueleto { border-radius: 1rem; background: #e2e8f0; animation: latido 1.2s ease-in-out infinite; }
+@keyframes latido { 50% { opacity: .5; } }
+
+@media (prefers-reduced-motion: reduce) {
+  dialog[open] { animation: none; }
+  #toast { transition: none; }
+  .esqueleto { animation: none; }
+}

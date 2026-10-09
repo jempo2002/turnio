@@ -71,7 +71,7 @@ def test_el_seed_carga_la_barberia_demo(app, crear):
 
     c = app.test_client()
     r = c.post("/login", data={"correo": "carlos@turnio.demo", "contrasena": CLAVE})
-    assert r.location.endswith("/inicio")
+    assert r.location.endswith("/citas")
 
 
 def _cita(cur, id_tienda, id_sede, id_profesional, inicio, estado="reservada"):

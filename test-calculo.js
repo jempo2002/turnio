@@ -72,4 +72,31 @@ assert.ok(nueva && nueva !== citas[1] && nueva.id !== citas[1].id, 'el turno com
 assert.strictEqual(citas.indexOf(nueva), 2, 'queda justo después del completado');
 assert.deepStrictEqual(horasAgenda(citas), ['15:00']);
 
-console.log('OK — 36 comprobaciones de cálculo');
+/* ── Panel conectado a la API (T7): static/js/panel/turnio.js usa las mismas fórmulas ── */
+const panel = require('./static/js/panel/turnio.js');
+[0, 999, 1250, 3000, 11000].forEach(compra => {
+  [-20, 0, 40, 75].forEach(pct => {
+    assert.strictEqual(panel.precioVenta(compra, pct), precioVenta(compra, pct));
+    assert.strictEqual(panel.pctGanancia(compra, panel.precioVenta(compra, pct)), pctGanancia(compra, precioVenta(compra, pct)));
+  });
+  [undefined, -1, 500, 20000].forEach(monto => assert.strictEqual(panel.pagoProfesional(compra, monto), pagoBarbero(compra, monto)));
+  assert.strictEqual(panel.pesos(compra * 1.5), pesos(compra * 1.5));
+});
+
+/* Turnos libres de la línea de tiempo: horas en punto que nada vigente toca */
+const lunes = { abierto: true, abre: '08:00', cierra: '12:00', almuerzo_desde: null, almuerzo_hasta: null };
+assert.deepStrictEqual(panel.turnosLibres(lunes, []), ['08:00', '09:00', '10:00', '11:00']);
+assert.deepStrictEqual(panel.turnosLibres(lunes, [{ hora: '09:30', fin: '10:15' }]), ['08:00', '11:00'],
+  'una cita de 45 min a las 9:30 ocupa las 9 y las 10');
+assert.deepStrictEqual(panel.turnosLibres(lunes, [{ hora: '08:00', fin: '09:00' }]), ['09:00', '10:00', '11:00'],
+  'terminar a las 9 deja libre las 9');
+assert.deepStrictEqual(panel.turnosLibres(lunes, [], '09:20'), ['10:00', '11:00'], 'hoy: no ofrece horas que ya pasaron');
+assert.deepStrictEqual(panel.turnosLibres(Object.assign({}, lunes, { almuerzo_desde: '10:00', almuerzo_hasta: '11:00' }), []),
+  ['08:00', '09:00', '11:00'], 'el almuerzo no se agenda');
+assert.deepStrictEqual(panel.turnosLibres(Object.assign({}, lunes, { abre: '08:30', cierra: '11:30' }), []), ['09:00', '10:00'],
+  'solo horas completas dentro del horario');
+assert.deepStrictEqual(panel.turnosLibres(Object.assign({}, lunes, { abierto: false }), []), [], 'día cerrado');
+assert.deepStrictEqual(panel.turnosLibres(undefined, []), []);
+assert.deepStrictEqual(panel.turnosLibres(lunes, [{ hora: '00:00', fin: '24:00' }]), [], 'bloqueo de todo el día');
+
+console.log('OK — 36 comprobaciones de cálculo del prototipo y 9 de la agenda del panel');
