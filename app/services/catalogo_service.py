@@ -95,8 +95,8 @@ def actualizar_servicio(id_tienda: int, id_servicio: int, data: dict) -> None:
             raise ErrorServicio("Hay profesionales que ganan más que ese precio por este servicio. Ajusta su pago primero.")
         cur.execute(
             "UPDATE servicios SET nombre = %s, duracion_min = %s, precio = %s, pago_profesional = %s "
-            "WHERE id_servicio = %s",
-            (nombre, duracion, precio, pago, id_servicio),
+            "WHERE id_servicio = %s AND id_tienda = %s",
+            (nombre, duracion, precio, pago, id_servicio, id_tienda),
         )
         conn.commit()
     except IntegrityError as exc:
@@ -114,7 +114,8 @@ def desactivar_servicio(id_tienda: int, id_servicio: int) -> None:
     try:
         cur = conn.cursor()
         _servicio_de_tienda(cur, id_tienda, id_servicio)
-        cur.execute("UPDATE servicios SET estado_activo = 0 WHERE id_servicio = %s", (id_servicio,))
+        cur.execute("UPDATE servicios SET estado_activo = 0 WHERE id_servicio = %s AND id_tienda = %s",
+                    (id_servicio, id_tienda))
         conn.commit()
     except Exception:
         conn.rollback()

@@ -305,7 +305,8 @@ def poner_base(id_tienda: int, id_sede: int, data: dict) -> int:
     try:
         cur = conn.cursor(dictionary=True)
         bloquear_dia(cur, id_tienda, id_sede, hoy_local())
-        cur.execute("UPDATE cajas_dia SET base = %s WHERE id_sede = %s AND fecha = %s", (base, id_sede, hoy_local()))
+        cur.execute("UPDATE cajas_dia SET base = %s WHERE id_sede = %s AND fecha = %s AND id_tienda = %s",
+                    (base, id_sede, hoy_local(), id_tienda))
         conn.commit()
         return base
     except Exception:
@@ -352,7 +353,7 @@ def borrar_gasto(id_tienda: int, id_movimiento: int, sedes_permitidas: list[int]
         if mov["tipo"] != "salida" or mov["id_liquidacion"]:
             raise ErrorServicio("Solo se borran gastos. Un cobro se deshace desde su cita o su venta.")
         bloquear_dia(cur, id_tienda, mov["id_sede"], mov["dia"])
-        cur.execute("DELETE FROM movimientos_caja WHERE id_movimiento = %s", (id_movimiento,))
+        cur.execute("DELETE FROM movimientos_caja WHERE id_movimiento = %s AND id_tienda = %s", (id_movimiento, id_tienda))
         conn.commit()
     except Exception:
         conn.rollback()
@@ -376,9 +377,9 @@ def cerrar(id_tienda: int, id_sede: int, id_usuario: int, data: dict) -> dict:
         cur.execute(
             "UPDATE cajas_dia SET estado = 'cerrada', ingresos = %s, salidas = %s, transferencias = %s, "
             "efectivo_esperado = %s, contado = %s, diferencia = %s, observaciones = %s, id_usuario_cierre = %s, "
-            "fecha_cierre = %s WHERE id_sede = %s AND fecha = %s",
+            "fecha_cierre = %s WHERE id_sede = %s AND fecha = %s AND id_tienda = %s",
             (resumen["ingresos"], resumen["salidas"], resumen["transferencias"], resumen["efectivo_esperado"],
-             contado, diferencia, observaciones, id_usuario, ahora_local(), id_sede, fecha),
+             contado, diferencia, observaciones, id_usuario, ahora_local(), id_sede, fecha, id_tienda),
         )
         conn.commit()
     except Exception:
@@ -401,8 +402,8 @@ def reabrir(id_tienda: int, id_sede: int, data: dict) -> None:
         cur.execute(
             "UPDATE cajas_dia SET estado = 'abierta', ingresos = NULL, salidas = NULL, transferencias = NULL, "
             "efectivo_esperado = NULL, contado = NULL, diferencia = NULL, id_usuario_cierre = NULL, "
-            "fecha_cierre = NULL WHERE id_sede = %s AND fecha = %s",
-            (id_sede, fecha),
+            "fecha_cierre = NULL WHERE id_sede = %s AND fecha = %s AND id_tienda = %s",
+            (id_sede, fecha, id_tienda),
         )
         conn.commit()
     except Exception:
@@ -480,8 +481,8 @@ def cobrar_cita(id_tienda: int, id_cita: int, usuario: dict, data: dict) -> dict
         insertar_movimientos(cur, id_tienda, id_sede, usuario["id_usuario"], "ingreso", concepto, pagos,
                              ahora_local(), id_cita=id_cita, id_profesional=id_profesional, pago_profesional=pago)
         cur.execute(
-            "UPDATE citas SET estado = 'completada', id_profesional = %s, precio = %s WHERE id_cita = %s",
-            (id_profesional, precio, id_cita),
+            "UPDATE citas SET estado = 'completada', id_profesional = %s, precio = %s WHERE id_cita = %s AND id_tienda = %s",
+            (id_profesional, precio, id_cita, id_tienda),
         )
         conn.commit()
     except Exception:
@@ -521,16 +522,18 @@ def deshacer_cobro(id_tienda: int, id_cita: int, usuario: dict) -> None:
         cita = cur.fetchone()
         # Otra vez, ya con candado: una liquidacion pudo entrar entre tanto.
         cur.execute(
-            "SELECT 1 FROM movimientos_caja WHERE id_cita = %s AND id_liquidacion IS NOT NULL FOR UPDATE", (id_cita,)
+            "SELECT 1 FROM movimientos_caja WHERE id_cita = %s AND id_tienda = %s AND id_liquidacion IS NOT NULL FOR UPDATE",
+            (id_cita, id_tienda),
         )
         if cur.fetchall():
             raise Conflicto("La comisión de ese cobro ya se pagó: no se puede deshacer.")
-        cur.execute("DELETE FROM movimientos_caja WHERE id_cita = %s AND tipo = 'ingreso'", (id_cita,))
+        cur.execute("DELETE FROM movimientos_caja WHERE id_cita = %s AND id_tienda = %s AND tipo = 'ingreso'",
+                    (id_cita, id_tienda))
         if cita and cita["estado"] == "completada":
             agenda_service._sin_cruces(cur, id_tienda, cita["id_sede"], cita["id_profesional"], cita["inicio"],
                                        cita["fin"], excluir=id_cita)
             try:
-                cur.execute("UPDATE citas SET estado = 'reservada' WHERE id_cita = %s", (id_cita,))
+                cur.execute("UPDATE citas SET estado = 'reservada' WHERE id_cita = %s AND id_tienda = %s", (id_cita, id_tienda))
             except IntegrityError as exc:
                 raise Conflicto("Esa hora ya la ocupa otra cita del profesional: no se puede deshacer.") from exc
         conn.commit()

@@ -4,6 +4,7 @@ from functools import wraps
 
 from flask import current_app, flash, g, jsonify, redirect, request, session, url_for
 
+from app.services.auth_service import huella_clave
 from app.utils.helpers import hoy_local
 from database import get_db
 
@@ -51,7 +52,7 @@ def _usuario_vigente(user_id, id_sede) -> dict | None:
         cur = conn.cursor(dictionary=True)
         cur.execute(
             # Sin pago registrado (fecha_fin NULL) manda el fin de la prueba.
-            "SELECT u.rol, u.id_tienda, u.id_sede AS sede_fija, u.estado_activo, "
+            "SELECT u.rol, u.id_tienda, u.id_sede AS sede_fija, u.estado_activo, u.clave_hash, "
             "t.plan_id, t.estado AS estado_tienda, "
             "COALESCE(t.fecha_fin_suscripcion, t.trial_ends_at) AS fecha_fin_suscripcion, "
             "s.id_tienda AS sede_tienda, s.estado AS estado_sede "
@@ -114,10 +115,17 @@ def login_required(f):
         user_id = session.get("id_usuario")
         id_sede = session.get("id_sede")
         fila = _usuario_vigente(user_id, id_sede) if user_id and session.get("rol") else None
+        # Huella de la clave: al cambiarla (reset por correo o desde Ajustes)
+        # se cierran las demas sesiones abiertas, como en jemPOS. La sesion la
+        # toma en su primera peticion; las abiertas antes de este cambio
+        # tambien, una vez, sin sacar a nadie.
+        huella = huella_clave(fila.get("clave_hash")) if fila else None
+        session.setdefault("huella", huella)
         if (
             not fila
             or not fila["estado_activo"]
             or fila["id_tienda"] != session.get("id_tienda")
+            or session.get("huella") != huella
             or (fila["rol"] != "Master" and fila["estado_tienda"] == "Eliminado")
         ):
             if user_id:

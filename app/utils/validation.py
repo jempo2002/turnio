@@ -47,9 +47,13 @@ def parse_int(
     max_value: int | None = None,
     allow_zero: bool = True,
 ) -> int:
+    # En JSON, true/false llegaban como 1/0 y 2.9 como 2; 1e400 es infinito
+    # y int() lanzaba OverflowError (un 500). Todos son "invalido".
+    if isinstance(raw_value, bool) or (isinstance(raw_value, float) and not raw_value.is_integer()):
+        raise ValueError(f"{field_label} invalido.")
     try:
         value = int(raw_value)
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise ValueError(f"{field_label} invalido.") from exc
     if not allow_zero and value == 0:
         raise ValueError(f"{field_label} invalido.")
@@ -68,9 +72,11 @@ def parse_float(
     max_value: float | None = None,
     allow_zero: bool = True,
 ) -> float:
+    if isinstance(raw_value, bool):
+        raise ValueError(f"{field_label} invalido.")
     try:
         value = float(raw_value)
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise ValueError(f"{field_label} invalido.") from exc
     # float() acepta "nan" e "inf": NaN pasaba cualquier comparacion de rango.
     if not math.isfinite(value):

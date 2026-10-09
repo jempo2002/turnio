@@ -17,7 +17,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import limiter
 from app.services import local_service, plan_service, vertical_service
-from app.services.auth_service import first_password_policy_error
+from app.services.auth_service import first_password_policy_error, huella_clave
 from app.services.usuario_service import ROLES_NEGOCIO
 from app.utils.decorators import log_seguridad, login_required, roles_required
 from database import get_db
@@ -126,11 +126,14 @@ def api_cambiar_clave():
         if not fila or not check_password_hash(fila["clave_hash"], actual):
             log_seguridad("cambio_clave_fallido")
             return jsonify({"ok": False, "msg": "La contraseña actual no es correcta.", "field": "actual"}), 400
+        nuevo_hash = generate_password_hash(nueva)
         cur.execute(
-            "UPDATE usuarios SET clave_hash = %s WHERE id_usuario = %s",
-            (generate_password_hash(nueva), session["id_usuario"]),
+            "UPDATE usuarios SET clave_hash = %s WHERE id_usuario = %s AND id_tienda = %s",
+            (nuevo_hash, session["id_usuario"], session["id_tienda"]),
         )
         conn.commit()
     finally:
         conn.close()
+    # Las otras sesiones de esta cuenta se cierran; esta sigue abierta.
+    session["huella"] = huella_clave(nuevo_hash)
     return jsonify({"ok": True, "msg": "Contraseña actualizada."})
