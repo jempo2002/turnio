@@ -1,62 +1,118 @@
 /* Avisos de Turnio (docs/ux-avisos.md). CSS plano, sin Tailwind: lo cargan el
    panel, la página pública de reservas, el login y las pantallas de cuenta
    (base.html), así todas usan el mismo aviso, la misma confirmación y la misma
-   guía (static/js/panel/turnio.js). */
+   guía (static/js/panel/turnio.js).
 
-/* Base propia: las pantallas de cuenta no traen el reset de Tailwind */
-#toast, #toast *, dialog.confirmar, dialog.confirmar *, .guia, .guia * { box-sizing: border-box; }
-#toast p, .guia p, dialog.confirmar h2 { margin: 0; }
-#toast button, dialog.confirmar button, .guia button { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
-#toast a { text-decoration: none; }
+   Se ven como el resto del panel: mismos colores de marca y radios que
+   frontend/tailwind.config.js, tarjeta blanca con borde slate-200 y sombra
+   "lift", y el icono en una baldosa de color suave como las tarjetas de
+   "Por atender" (rose-50) y "Libres" (emerald-50). Si cambian esos tokens,
+   cambian aquí también. */
 
-/* Avisos (T.aviso, docs/ux-avisos.md): icono + título + qué hacer, nunca solo color */
-#toast { position: fixed; left: 50%; top: calc(.75rem + env(safe-area-inset-top)); z-index: 100; display: flex; align-items: flex-start; gap: .625rem; width: calc(100vw - 2rem); max-width: 26rem; padding: .875rem .75rem .875rem 1rem; border-radius: 1.25rem; border: 1px solid #e2e8f0; border-left-width: 5px; background: #fff; color: #1B2B36; box-shadow: 0 16px 40px -16px rgba(15,23,42,.45); opacity: 0; transform: translate(-50%,-150%); transition: transform .3s cubic-bezier(.32,.72,0,1), opacity .2s; pointer-events: none; }
-#toast.ver { opacity: 1; transform: translate(-50%,0); pointer-events: auto; }
-#toast .icono { width: 1.375rem; height: 1.375rem; flex-shrink: 0; margin-top: .0625rem; }
-#toast .texto { min-width: 0; flex: 1; }
-#toast .titulo { font-size: .9375rem; font-weight: 600; line-height: 1.35; }
-#toast .detalle { margin-top: .125rem; font-size: .8125rem; line-height: 1.45; color: rgba(27,43,54,.8); }
-#toast .accion { flex-shrink: 0; align-self: center; display: inline-flex; align-items: center; min-height: 44px; padding: 0 .75rem; border-radius: .75rem; background: #E8F4F8; color: #17748E; font-size: .8125rem; font-weight: 700; }
-#toast .cerrar { flex-shrink: 0; display: grid; place-items: center; width: 44px; min-height: 44px; margin: -.5rem -.25rem -.5rem 0; border-radius: .75rem; color: rgba(27,43,54,.7); }
-#toast .cerrar svg { width: 1.125rem; height: 1.125rem; }
-#toast.exito { border-left-color: #059669; } #toast.exito .icono { color: #047857; }
-#toast.info { border-left-color: #17748E; } #toast.info .icono { color: #17748E; }
-#toast.aviso { border-left-color: #d97706; } #toast.aviso .icono { color: #b45309; }
-#toast.error { border-left-color: #be123c; background: #fff1f2; } #toast.error .icono { color: #be123c; }
-
-/* Error de un campo: debajo del campo, en rojo y con el borde marcado */
-[aria-invalid=true] { border-color: #be123c !important; }
-.campo-error { margin-top: .375rem; font-size: .8125rem; font-weight: 500; color: #be123c; }
-
-/* Guía de bienvenida (T.guia): una tarjeta, pocos pasos, se puede saltar */
-.guia { margin-bottom: 1rem; padding: 1rem 1.125rem; border-radius: 1.5rem; border: 1px solid #b9dfea; background: #E8F4F8; color: #1B2B36; }
-.guia .paso-guia { font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #17748E; }
-.guia .titulo { margin-top: .25rem; font-size: 1rem; font-weight: 600; }
-.guia .texto { margin-top: .25rem; font-size: .875rem; line-height: 1.5; color: rgba(27,43,54,.8); }
-.guia .botones { margin-top: .75rem; display: flex; justify-content: flex-end; gap: .5rem; }
-.guia button { padding: 0 1rem; border-radius: .875rem; font-size: .875rem; font-weight: 600; }
-.guia .saltar { color: #17748E; }
-.guia .seguir { background: #17748E; color: #fff; }
-
-dialog.confirmar { margin: auto auto 0; width: 100%; max-width: 28rem; border: 0; border-radius: 1.5rem 1.5rem 0 0; padding: 1.5rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom)); background: #fff; color: #1B2B36; }
-dialog.confirmar h2 { font-size: 1.125rem; font-weight: 600; }
-dialog.confirmar p { margin: .375rem 0 1.25rem; font-size: .875rem; line-height: 1.5; color: #64748b; }
-dialog.confirmar button { display: block; width: 100%; min-height: 52px; border-radius: 1rem; font-size: 1rem; font-weight: 600; }
-dialog.confirmar .ok { margin-bottom: .5rem; background: #be123c; color: #fff; }
-dialog.confirmar .ok.normal { background: #17748E; }
-dialog.confirmar p.irreversible { margin-top: -.75rem; font-weight: 600; color: #be123c; }
-
-dialog.confirmar::backdrop { background: rgba(15,23,42,.45); }
-
-@media (prefers-reduced-motion: reduce) {
-  #toast { transition: none; }
+:root {
+  --tn-texto: #1B2B36;                    /* brand-darkest */
+  --tn-texto-2: rgba(27, 43, 54, .7);     /* brand-darkest/70: mínimo legible (T9) */
+  --tn-acento: #17748E;                   /* brand-dark */
+  --tn-acento-hover: #1B2B36;             /* hover:bg-brand-darkest */
+  --tn-acento-suave: #E8F4F8;             /* brand-lightest */
+  --tn-linea: #e2e8f0;                    /* slate-200 */
+  --tn-linea-marca: #D9E2E8;              /* brand-light */
+  --tn-sombra-soft: 0 1px 2px rgba(15,23,42,.05), 0 8px 24px -16px rgba(15,23,42,.18);
+  --tn-sombra-lift: 0 2px 4px rgba(15,23,42,.06), 0 20px 40px -16px rgba(15,23,42,.28);
+  --tn-letra: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Mensajes del servidor al recargar (templates/_flashes.html) */
-.flash { box-sizing: border-box; display: flex; align-items: flex-start; gap: .625rem; margin: 0 0 1rem; padding: .75rem .875rem; border-radius: 1rem; border: 1px solid #e2e8f0; border-left-width: 5px; background: #fff; color: #1B2B36; font-size: .875rem; line-height: 1.45; font-weight: 500; }
-.flash p { margin: 0; }
-.flash .icono { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
-.flash--exito { border-left-color: #059669; background: #ecfdf5; } .flash--exito .icono { color: #047857; }
-.flash--info { border-left-color: #17748E; background: #E8F4F8; } .flash--info .icono { color: #17748E; }
-.flash--aviso { border-left-color: #d97706; background: #fffbeb; } .flash--aviso .icono { color: #b45309; }
-.flash--error { border-left-color: #be123c; background: #fff1f2; } .flash--error .icono { color: #be123c; }
+/* Base propia: las pantallas de cuenta no traen el reset de Tailwind */
+#toast, #toast *, dialog.confirmar, dialog.confirmar *, .guia, .guia *, .flash, .flash * { box-sizing: border-box; }
+#toast p, .guia p, dialog.confirmar h2, dialog.confirmar p, .flash p { margin: 0; }
+:where(#toast, dialog.confirmar, .guia) button { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#toast a { text-decoration: none; }
+#toast, dialog.confirmar, .guia, .flash { font-family: var(--tn-letra); color: var(--tn-texto); }
+
+/* Baldosa del icono: el mismo color suave por tipo en aviso, flash, guía y confirmación */
+.tn-icono { display: grid; place-items: center; flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: 1rem; }
+.tn-icono svg { width: 1.25rem; height: 1.25rem; }
+.tn-exito  { background: #ecfdf5; color: #047857; }   /* emerald-50 / 700 */
+.tn-info   { background: var(--tn-acento-suave); color: var(--tn-acento); }
+.tn-aviso  { background: #fffbeb; color: #b45309; }   /* amber-50 / 700 */
+.tn-error  { background: #fff1f2; color: #be123c; }   /* rose-50 / 700 */
+
+/* Botones con la forma del panel: rounded-2xl, 44 px, semibold */
+.tn-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 1rem; border-radius: 1rem; font-size: .875rem; font-weight: 600; line-height: 1; transition: background-color .15s, transform .1s; }
+.tn-btn:active { transform: scale(.97); }
+.tn-btn-primario { background: var(--tn-acento); color: #fff; box-shadow: var(--tn-sombra-soft); }
+.tn-btn-primario:hover { background: var(--tn-acento-hover); }
+.tn-btn-peligro { background: #be123c; color: #fff; box-shadow: var(--tn-sombra-soft); }
+.tn-btn-peligro:hover { background: #9f1239; }
+.tn-btn-borde { border: 1px solid var(--tn-linea-marca); color: var(--tn-acento); background: #fff; }
+.tn-btn-borde:hover { background: #f4fafc; }
+.tn-btn-texto { color: var(--tn-acento); }
+.tn-btn-texto:hover { background: var(--tn-acento-suave); }
+
+/* ── Aviso flotante (T.aviso) ──
+   Tarjeta del panel: arriba y centrada en la columna (max-w-md), sin tapar la
+   barra inferior ni los botones del pulgar. */
+#toast { position: fixed; left: 50%; top: calc(.75rem + env(safe-area-inset-top)); z-index: 100; display: flex; align-items: center; gap: .75rem; width: calc(100vw - 2rem); max-width: 26rem; padding: .75rem .5rem .75rem .75rem; border-radius: 1.5rem; border: 1px solid var(--tn-linea); background: #fff; box-shadow: var(--tn-sombra-lift); opacity: 0; transform: translate(-50%, -1rem) scale(.98); transition: transform .3s cubic-bezier(.32,.72,0,1), opacity .2s; pointer-events: none; }
+#toast.ver { opacity: 1; transform: translate(-50%, 0) scale(1); pointer-events: auto; }
+#toast.error { border-color: #fecdd3; }               /* rose-200, como la tarjeta de error de carga */
+#toast .texto { min-width: 0; flex: 1; }
+#toast .titulo { font-size: .875rem; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; }
+#toast .detalle { margin-top: .125rem; font-size: .8125rem; line-height: 1.45; color: var(--tn-texto-2); }
+#toast .accion { flex-shrink: 0; padding: 0 .875rem; font-size: .8125rem; }
+#toast .cerrar { flex-shrink: 0; display: grid; place-items: center; width: 44px; min-height: 44px; border-radius: 1rem; color: var(--tn-texto-2); }
+#toast .cerrar:hover { background: #f1f5f9; }
+#toast .cerrar svg { width: 1.125rem; height: 1.125rem; }
+/* Cuánto le queda al aviso: una línea fina del color del tipo */
+#toast .tiempo { position: absolute; left: 1.5rem; right: 1.5rem; bottom: 0; height: 2px; border-radius: 2px; background: currentColor; opacity: .35; transform-origin: left; }
+#toast.ver .tiempo { animation: tn-tiempo var(--tn-dura, 4s) linear forwards; }
+#toast:hover .tiempo, #toast:focus-within .tiempo { animation-play-state: paused; }
+@keyframes tn-tiempo { to { transform: scaleX(0); } }
+#toast.exito .tiempo { color: #047857; } #toast.info .tiempo { color: var(--tn-acento); }
+#toast.aviso .tiempo { color: #b45309; } #toast.error .tiempo { color: #be123c; }
+
+/* Error de un campo: debajo del campo, en rojo y con el borde marcado */
+[aria-invalid=true] { border-color: #be123c !important; box-shadow: 0 0 0 3px #ffe4e6 !important; }
+.campo-error { display: flex; align-items: flex-start; gap: .375rem; margin-top: .375rem; font-size: .75rem; line-height: 1.4; font-weight: 500; color: #be123c; }
+.campo-error::before { content: "!"; display: grid; place-items: center; flex-shrink: 0; width: 1rem; height: 1rem; margin-top: .0625rem; border-radius: 999px; background: #be123c; color: #fff; font-size: .625rem; font-weight: 700; }
+
+/* ── Guía de bienvenida (T.guia) ──
+   Una tarjeta más de la pantalla (rounded-3xl, borde, sombra suave) con el
+   chip de marca arriba y puntos de avance. */
+.guia { margin-bottom: 1rem; padding: 1.25rem; border-radius: 1.5rem; border: 1px solid var(--tn-linea); background: #fff; box-shadow: var(--tn-sombra-soft); }
+.guia .cabeza { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.guia .chip { display: inline-flex; align-items: center; gap: .375rem; padding: .25rem .625rem; border-radius: 999px; background: var(--tn-acento-suave); color: var(--tn-acento); font-size: .75rem; font-weight: 600; }
+.guia .chip svg { width: .875rem; height: .875rem; }
+.guia .puntos { display: flex; gap: .25rem; }
+.guia .puntos span { width: .375rem; height: .375rem; border-radius: 999px; background: var(--tn-linea-marca); transition: width .2s, background-color .2s; }
+.guia .puntos span.activo { width: 1rem; background: var(--tn-acento); }
+.guia .titulo { margin-top: .875rem; font-size: 1rem; font-weight: 600; letter-spacing: -.01em; }
+.guia .texto { margin-top: .25rem; font-size: .875rem; line-height: 1.55; color: var(--tn-texto-2); }
+.guia .botones { margin-top: 1rem; display: flex; justify-content: flex-end; gap: .5rem; }
+
+/* ── Confirmación (T.confirmar) ──
+   Hoja inferior igual a las del panel: rounded-t-3xl, agarradera, sombra lift. */
+dialog.confirmar { margin: auto auto 0; width: 100%; max-width: 28rem; max-height: 92vh; border: 0; border-radius: 1.5rem 1.5rem 0 0; padding: .75rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom)); background: #fff; box-shadow: var(--tn-sombra-lift); }
+dialog.confirmar::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(3px); }
+dialog.confirmar .agarradera { width: 2.5rem; height: .375rem; margin: 0 auto; border-radius: 999px; background: var(--tn-linea-marca); }
+dialog.confirmar .tn-icono { margin-top: 1.25rem; width: 3rem; height: 3rem; border-radius: 1.25rem; }
+dialog.confirmar .tn-icono svg { width: 1.5rem; height: 1.5rem; }
+dialog.confirmar h2 { margin-top: 1rem; font-size: 1.125rem; font-weight: 600; letter-spacing: -.01em; }
+dialog.confirmar p { margin-top: .375rem; font-size: .875rem; line-height: 1.55; color: var(--tn-texto-2); }
+dialog.confirmar p.irreversible { display: inline-flex; margin-top: .75rem; padding: .25rem .625rem; border-radius: 999px; background: #fff1f2; color: #be123c; font-size: .75rem; font-weight: 600; }
+dialog.confirmar .botones { margin-top: 1.5rem; display: grid; gap: .5rem; }
+dialog.confirmar .botones .tn-btn { width: 100%; min-height: 52px; font-size: 1rem; }
+
+/* ── Mensajes del servidor al recargar (templates/_flashes.html) ──
+   Baldosa suave del tipo, como los chips y tarjetas de estado del panel. */
+.flash { display: flex; align-items: center; gap: .75rem; margin: 0 0 1rem; padding: .625rem .875rem .625rem .625rem; border-radius: 1.25rem; font-size: .875rem; line-height: 1.45; font-weight: 500; }
+.flash .tn-icono { width: 2rem; height: 2rem; border-radius: .75rem; background: #fff; }
+.flash .tn-icono svg { width: 1.125rem; height: 1.125rem; }
+.flash--exito { background: #ecfdf5; } .flash--exito .tn-icono { color: #047857; }
+.flash--info  { background: var(--tn-acento-suave); } .flash--info .tn-icono { color: var(--tn-acento); }
+.flash--aviso { background: #fffbeb; } .flash--aviso .tn-icono { color: #b45309; }
+.flash--error { background: #fff1f2; } .flash--error .tn-icono { color: #be123c; }
+
+@media (prefers-reduced-motion: reduce) {
+  #toast, .guia .puntos span, .tn-btn { transition: none; }
+  #toast.ver .tiempo { animation: none; opacity: 0; }
+}
