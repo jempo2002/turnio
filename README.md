@@ -88,11 +88,11 @@ pip install -r requirements.txt -r requirements-dev.txt
 cp .env.example .env              # FLASK_ENV=development y datos de la base
 python scripts/migrar.py          # aplica las migraciones pendientes
 python scripts/crear_master.py "Tu nombre" tu@correo.com
-python scripts/crear_demo.py      # opcional: barbería demo con citas de hoy
+python scripts/crear_demo.py      # opcional: negocios demo con citas de hoy
 python run.py                     # http://127.0.0.1:5000
 ```
 
-`crear_demo.py` crea "Barbería Turnio Demo" con los datos del prototipo y los usuarios `admin@`, `recepcion@`, `carlos@` y `junior@turnio.demo` (misma contraseña, que pide por consola o toma de `DEMO_CLAVE`).
+`crear_demo.py` crea "Barbería Turnio Demo" (los datos del prototipo, dos Admin) y "Salón Turnio Multisede Demo" (3 sedes) con sus usuarios `@turnio.demo` (misma contraseña, que pide por consola o toma de `DEMO_CLAVE`). La lista de cuentas está en `DEPLOY.md`, paso 4.
 
 ### Migraciones
 

@@ -81,7 +81,7 @@ Al guardar, Railway redespliega: migra la base de cero y arranca. En **Deploymen
 1. Arriba, el selector de entorno → **New Environment** → `staging` → **Duplicate environment** de `production`. Copia los tres servicios con sus variables y con bases nuevas y vacías.
 2. En `staging`, servicio web → **Settings → Source → Branch** = `test`.
 3. Cambia su `SECRET_KEY` por una nueva.
-4. Opcional, para tener datos de prueba: ver el paso 4.
+4. Opcional, para tener datos de prueba: ver *Cuentas demo* en el paso 4.
 
 ## 4. Primer usuario Master (en cada entorno)
 
@@ -90,9 +90,32 @@ Con la [CLI de Railway](https://docs.railway.com/guides/cli) instalada y `railwa
 ```bash
 railway ssh --environment production --service <servicio web>
 python scripts/crear_master.py "Tu nombre" tu@correo.com   # pide la contraseña
-# Solo en staging, si quieres la barbería de demo:
-python scripts/crear_demo.py
 ```
+
+### Cuentas demo (solo staging)
+
+Para probar con datos de ejemplo, en `staging`:
+
+```bash
+railway ssh --environment staging --service <servicio web>
+python scripts/crear_demo.py      # pide la contraseña de las cuentas demo
+```
+
+Crea dos negocios con citas de hoy, servicios y productos. Todas las cuentas usan la misma contraseña:
+
+| Negocio | Correo | Rol |
+|---|---|---|
+| Barbería Turnio Demo (prueba del Pro) | `admin@turnio.demo` | Admin |
+| | `admin2@turnio.demo` | Admin (el segundo, tope del plan) |
+| | `recepcion@turnio.demo` | Recepción |
+| | `carlos@turnio.demo`, `junior@turnio.demo` | Profesional |
+| Salón Turnio Multisede Demo (Multisede, 3 sedes) | `multisede@turnio.demo` | Admin de todas las sedes |
+| | `norte@turnio.demo` | Recepción, sede Norte |
+| | `laura@turnio.demo`, `sofia@turnio.demo`, `valeria@turnio.demo` | Profesional (Centro, Norte, Sur) |
+
+La tercera sede del salón pasa las 2 incluidas: nace con el montaje pendiente y suma la sede extra a la mensualidad en `/panel-master`.
+
+Se puede correr las veces que sea: lo que ya existe no se toca y solo se crean las cuentas que falten. Como la contraseña es conocida, se niega a correr en el entorno `production` de Railway (o con `FLASK_ENV=production` fuera de Railway) salvo con `--en-produccion`.
 
 El Master entra en `/login` y desde `/panel-master` administra los negocios. Los negocios también se registran solos en `/registro`.
 
