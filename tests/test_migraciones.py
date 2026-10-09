@@ -60,7 +60,8 @@ def test_el_seed_carga_la_barberia_demo(app, crear):
     assert contar("servicios") == len(SERVICIOS)
     assert contar("productos") == len(PRODUCTOS)
     assert contar("citas") == len(CITAS)
-    assert contar("usuarios") == 4
+    assert contar("usuarios") == 5
+    assert crear.fila("SELECT COUNT(*) AS n FROM usuarios WHERE id_tienda = %s AND rol = 'Admin'", (id_tienda,))["n"] == 2
     caja = crear.fila(
         "SELECT SUM(IF(tipo = 'ingreso', monto, -monto)) AS neto, SUM(pago_profesional) AS comisiones "
         "FROM movimientos_caja WHERE id_tienda = %s", (id_tienda,),
@@ -72,6 +73,44 @@ def test_el_seed_carga_la_barberia_demo(app, crear):
     c = app.test_client()
     r = c.post("/login", data={"correo": "carlos@turnio.demo", "contrasena": CLAVE})
     assert r.location.endswith("/citas")
+
+
+def test_el_seed_carga_el_salon_multisede(app, crear, db):
+    from scripts.crear_demo import MULTI_CITAS, MULTI_USUARIOS, sembrar_multisede
+    from app.services import plan_service
+
+    with app.app_context():
+        id_tienda = sembrar_multisede(CLAVE)
+        # Si alguien borro un usuario demo, la segunda corrida lo vuelve a crear.
+        db.cursor().execute("DELETE FROM usuarios WHERE correo = 'valeria@turnio.demo'")
+        db.commit()
+        assert sembrar_multisede(CLAVE) is None
+    sedes = crear.fila(
+        "SELECT COUNT(*) AS n, SUM(costo_montaje) AS montaje FROM sedes WHERE id_tienda = %s AND estado = 'Activa'",
+        (id_tienda,),
+    )
+    assert sedes["n"] == 3 and int(sedes["montaje"]) == plan_service.COSTO_MONTAJE_SEDE
+    assert plan_service.mensualidad("multisede", 3) == 139000 + 45000
+    assert crear.fila("SELECT plan_id FROM tiendas WHERE id_tienda = %s", (id_tienda,))["plan_id"] == "multisede"
+    usuarios = crear.fila("SELECT COUNT(*) AS n FROM usuarios WHERE id_tienda = %s", (id_tienda,))["n"]
+    assert usuarios == 1 + len(MULTI_USUARIOS)
+    assert crear.fila("SELECT COUNT(*) AS n FROM citas WHERE id_tienda = %s", (id_tienda,))["n"] == len(MULTI_CITAS)
+
+    r = app.test_client().post("/login", data={"correo": "multisede@turnio.demo", "contrasena": CLAVE})
+    assert r.status_code == 302
+
+
+def test_crear_demo_no_corre_en_produccion(monkeypatch):
+    from scripts import crear_demo
+
+    monkeypatch.setattr("sys.argv", ["crear_demo.py"])
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT_NAME", "production")
+    assert crear_demo.main() == 2
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT_NAME", "staging")
+    monkeypatch.setenv("FLASK_ENV", "production")
+    assert not crear_demo.en_produccion()
+    monkeypatch.delenv("RAILWAY_ENVIRONMENT_NAME")
+    assert crear_demo.en_produccion()
 
 
 def _cita(cur, id_tienda, id_sede, id_profesional, inicio, estado="reservada"):
