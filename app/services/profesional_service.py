@@ -143,7 +143,8 @@ def actualizar_profesional(id_tienda: int, id_usuario: int, data: dict) -> None:
                 )
         if cambios:
             asignaciones = ", ".join(f"{campo} = %s" for campo in cambios)
-            cur.execute(f"UPDATE usuarios SET {asignaciones} WHERE id_usuario = %s", [*cambios.values(), id_usuario])
+            cur.execute(f"UPDATE usuarios SET {asignaciones} WHERE id_usuario = %s AND id_tienda = %s",
+                        [*cambios.values(), id_usuario, id_tienda])
         conn.commit()
     except Exception:
         conn.rollback()
@@ -160,7 +161,8 @@ def cambiar_foto(id_tienda: int, id_usuario: int, datos: bytes | None) -> str | 
         cur = conn.cursor(dictionary=True)
         usuario = _usuario_de_tienda(cur, id_tienda, id_usuario)
         id_foto = imagen_service.guardar(cur, id_tienda, datos, tipo) if datos is not None else None
-        cur.execute("UPDATE usuarios SET id_foto = %s WHERE id_usuario = %s", (id_foto, id_usuario))
+        cur.execute("UPDATE usuarios SET id_foto = %s WHERE id_usuario = %s AND id_tienda = %s",
+                    (id_foto, id_usuario, id_tienda))
         imagen_service.borrar(cur, id_tienda, usuario["id_foto"])
         conn.commit()
         return imagen_service.url(id_foto)

@@ -189,8 +189,8 @@ def actualizar_usuario(id_tienda: int, id_actor: int, id_usuario: int, data: dic
         cur.execute(
             # Todo Profesional atiende; los otros roles conservan lo que tenian.
             "UPDATE usuarios SET nombre_completo = %s, rol = %s, id_sede = %s, "
-            "atiende = IF(%s = 'Profesional', 1, atiende) WHERE id_usuario = %s",
-            (nombre, rol, id_sede, rol, id_usuario),
+            "atiende = IF(%s = 'Profesional', 1, atiende) WHERE id_usuario = %s AND id_tienda = %s",
+            (nombre, rol, id_sede, rol, id_usuario, id_tienda),
         )
         conn.commit()
     except Exception:
@@ -209,7 +209,8 @@ def desactivar_usuario(id_tienda: int, id_actor: int, id_usuario: int) -> None:
         usuario = _usuario_de_tienda(cur, id_tienda, id_usuario)
         if usuario["rol"] == "Admin" and _es_ultimo_admin(cur, id_tienda, id_usuario):
             raise UsuarioError("El negocio debe tener al menos un Admin.")
-        cur.execute("UPDATE usuarios SET " + LIBERAR_USUARIO_SQL + " WHERE id_usuario = %s", (id_usuario,))
+        cur.execute("UPDATE usuarios SET " + LIBERAR_USUARIO_SQL + " WHERE id_usuario = %s AND id_tienda = %s",
+                    (id_usuario, id_tienda))
         conn.commit()
     except Exception:
         conn.rollback()

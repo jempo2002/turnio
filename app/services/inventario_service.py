@@ -215,9 +215,9 @@ def actualizar(id_tienda: int, id_producto: int, data: dict) -> None:
         _producto_de_tienda(cur, id_tienda, id_producto)
         cur.execute(
             "UPDATE productos SET codigo_barras = %s, emoji = %s, nombre = %s, costo = %s, precio = %s, "
-            "stock_minimo = %s WHERE id_producto = %s",
+            "stock_minimo = %s WHERE id_producto = %s AND id_tienda = %s",
             (campos["codigo_barras"], campos["emoji"], campos["nombre"], campos["costo"], campos["precio"],
-             campos["stock_minimo"], id_producto),
+             campos["stock_minimo"], id_producto, id_tienda),
         )
         conn.commit()
     except IntegrityError as exc:
@@ -236,7 +236,8 @@ def desactivar(id_tienda: int, id_producto: int) -> None:
     try:
         cur = conn.cursor(dictionary=True)
         _producto_de_tienda(cur, id_tienda, id_producto)
-        cur.execute("UPDATE productos SET estado_activo = 0 WHERE id_producto = %s", (id_producto,))
+        cur.execute("UPDATE productos SET estado_activo = 0 WHERE id_producto = %s AND id_tienda = %s",
+                    (id_producto, id_tienda))
         conn.commit()
     except Exception:
         conn.rollback()

@@ -23,6 +23,7 @@ from app.services.plan_service import LimitePlanError, requiere_funcion
 from app.services.usuario_service import ROLES_NEGOCIO
 from app.utils.decorators import login_required, roles_required
 from app.utils.helpers import hoy_local
+from app.utils.validation import parse_int
 from database import get_db
 
 caja = Blueprint("caja", __name__)
@@ -332,8 +333,9 @@ def api_inventario_traslado():
         if not _admin_libre():
             raise NoEncontrado("Sede no encontrada.")
         inventario_service.trasladar(
-            session["id_tienda"], session["id_usuario"], int(data.get("id_producto") or 0),
-            int(data.get("desde") or 0), int(data.get("hacia") or 0), data.get("cantidad"))
+            session["id_tienda"], session["id_usuario"], parse_int(data.get("id_producto"), "Producto", min_value=1),
+            parse_int(data.get("desde"), "La sede de origen", min_value=1),
+            parse_int(data.get("hacia"), "La sede de destino", min_value=1), data.get("cantidad"))
     except _ERRORES as exc:
         return _error(exc)
     return jsonify({"ok": True, "msg": "Traslado registrado."})

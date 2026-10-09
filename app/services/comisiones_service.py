@@ -90,8 +90,8 @@ def liquidar(id_tienda: int, id_sede: int, id_usuario: int, data: dict) -> dict:
         id_liquidacion = cur.lastrowid
         marcas = ", ".join(["%s"] * len(cobros))
         cur.execute(
-            f"UPDATE movimientos_caja SET id_liquidacion = %s WHERE id_movimiento IN ({marcas})",
-            (id_liquidacion, *[c["id_movimiento"] for c in cobros]),
+            f"UPDATE movimientos_caja SET id_liquidacion = %s WHERE id_tienda = %s AND id_movimiento IN ({marcas})",
+            (id_liquidacion, id_tienda, *[c["id_movimiento"] for c in cobros]),
         )
         caja_service.insertar_movimientos(
             cur, id_tienda, id_sede, id_usuario, "salida", f"Pago a {profesional['nombre_completo']}",
