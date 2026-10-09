@@ -29,7 +29,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 _ENTORNOS_DEV = {"development", "dev", "local", "testing", "test"}
 
 # Rutas publicas: su respuesta si se puede cachear (no depende de la sesion).
-_PREFIJOS_PUBLICOS = ("/static/", "/favicon.ico", "/health", "/img/")
+_PREFIJOS_PUBLICOS = ("/static/", "/favicon.ico", "/health", "/img/", "/manifest.webmanifest", "/sw.js", "/offline")
 
 
 def cerrar_sesion_publica() -> None:
@@ -96,14 +96,14 @@ def init_security(app) -> None:
         session_cookie_http_only=True,
         frame_options="DENY",
         referrer_policy="strict-origin-when-cross-origin",
-        # Las pantallas Flask no usan CDN de scripts ni JS inline: todo sale
-        # de /static. Solo Google Fonts (CSS + archivos de fuente). El
-        # prototipo HTML de la raiz (Tailwind por CDN) no lo sirve Flask; al
-        # pasarlo a plantillas (T7/T9) se compila Tailwind y esto no cambia.
+        # Nada de terceros (T9): sin CDN de scripts, sin JS ni estilos
+        # inline y sin Google Fonts (la letra es la del sistema, que ya esta
+        # en el celular). Tailwind va compilado en /static/css. El service
+        # worker y el manifiesto salen de 'self' (default-src).
         content_security_policy={
             "default-src": "'self'",
-            "style-src": ["'self'", "https://fonts.googleapis.com"],
-            "font-src": ["'self'", "https://fonts.gstatic.com"],
+            "style-src": "'self'",
+            "font-src": "'self'",
             "img-src": ["'self'", "data:"],
             "frame-ancestors": "'none'",
             "form-action": "'self'",

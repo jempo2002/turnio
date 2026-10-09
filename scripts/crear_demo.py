@@ -124,6 +124,9 @@ def sembrar(clave: str) -> int | None:
             [(id_sede, dia, abierto, abre, cierra, "13:00" if abierto else None, "14:00" if abierto else None)
              for dia, abierto, abre, cierra in HORARIO],
         )
+        # La demo trae el catalogo del prototipo, no el de referencia que
+        # crear_negocio siembra para una barberia (T9).
+        cur.execute("DELETE FROM servicios WHERE id_tienda = %s", (id_tienda,))
         servicios = {}
         for nombre, duracion, precio, pago in SERVICIOS:
             cur.execute(

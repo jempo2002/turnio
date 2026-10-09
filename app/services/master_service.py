@@ -16,7 +16,7 @@ from datetime import date, timedelta
 from mysql.connector import IntegrityError
 from werkzeug.security import generate_password_hash
 
-from app.services import plan_service
+from app.services import plan_service, vertical_service
 from app.services.auth_service import (
     LIBERAR_USUARIO_SQL,
     first_password_policy_error,
@@ -24,20 +24,13 @@ from app.services.auth_service import (
     liberar_datos_inactivos,
 )
 from app.services.sede_service import sembrar_horario
+from app.services.vertical_service import TIPOS_NEGOCIO
 from app.services.usuario_service import _parse_cc
 from app.utils.helpers import ahora_local, hoy_local, normalize_phone
 from app.utils.validation import sanitize_optional_text, sanitize_text
 from database import get_db
 
 PERIODOS = (1, 3, 6, 12)
-TIPOS_NEGOCIO = {
-    "barberia": "Barbería",
-    "peluqueria": "Peluquería o salón de belleza",
-    "unas": "Estudio de uñas",
-    "cejas_pestanas": "Cejas y pestañas",
-    "estetica": "Estética",
-    "otro": "Otro",
-}
 _SLUG_MAX = 60
 
 
@@ -163,7 +156,10 @@ def crear_negocio(data: dict) -> int:
             "INSERT INTO sedes (id_tienda, nombre, direccion, telefono, es_principal) VALUES (%s, %s, %s, %s, 1)",
             (id_tienda, sede_nombre, sede_direccion, telefono),
         )
-        sembrar_horario(cur, cur.lastrowid)
+        # Horario y servicios del tipo de negocio (T9): el link de reservas
+        # sirve desde el primer dia y el dueno solo ajusta precios.
+        sembrar_horario(cur, cur.lastrowid, vertical_service.horario(tipo))
+        vertical_service.sembrar_servicios(cur, id_tienda, tipo)
         cur.execute(
             # Admin sin sede fija (NULL): ve todas las sedes del negocio. En
             # un negocio que empieza el dueno casi siempre atiende (atiende =

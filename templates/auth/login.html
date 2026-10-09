@@ -7,6 +7,7 @@
 <meta name="description" content="Entra a la agenda y a la caja de tu negocio con Turnio.">
 <meta name="theme-color" content="#F1F5F9">
 <meta name="robots" content="noindex">
+{% include "_pwa.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
 </head>
 {#- Diseño del prototipo (login.html, T1) con el formulario real de jemPOS Chef:
@@ -29,7 +30,7 @@
 
     <div class="rounded-3xl border border-slate-200 bg-white p-7 shadow-lift sm:p-9">
       <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">Bienvenido de vuelta</h1>
-      <p class="mt-2 text-sm leading-relaxed text-brand-darkest/60">
+      <p class="mt-2 text-sm leading-relaxed text-brand-darkest/70">
         Ingresa para ver tu agenda del día y cerrar la caja.
       </p>
 
@@ -63,7 +64,7 @@
         </button>
       </form>
 
-      <p class="mt-7 border-t border-brand-light/50 pt-6 text-center text-sm text-brand-darkest/60">
+      <p class="mt-7 border-t border-brand-light/50 pt-6 text-center text-sm text-brand-darkest/70">
         ¿Tu negocio aún no está en Turnio?
         <a href="{{ url_for('auth.registro') }}" class="rounded font-semibold text-brand-darkest underline-offset-4 transition hover:text-brand-dark hover:underline">
           Pruébalo gratis
@@ -71,7 +72,7 @@
       </p>
     </div>
 
-    <p class="mt-6 text-center text-xs text-brand-darkest/45">© 2026 Turnio</p>
+    <p class="mt-6 text-center text-xs text-brand-darkest/70">© 2026 Turnio</p>
   </main>
 </body>
 </html>

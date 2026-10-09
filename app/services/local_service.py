@@ -10,7 +10,7 @@ from datetime import time, timedelta
 
 from mysql.connector import IntegrityError
 
-from app.services import imagen_service
+from app.services import imagen_service, vertical_service
 from app.services.errores import Conflicto
 from app.services.master_service import TIPOS_NEGOCIO, _parse_tipo
 from app.services.sede_service import ABRE, CIERRA, sede_de_tienda
@@ -37,6 +37,7 @@ def datos_negocio(id_tienda: int) -> dict:
         conn.close()
     fila["logo_url"] = imagen_service.url(fila.pop("id_logo"))
     fila["tipos_negocio"] = list(TIPOS_NEGOCIO)
+    fila["voc"] = vertical_service.vocabulario(fila["tipo_negocio"])
     return fila
 
 

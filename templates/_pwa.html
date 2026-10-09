@@ -1,0 +1,12 @@
+{#- App instalable (T9): icono, manifiesto y service worker. Va en el <head>
+    del landing, el login y el panel; no en la pagina publica de reservas
+    (un cliente no instala el panel del negocio). -#}
+<link rel="icon" href="{{ url_for('static', filename='img/icono.svg') }}" type="image/svg+xml">
+<link rel="icon" href="{{ url_for('static', filename='img/icono-192.png') }}" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+<link rel="manifest" href="{{ url_for('pwa.manifest') }}">
+<meta name="apple-mobile-web-app-title" content="Turnio">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>

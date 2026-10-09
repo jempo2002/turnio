@@ -1,0 +1,8 @@
+/* Fuente del CSS del landing (T9). `npm run css` lo compila a
+   static/css/landing.css con solo las clases de templates/landing.html: el
+   visitante no descarga el CSS del panel, ni el panel el del landing. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:focus-visible { outline: 2px solid #17748E; outline-offset: 2px; border-radius: 8px; }

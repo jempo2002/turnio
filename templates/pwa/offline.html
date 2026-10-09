@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sin conexión · Turnio</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F1F5F9">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
+<script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
+</head>
+{#- La guarda el service worker y la muestra cuando no hay senal. Sin datos de
+    sesion ni CSRF: es la misma para todos. -#}
+<body class="grid min-h-screen place-items-center bg-slate-100 px-6 font-sans text-brand-darkest antialiased">
+<main class="max-w-sm text-center">
+  <img src="{{ url_for('static', filename='img/icono-192.png') }}" alt="" width="64" height="64" class="mx-auto h-16 w-16">
+  <h1 class="mt-6 text-xl font-semibold tracking-tight">Sin conexión</h1>
+  <p class="mt-2 text-sm leading-relaxed text-brand-darkest/65">
+    Turnio necesita internet para mostrar tu agenda y tu caja al día. Revisa los datos o el wifi e intenta de nuevo.
+  </p>
+  <button type="button" data-recargar class="mt-8 w-full rounded-2xl bg-brand-dark py-4 text-base font-semibold text-white transition hover:bg-brand-darkest active:scale-[.98]">
+    Intentar de nuevo
+  </button>
+</main>
+</body>
+</html>

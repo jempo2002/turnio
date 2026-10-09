@@ -13,7 +13,7 @@ from __future__ import annotations
 from flask import Blueprint, jsonify, render_template, request
 
 from app import limiter
-from app.services import reserva_service
+from app.services import reserva_service, vertical_service
 from app.services.errores import ErrorServicio, NoEncontrado
 from app.utils.decorators import log_seguridad
 from app.utils.helpers import only_digits
@@ -42,7 +42,9 @@ def reservar(slug):
         tienda = reserva_service.tienda(slug)
     except NoEncontrado:
         return render_template("publico/no_encontrado.html"), 404
-    return render_template("publico/reservar.html", tienda=tienda)
+    return render_template(
+        "publico/reservar.html", tienda=tienda, voc=vertical_service.vocabulario(tienda["tipo_negocio"])
+    )
 
 
 @publico.get("/api/publico/<slug>")

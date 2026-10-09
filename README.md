@@ -9,7 +9,7 @@ Reglas de trabajo y ramas: [CLAUDE.md](CLAUDE.md). Plan hasta el deploy: [docs/a
 - **App Flask** (`app/`, `templates/`, `static/`, `migrations/`, `scripts/`, `tests/`): el backend de Turnio, construido sobre la base de jemPOS Chef (Flask + MySQL + Redis). Hoy trae registro de negocios, login, invitaciones al equipo, recuperación de contraseña, sesiones revalidadas en cada petición, modo solo lectura al vencer la suscripción, cabeceras de seguridad, planes, panel Master, sedes y equipo, catálogo y configuración (T4), caja e inventario (T5) agenda (T6) y reservas públicas (T8).
 - **Panel del negocio** (T7, `templates/panel/`, `static/js/panel/`): Citas, Caja, Inventario y Ajustes, con el diseño del prototipo y los datos de la API. Ver [Panel](#panel-t7).
 - **Página pública de reservas** (T8, `/r/<slug>`, `app/routes/publico.py`, `templates/publico/`, `static/js/publico/`): el cliente final elige sede, servicio, día, hora y profesional sin crear cuenta, y avisa al negocio por WhatsApp. Ver [Reservas públicas](#reservas-públicas-t8).
-- **Prototipo que queda** (`index.html` con `theme.js`): la landing, diseño de referencia de T9. Para verla: `python3 -m http.server 8000`.
+- **Landing** (`templates/landing.html`, T9): la sirve Flask en `/`; con sesión abierta redirige al panel.
 
 ## App Flask
 
@@ -67,7 +67,9 @@ Las pantallas del prototipo ya son de la app: `/citas`, `/caja`, `/inventario` y
 - **Caja**: totales del día, efectivo esperado en el cajón, división por profesional, salidas, anular ventas, cierre con arqueo (el Admin puede reabrir) y el pago por servicio.
 - **Inventario**: stock de la sede con +1/−1 (kardex), producto nuevo con calculadora de precio, conteo (ajuste) al editar y mínimo por producto para "Quedan pocas"; servicios.
 - **Estados**: esqueletos mientras carga, "Reintentar" si falla, spinner en cada botón y el mensaje del servidor en un aviso. Al volver a la pestaña (y cada minuto en Citas y Caja) los datos se refrescan.
-- **CSS**: Tailwind compilado (sin CDN), así la CSP estricta de `app/security.py` sigue igual: sin JS ni estilos inline. Al cambiar clases en `templates/panel/` o `static/js/panel/`: `cd frontend && npm install && npm run css`, y se sube `static/css/panel.css` (Railway solo corre Python).
+- **CSS**: Tailwind compilado (sin CDN), así la CSP estricta de `app/security.py` sigue igual: sin JS ni estilos inline. Al cambiar clases en `templates/` o `static/js/`: `cd frontend && npm install && npm run css`, y se suben `static/css/panel.css` y `static/css/landing.css` (Railway solo corre Python).
+- **App instalable (T9)**: `/manifest.webmanifest`, `/sw.js` (solo guarda estáticos versionados y la página `/offline`; nunca la API) e iconos en `static/img/` (`python scripts/generar_iconos.py`). Los estáticos llevan `?v=<huella>` y se guardan un año; las respuestas van comprimidas (Flask-Compress, de jemPOS).
+- **Tipos de negocio (T9)**: `app/services/vertical_service.py` define vocabulario, ejemplos, servicios iniciales y horario de cada tipo; el registro los siembra.
 
 ### Reservas públicas (T8)
 
@@ -116,4 +118,4 @@ En cada PR hacia `test` o `main` corren en GitHub Actions (`.github/workflows/`)
 - **CodeQL**: análisis de seguridad de Python y JavaScript; los hallazgos salen en la pestaña Security.
 - **Dependabot**: PR semanales hacia `test` con dependencias y acciones al día.
 
-`tests/test_seguridad.py` cuida lo de producción detrás del proxy de Railway: el límite de intentos cuenta por la IP real del cliente (ProxyFix) y no se burla con un `X-Forwarded-For` inventado, HTTP redirige a HTTPS con HSTS, la API no abre CORS a otros orígenes, `/health` responde sin sesión, y ni las plantillas (`|safe`, `Markup`) ni el JS de `static/` meten HTML sin escapar. El prototipo de la raíz usa `innerHTML`, pero cada dato del usuario pasa por `esc()` (revisado en T10; el único que faltaba, el teléfono del enlace de WhatsApp en `citas.html`, ahora se limpia a solo dígitos); al pasarlo a plantillas (T7/T9) queda cubierto por esa prueba.
+`tests/test_seguridad.py` cuida lo de producción detrás del proxy de Railway: el límite de intentos cuenta por la IP real del cliente (ProxyFix) y no se burla con un `X-Forwarded-For` inventado, HTTP redirige a HTTPS con HSTS, la API no abre CORS a otros orígenes, `/health` responde sin sesión, y ni las plantillas (`|safe`, `Markup`) ni el JS de `static/` meten HTML sin escapar. Desde T9 no queda prototipo en la raíz: todo el HTML sale de `templates/` y pasa por esa prueba.

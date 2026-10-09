@@ -88,6 +88,10 @@
     atiende: b.yoAtiende === '1',
     funciones: (b.yoFunciones || '').split(' ').filter(Boolean)
   };
+  /* Como se le dice a quien atiende en este negocio: barbero, estilista,
+     manicurista... (T9, app/services/vertical_service.py). */
+  T.voc = { profesional: b.vocProfesional || 'profesional' };
+  T.voc.Profesional = T.voc.profesional.charAt(0).toUpperCase() + T.voc.profesional.slice(1);
   T.puede = function (funcion) { return T.yo.funciones.indexOf(funcion) >= 0; };
   T.esCaja = T.yo.rol === 'Admin' || T.yo.rol === 'Recepcion';
 
@@ -197,7 +201,7 @@
     T.pintar(contenedor, T.h`
       <div class="rounded-3xl border border-rose-200 bg-white p-6 text-center shadow-soft" role="alert">
         <p class="text-sm font-semibold text-rose-700">No se pudo cargar</p>
-        <p class="mt-1 text-xs text-brand-darkest/60">${(e && e.message) || 'Intenta de nuevo.'}</p>
+        <p class="mt-1 text-xs text-brand-darkest/70">${(e && e.message) || 'Intenta de nuevo.'}</p>
         <button type="button" data-reintentar class="mt-4 rounded-xl bg-brand-dark px-5 text-sm font-semibold text-white transition hover:bg-brand-darkest active:scale-95">Reintentar</button>
       </div>`);
     contenedor.querySelector('[data-reintentar]').addEventListener('click', reintentar);
