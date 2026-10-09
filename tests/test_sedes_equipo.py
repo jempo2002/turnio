@@ -1,5 +1,4 @@
 """Sedes y usuarios segun el plan (tomado de jemPOS Chef)."""
-import mysql.connector
 import pytest
 
 from conftest import entrar
@@ -33,18 +32,17 @@ def test_multisede_incluye_dos_sedes_y_cobra_las_extra(client, crear):
         "SELECT GROUP_CONCAT(costo_montaje ORDER BY id_sede) AS m FROM sedes WHERE id_tienda = %s", (id_tienda,)
     )["m"]
     assert montajes == "0,0,79000"
-    for nombre in ("Este", "Oeste"):
+    for nombre in ("Este", "Oeste", "Sexta", "Septima"):
         assert client.post("/api/sedes", json={"nombre": nombre}).status_code == 201
-    r = client.post("/api/sedes", json={"nombre": "Sexta"})
-    assert r.status_code == 403 and "máximo de 5" in r.get_json()["msg"]
-    assert "$274.000" in client.get("/sedes").get_data(as_text=True)  # 139.000 + 3 x 45.000
+    pagina = client.get("/sedes").get_data(as_text=True)
+    assert "$344.000" in pagina  # 139.000 + 3 x 45.000 + 2 x 35.000
+    assert "suma $35.000 a la mensualidad" in pagina
 
 
-def test_la_base_rechaza_una_sexta_sede(crear):
+def test_la_base_no_limita_las_sedes(crear):
     id_tienda, _ = crear.tienda("multisede", sedes=("A", "B", "C", "D", "E"))
-    with pytest.raises(mysql.connector.Error) as exc:
-        crear.sede(id_tienda, "F")
-    assert exc.value.errno == 1644
+    crear.sede(id_tienda, "F")
+    assert crear.fila("SELECT COUNT(*) AS n FROM sedes WHERE id_tienda = %s", (id_tienda,))["n"] == 6
 
 
 def test_editar_sede_y_nombre_repetido(client, crear):

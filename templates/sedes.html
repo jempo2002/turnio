@@ -49,15 +49,14 @@
   {% elif puede_crear and sede_incluida %}
     <p class="muted">
       Tu Plan {{ plan_nombre }} incluye {{ sedes_incluidas }} sedes sin costo extra. Desde la siguiente, cada sede
-      tiene un montaje único de {{ montaje_sede_extra|pesos }} y suma {{ sede_extra|pesos }} a la mensualidad. Puedes tener hasta {{ max_sedes }} sedes.
-    </p>
-  {% elif puede_crear %}
-    <p class="muted">
-      Cada sede nueva tiene un montaje único de {{ costo_montaje|pesos }} (capacitación y configuración inicial)
-      y suma {{ sede_extra|pesos }} a la mensualidad. Puedes tener hasta {{ max_sedes }} sedes.
+      tiene un montaje único de {{ montaje_sede_extra|pesos }} y suma {{ sede_extra|pesos }} a la mensualidad
+      ({{ precio_volumen|pesos }} desde la sede {{ sede_volumen }}).
     </p>
   {% else %}
-    <p class="muted">Llegaste al máximo de {{ max_sedes }} sedes. Para más, escríbenos y lo vemos con un plan corporativo.</p>
+    <p class="muted">
+      Cada sede nueva tiene un montaje único de {{ costo_montaje|pesos }} (capacitación y configuración inicial)
+      y suma {{ sede_extra|pesos }} a la mensualidad{% if sede_extra > precio_volumen %} ({{ precio_volumen|pesos }} desde la sede {{ sede_volumen }}){% endif %}.
+    </p>
   {% endif %}
   <form class="form form--fila" data-api="POST {{ url_for('negocio.api_sedes_crear') }}"
         data-confirmar="¿Crear la sede nueva?"
