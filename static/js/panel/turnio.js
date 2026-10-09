@@ -99,6 +99,30 @@
     });
   };
 
+  /* ── HTML que escapa solo ──
+     T.h`<p>${nombre}</p>` escapa todo lo que se interpola, como Jinja: un dato
+     del usuario nunca se vuelve marcado. Lo que ya es T.h (o una lista de T.h)
+     entra tal cual; false/null/undefined no pintan nada. T.pintar() es el único
+     sitio que convierte ese texto en nodos (tests/test_seguridad.py). */
+  function Html(texto) { this.texto = texto; }
+
+  function trozo(v) {
+    if (v instanceof Html) return v.texto;
+    if (Array.isArray(v)) return v.map(trozo).join('');
+    if (v === null || v === undefined || v === false) return '';
+    return T.esc(v);
+  }
+
+  T.h = function (partes) {
+    var texto = partes[0];
+    for (var i = 1; i < arguments.length; i++) texto += trozo(arguments[i]) + partes[i];
+    return new Html(texto);
+  };
+
+  T.pintar = function (el, contenido) {
+    el.replaceChildren(document.createRange().createContextualFragment(trozo(contenido)));
+  };
+
   T.iniciales = function (nombre) {
     var p = String(nombre || '').trim().split(/\s+/);
     return (p.length > 1 ? p[0].charAt(0) + p[1].charAt(0) : p[0].slice(0, 2)).toUpperCase();
@@ -170,12 +194,12 @@
   T.errorCarga = function (contenedor, e, reintentar) {
     if (e && e.name === 'AbortError') return;
     contenedor.removeAttribute('aria-busy');
-    contenedor.innerHTML =
-      '<div class="rounded-3xl border border-rose-200 bg-white p-6 text-center shadow-soft" role="alert">' +
-        '<p class="text-sm font-semibold text-rose-700">No se pudo cargar</p>' +
-        '<p class="mt-1 text-xs text-brand-darkest/60">' + T.esc((e && e.message) || 'Intenta de nuevo.') + '</p>' +
-        '<button type="button" data-reintentar class="mt-4 rounded-xl bg-brand-dark px-5 text-sm font-semibold text-white transition hover:bg-brand-darkest active:scale-95">Reintentar</button>' +
-      '</div>';
+    T.pintar(contenedor, T.h`
+      <div class="rounded-3xl border border-rose-200 bg-white p-6 text-center shadow-soft" role="alert">
+        <p class="text-sm font-semibold text-rose-700">No se pudo cargar</p>
+        <p class="mt-1 text-xs text-brand-darkest/60">${(e && e.message) || 'Intenta de nuevo.'}</p>
+        <button type="button" data-reintentar class="mt-4 rounded-xl bg-brand-dark px-5 text-sm font-semibold text-white transition hover:bg-brand-darkest active:scale-95">Reintentar</button>
+      </div>`);
     contenedor.querySelector('[data-reintentar]').addEventListener('click', reintentar);
   };
 
@@ -211,11 +235,8 @@
     return new Promise(function (resolve) {
       var d = document.createElement('dialog');
       d.className = 'confirmar';
-      d.innerHTML = '<form method="dialog"><h2></h2><p></p>' +
-        '<button value="ok" class="ok"></button><button value="no" autofocus>Cancelar</button></form>';
-      d.querySelector('h2').textContent = titulo;
-      d.querySelector('p').textContent = detalle || '';
-      d.querySelector('.ok').textContent = textoOk || 'Confirmar';
+      T.pintar(d, T.h`<form method="dialog"><h2>${titulo}</h2><p>${detalle || ''}</p>
+        <button value="ok" class="ok">${textoOk || 'Confirmar'}</button><button value="no" autofocus>Cancelar</button></form>`);
       d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
       d.addEventListener('close', function () { resolve(d.returnValue === 'ok'); d.remove(); });
       document.body.appendChild(d);

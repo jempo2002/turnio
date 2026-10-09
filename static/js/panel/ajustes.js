@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  var T = window.Turnio, $ = T.$, esc = T.esc;
+  var T = window.Turnio, $ = T.$;
   var dias = [];   /* 7 días, lunes = 0, tal como los manda /api/horario */
 
   $('cuenta-iniciales').textContent = T.iniciales(T.yo.nombre);
@@ -66,29 +66,29 @@
 
   function pintarHorarios() {
     $('form-ajustes').removeAttribute('aria-busy');
-    $('horarios').innerHTML = dias.map(function (d, i) {
+    T.pintar($('horarios'), dias.map(function (d, i) {
       var error = errorDia(d);
       /* Tres filas fijas (día, horario, almuerzo): a 360 px nada se parte raro */
       function fila(etiqueta, a, b, va, vb) {
-        return '<div class="mt-1 grid grid-cols-[3.75rem_1fr_auto_1fr] items-center gap-1">' +
-          '<span class="text-xs text-brand-darkest/55">' + etiqueta + '</span>' +
-          '<input type="time" data-campo="' + a + '" data-i="' + i + '" value="' + (va || '') + '" aria-label="' + etiqueta + ' desde, ' + esc(d.nombre) + '" class="' + HORA + '">' +
-          '<span class="text-xs text-brand-darkest/40" aria-hidden="true">a</span>' +
-          '<input type="time" data-campo="' + b + '" data-i="' + i + '" value="' + (vb || '') + '" aria-label="' + etiqueta + ' hasta, ' + esc(d.nombre) + '" class="' + HORA + '">' +
-        '</div>';
+        return T.h`<div class="mt-1 grid grid-cols-[3.75rem_1fr_auto_1fr] items-center gap-1">
+          <span class="text-xs text-brand-darkest/55">${etiqueta}</span>
+          <input type="time" data-campo="${a}" data-i="${i}" value="${va || ''}" aria-label="${etiqueta} desde, ${d.nombre}" class="${HORA}">
+          <span class="text-xs text-brand-darkest/40" aria-hidden="true">a</span>
+          <input type="time" data-campo="${b}" data-i="${i}" value="${vb || ''}" aria-label="${etiqueta} hasta, ${d.nombre}" class="${HORA}">
+        </div>`;
       }
-      return '<li class="rounded-2xl bg-brand-lightest/40 p-3">' +
-        '<div class="flex items-center justify-between gap-3">' +
-          '<label class="flex min-h-[44px] flex-1 cursor-pointer items-center gap-2.5">' +
-            '<input type="checkbox" data-campo="abierto" data-i="' + i + '"' + (d.abierto ? ' checked' : '') + ' class="h-5 w-5 rounded accent-brand-dark">' +
-            '<span class="text-sm font-medium">' + esc(d.nombre) + '</span>' +
-          '</label>' +
-          (d.abierto ? '' : '<span class="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-brand-darkest/50">Cerrado</span>') +
-        '</div>' +
-        (d.abierto ? fila('Abre', 'abre', 'cierra', d.abre, d.cierra) + fila('Almuerzo', 'almuerzo_desde', 'almuerzo_hasta', d.almuerzo_desde, d.almuerzo_hasta) : '') +
-        (error ? '<p class="mt-2 text-xs font-medium text-rose-700" role="alert">' + error + '</p>' : '') +
-      '</li>';
-    }).join('');
+      return T.h`<li class="rounded-2xl bg-brand-lightest/40 p-3">
+        <div class="flex items-center justify-between gap-3">
+          <label class="flex min-h-[44px] flex-1 cursor-pointer items-center gap-2.5">
+            <input type="checkbox" data-campo="abierto" data-i="${i}" ${d.abierto ? T.h`checked` : ''} class="h-5 w-5 rounded accent-brand-dark">
+            <span class="text-sm font-medium">${d.nombre}</span>
+          </label>
+          ${d.abierto ? '' : T.h`<span class="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-brand-darkest/50">Cerrado</span>`}
+        </div>
+        ${d.abierto ? [fila('Abre', 'abre', 'cierra', d.abre, d.cierra), fila('Almuerzo', 'almuerzo_desde', 'almuerzo_hasta', d.almuerzo_desde, d.almuerzo_hasta)] : ''}
+        ${error && T.h`<p class="mt-2 text-xs font-medium text-rose-700" role="alert">${error}</p>`}
+      </li>`;
+    }));
   }
 
   $('horarios').addEventListener('change', function (e) {

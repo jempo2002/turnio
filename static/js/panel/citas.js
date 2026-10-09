@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  var T = window.Turnio, $ = T.$, esc = T.esc, pesos = T.pesos;
+  var T = window.Turnio, $ = T.$, pesos = T.pesos;
   var NEGOCIO = document.body.dataset.negocio || '';
 
   var filtro = 'todas';
@@ -52,8 +52,7 @@
     var abierto = d.abierto && ahora >= d.abre && ahora < d.cierra;
     est.className = 'mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ' +
       (abierto ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-brand-darkest/60');
-    est.innerHTML = '<span class="h-1.5 w-1.5 rounded-full ' + (abierto ? 'bg-emerald-500' : 'bg-slate-400') + '" aria-hidden="true"></span>' +
-      (abierto ? 'Abierto' : 'Cerrado');
+    T.pintar(est, T.h`<span class="h-1.5 w-1.5 rounded-full ${abierto ? 'bg-emerald-500' : 'bg-slate-400'}" aria-hidden="true"></span>${abierto ? 'Abierto' : 'Cerrado'}`);
   }
 
   function moverDia(n) {
@@ -70,10 +69,9 @@
     var sel = $('profesional');
     var ver = T.yo.rol !== 'Profesional' && profesionales.length > 1;
     $('caja-profesional').classList.toggle('hidden', !ver);
-    sel.innerHTML = profesionales.map(function (p) {
-      return '<option value="' + p.id_usuario + '">Agenda de ' + esc(p.nombre_completo) +
-        (p.id_usuario === T.yo.id ? ' (tú)' : '') + '</option>';
-    }).join('');
+    T.pintar(sel, profesionales.map(function (p) {
+      return T.h`<option value="${p.id_usuario}">Agenda de ${p.nombre_completo}${p.id_usuario === T.yo.id ? ' (tú)' : ''}</option>`;
+    }));
     if (quien) sel.value = String(quien);
   }
 
@@ -154,69 +152,59 @@
   }
 
   function tarjeta(c) {
-    var hora = '<span class="w-11 shrink-0 pt-4 text-right text-xs font-semibold tabular-nums ' + COLOR_HORA[c.estado] + '">' + c.hora + '</span>';
-    var li = '<li class="flex gap-3">' + hora;
+    var hora = T.h`<span class="w-11 shrink-0 pt-4 text-right text-xs font-semibold tabular-nums ${COLOR_HORA[c.estado]}">${c.hora}</span>`;
 
     /* Turno libre: toda la tarjeta es el botón. Un toque abre la hoja con la hora ya puesta. */
     if (c.estado === 'disponible') {
-      return li +
-        '<button type="button" data-agendar="' + c.hora + '" class="min-w-0 flex-1 rounded-2xl border border-dashed border-emerald-300 bg-emerald-50 py-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 active:scale-[.99]">' +
-          'Disponible · Agendar' +
-        '</button></li>';
+      return T.h`<li class="flex gap-3">${hora}<button type="button" data-agendar="${c.hora}" class="min-w-0 flex-1 rounded-2xl border border-dashed border-emerald-300 bg-emerald-50 py-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 active:scale-[.99]">Disponible · Agendar</button></li>`;
     }
 
     if (c.estado === 'bloqueada') {
       var texto = c.cliente_nombre === 'Almuerzo' && !c.id_cita ? 'Almuerzo · No reservable'
         : (c.toda_la_sede ? 'Local cerrado' : 'Bloqueado') + (c.nota ? ' · ' + c.nota : '') + ' · hasta ' + c.hasta;
-      return li +
-        '<div class="min-w-0 flex-1 truncate rounded-2xl bg-slate-200/60 px-4 py-3.5 text-xs font-medium text-brand-darkest/55">' + esc(texto) + '</div></li>';
+      return T.h`<li class="flex gap-3">${hora}<div class="min-w-0 flex-1 truncate rounded-2xl bg-slate-200/60 px-4 py-3.5 text-xs font-medium text-brand-darkest/55">${texto}</div></li>`;
     }
 
     var hecha = c.estado !== 'reservada';
     var acciones;
     if (c.estado === 'completada') {
-      acciones = '<div class="mt-2 flex items-center justify-between gap-2">' +
-          '<span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-darkest/55">Completada</span>' +
-          '<button type="button" data-accion="reabrir" data-id="' + c.id_cita + '" class="rounded-xl px-3 text-xs font-medium text-brand-darkest/55 transition hover:bg-slate-100">Deshacer</button>' +
-        '</div>';
+      acciones = T.h`<div class="mt-2 flex items-center justify-between gap-2">
+          <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-darkest/55">Completada</span>
+          <button type="button" data-accion="reabrir" data-id="${c.id_cita}" class="rounded-xl px-3 text-xs font-medium text-brand-darkest/55 transition hover:bg-slate-100">Deshacer</button>
+        </div>`;
     } else if (c.estado === 'no_asistio') {
-      acciones = '<div class="mt-2"><span class="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800">No asistió</span></div>';
+      acciones = T.h`<div class="mt-2"><span class="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800">No asistió</span></div>`;
     } else {
       var msg = 'Hola ' + primerNombre(c.cliente_nombre) + ', te recordamos tu cita ' +
         (esHoy() ? 'hoy' : 'el ' + dia.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })) +
         ' a las ' + c.hora + (NEGOCIO ? ' en ' + NEGOCIO : '') + '.';
-      acciones = '<div class="mt-3 flex gap-2">' +
-          '<button type="button" data-accion="liberar" data-id="' + c.id_cita + '" class="' + BTN + 'border border-slate-200 text-rose-700 hover:bg-rose-50" aria-label="Liberar el turno de ' + esc(c.cliente_nombre) + '">Liberar</button>' +
-          (c.cliente_telefono
-            ? '<a href="https://wa.me/' + wa(c.cliente_telefono) + '?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener" ' +
-              'class="' + BTN + 'min-h-[44px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100" aria-label="Recordar por WhatsApp a ' + esc(c.cliente_nombre) + '">Recordar</a>'
-            : '') +
-          '<button type="button" data-accion="completar" data-id="' + c.id_cita + '" class="' + BTN + 'bg-brand-dark text-white hover:bg-brand-darkest" aria-label="Completar la cita de ' + esc(c.cliente_nombre) + '">Completar</button>' +
-        '</div>';
+      acciones = T.h`<div class="mt-3 flex gap-2">
+          <button type="button" data-accion="liberar" data-id="${c.id_cita}" class="${BTN}border border-slate-200 text-rose-700 hover:bg-rose-50" aria-label="Liberar el turno de ${c.cliente_nombre}">Liberar</button>
+          ${c.cliente_telefono && T.h`<a href="${'https://wa.me/' + wa(c.cliente_telefono) + '?text=' + encodeURIComponent(msg)}" target="_blank" rel="noopener" class="${BTN}min-h-[44px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100" aria-label="Recordar por WhatsApp a ${c.cliente_nombre}">Recordar</a>`}
+          <button type="button" data-accion="completar" data-id="${c.id_cita}" class="${BTN}bg-brand-dark text-white hover:bg-brand-darkest" aria-label="Completar la cita de ${c.cliente_nombre}">Completar</button>
+        </div>`;
     }
 
-    return li +
-      '<div class="min-w-0 flex-1 rounded-2xl border border-slate-200 border-l-4 bg-white p-4 ' +
-        (hecha ? 'border-l-slate-300 opacity-60' : 'border-l-rose-300 shadow-soft') + '">' +
-        '<div class="flex items-start gap-2">' +
-          '<div class="min-w-0 flex-1">' +
-            '<p class="truncate text-base font-semibold' + (c.estado === 'completada' ? ' line-through decoration-brand-darkest/30' : '') + '">' + esc(c.cliente_nombre) + '</p>' +
-            '<p class="mt-0.5 truncate text-xs text-brand-darkest/55">' + esc(c.servicio || '') + ' · hasta ' + c.hasta +
-              (c.origen === 'publica' ? ' · <span class="font-semibold text-brand-dark">Reservó online</span>' : '') + '</p>' +
-          '</div>' +
-          '<p class="shrink-0 text-sm font-semibold">' + pesos(c.precio) + '</p>' +
-        '</div>' +
-        acciones +
-      '</div></li>';
+    return T.h`<li class="flex gap-3">${hora}
+      <div class="min-w-0 flex-1 rounded-2xl border border-slate-200 border-l-4 bg-white p-4 ${hecha ? 'border-l-slate-300 opacity-60' : 'border-l-rose-300 shadow-soft'}">
+        <div class="flex items-start gap-2">
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-base font-semibold${c.estado === 'completada' ? ' line-through decoration-brand-darkest/30' : ''}">${c.cliente_nombre}</p>
+            <p class="mt-0.5 truncate text-xs text-brand-darkest/55">${c.servicio || ''} · hasta ${c.hasta}${c.origen === 'publica' && T.h` · <span class="font-semibold text-brand-dark">Reservó online</span>`}</p>
+          </div>
+          <p class="shrink-0 text-sm font-semibold">${pesos(c.precio)}</p>
+        </div>
+        ${acciones}
+      </div></li>`;
   }
 
   function marcaAhora(ahora) {
-    return '<li class="flex items-center gap-3 py-0.5" aria-label="Hora actual: ' + ahora + '">' +
-      '<span class="w-11 shrink-0 text-right text-xs font-bold tabular-nums text-brand-dark">' + ahora + '</span>' +
-      '<span class="h-2 w-2 shrink-0 rounded-full bg-brand-dark" aria-hidden="true"></span>' +
-      '<span class="h-px min-w-0 flex-1 bg-brand-dark/40" aria-hidden="true"></span>' +
-      '<span class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-brand-dark">Ahora</span>' +
-    '</li>';
+    return T.h`<li class="flex items-center gap-3 py-0.5" aria-label="Hora actual: ${ahora}">
+      <span class="w-11 shrink-0 text-right text-xs font-bold tabular-nums text-brand-dark">${ahora}</span>
+      <span class="h-2 w-2 shrink-0 rounded-full bg-brand-dark" aria-hidden="true"></span>
+      <span class="h-px min-w-0 flex-1 bg-brand-dark/40" aria-hidden="true"></span>
+      <span class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-brand-dark">Ahora</span>
+    </li>`;
   }
 
   function pintar() {
@@ -224,14 +212,14 @@
     var todos = items();
     var ahora = esHoy() ? ahoraHHMM() : null;
     var visibles = 0, marcado = !ahora;
-    $lista.innerHTML = todos.map(function (c) {
-      if (filtro !== 'todas' && c.estado !== filtro) return '';
+    T.pintar($lista, todos.map(function (c) {
+      if (filtro !== 'todas' && c.estado !== filtro) return null;
       /* La marca "Ahora" va antes del primer turno futuro, si ya pasó alguno */
-      var marca = '';
+      var marca = null;
       if (!marcado && c.hora > ahora) { marcado = true; if (visibles) marca = marcaAhora(ahora); }
       visibles++;
-      return marca + tarjeta(c);
-    }).join('');
+      return [marca, tarjeta(c)];
+    }));
 
     var d = horarioDelDia();
     $('vacio').textContent = !quien ? 'Nadie atiende todavía en esta sede. ' + (T.yo.rol === 'Admin' ? 'Suma a tu equipo desde Ajustes.' : 'Pídele al administrador que configure el equipo.')
@@ -321,14 +309,13 @@
   }
 
   function llenarServicios() {
-    $('servicios').innerHTML = serviciosDe().map(function (s) {
-      return '<label class="flex min-h-[56px] cursor-pointer items-center gap-3 rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:bg-brand-lightest/50">' +
-        '<input type="radio" name="servicio" value="' + s.id_servicio + '" required class="h-5 w-5 shrink-0 accent-brand-dark">' +
-        '<span class="min-w-0 flex-1 truncate text-sm font-medium">' + esc(s.nombre) +
-          '<span class="block text-xs font-normal text-brand-darkest/55">' + s.duracion_min + ' min</span></span>' +
-        '<span class="shrink-0 text-sm font-semibold">' + pesos(s.precio) + '</span>' +
-      '</label>';
-    }).join('');
+    T.pintar($('servicios'), serviciosDe().map(function (s) {
+      return T.h`<label class="flex min-h-[56px] cursor-pointer items-center gap-3 rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:bg-brand-lightest/50">
+        <input type="radio" name="servicio" value="${s.id_servicio}" required class="h-5 w-5 shrink-0 accent-brand-dark">
+        <span class="min-w-0 flex-1 truncate text-sm font-medium">${s.nombre}<span class="block text-xs font-normal text-brand-darkest/55">${s.duracion_min} min</span></span>
+        <span class="shrink-0 text-sm font-semibold">${pesos(s.precio)}</span>
+      </label>`;
+    }));
   }
 
   /* Horas libres para ese servicio (con su duración real), según la API */
@@ -337,20 +324,20 @@
     if (!marcado) return Promise.resolve();
     var n = ++consultaHoras;
     $hora.disabled = true;
-    $hora.innerHTML = '<option value="">Buscando horas libres…</option>';
+    T.pintar($hora, T.h`<option value="">Buscando horas libres…</option>`);
     return T.api('GET', '/api/agenda/disponibilidad?id_servicio=' + marcado.value + '&fecha=' + fecha() + '&id_profesional=' + quien)
       .then(function (d) {
         if (n !== consultaHoras) return;   /* llegó tarde: ya se eligió otro servicio */
         var horas = d.profesionales.length ? d.profesionales[0].horas : [];
-        $hora.innerHTML = horas.length
-          ? horas.map(function (x) { return '<option value="' + x + '">' + x + '</option>'; }).join('')
-          : '<option value="">' + (d.abierto ? 'No quedan horas libres para este servicio' : 'El local no abre este día') + '</option>';
+        T.pintar($hora, horas.length
+          ? horas.map(function (x) { return T.h`<option value="${x}">${x}</option>`; })
+          : T.h`<option value="">${d.abierto ? 'No quedan horas libres para este servicio' : 'El local no abre este día'}</option>`);
         $hora.disabled = horas.length === 0;
         if (horaPedida && horas.indexOf(horaPedida) >= 0) $hora.value = horaPedida;
       })
       .catch(function (e) {
         if (n !== consultaHoras) return;
-        $hora.innerHTML = '<option value="">No se pudieron cargar las horas</option>';
+        T.pintar($hora, T.h`<option value="">No se pudieron cargar las horas</option>`);
         T.fallo(e);
       });
   }
@@ -402,17 +389,16 @@
   function crearPago(el, nombre) {
     var CHIP = 'flex min-h-[44px] min-w-0 cursor-pointer items-center justify-center rounded-xl border border-brand-light px-1 text-[13px] font-semibold transition has-[:checked]:border-brand-dark has-[:checked]:bg-brand-lightest has-[:checked]:text-brand-dark has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand';
     var CAMPO = 'mt-1 block w-full min-w-0 rounded-xl border border-brand-light bg-white px-3 text-base transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/25';
-    el.innerHTML =
-      '<div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Método de pago">' +
-        ['efectivo', 'transferencia', 'mixto'].map(function (m) {
-          return '<label class="' + CHIP + '"><input type="radio" name="' + nombre + '" value="' + m + '" class="sr-only">' +
-            '<span class="truncate capitalize">' + m + '</span></label>';
-        }).join('') +
-      '</div>' +
-      '<div data-mixto class="mt-2 hidden grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-3">' +
-        '<label class="min-w-0 text-xs font-medium">En efectivo<input data-ef type="number" inputmode="numeric" min="0" step="100" placeholder="0" class="' + CAMPO + '"></label>' +
-        '<label class="min-w-0 text-xs font-medium">En transferencia<input data-tr type="number" inputmode="numeric" min="0" step="100" placeholder="0" class="' + CAMPO + '"></label>' +
-      '</div>';
+    T.pintar(el, T.h`
+      <div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Método de pago">
+        ${['efectivo', 'transferencia', 'mixto'].map(function (m) {
+          return T.h`<label class="${CHIP}"><input type="radio" name="${nombre}" value="${m}" class="sr-only"><span class="truncate capitalize">${m}</span></label>`;
+        })}
+      </div>
+      <div data-mixto class="mt-2 hidden grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-3">
+        <label class="min-w-0 text-xs font-medium">En efectivo<input data-ef type="number" inputmode="numeric" min="0" step="100" placeholder="0" class="${CAMPO}"></label>
+        <label class="min-w-0 text-xs font-medium">En transferencia<input data-tr type="number" inputmode="numeric" min="0" step="100" placeholder="0" class="${CAMPO}"></label>
+      </div>`);
 
     var total = 0;
     var radios = el.querySelectorAll('input[type=radio]');
@@ -518,29 +504,28 @@
     var v = vitrina();
     $('productos-titulo').textContent = !productos.length ? 'Todavía no hay productos en el inventario'
       : !v.buscando ? 'Más vendidos' : v.lista.length ? 'Resultados' : 'Ningún producto con ese nombre';
-    $('productos').innerHTML = v.lista.map(function (p) {
+    T.pintar($('productos'), v.lista.map(function (p) {
       var n = carrito[p.id_producto] || 0, quedan = p.stock - n;
-      return '<button type="button" data-producto="' + p.id_producto + '"' + (quedan <= 0 ? ' disabled' : '') +
-        ' class="relative min-w-0 rounded-2xl border p-2.5 text-center transition active:scale-95 disabled:opacity-40 ' +
-        (n ? 'border-brand-dark bg-brand-lightest/60' : 'border-brand-light bg-white hover:bg-slate-50') + '">' +
-        (n ? '<span class="absolute right-1.5 top-1.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-brand-dark px-1 text-[11px] font-bold text-white">' + n + '</span>' : '') +
-        '<span class="block text-2xl" aria-hidden="true">' + esc(p.emoji || '📦') + '</span>' +
-        '<span class="mt-1 block truncate text-xs font-semibold">' + esc(p.nombre) + '</span>' +
-        '<span class="block text-xs text-brand-dark">' + pesos(p.precio) + '</span>' +
-        '<span class="block text-[10px] text-brand-darkest/45">' + (p.stock ? 'Quedan ' + quedan : 'Agotado') + '</span>' +
-      '</button>';
-    }).join('');
+      return T.h`<button type="button" data-producto="${p.id_producto}" ${quedan <= 0 && T.h`disabled`}
+          class="relative min-w-0 rounded-2xl border p-2.5 text-center transition active:scale-95 disabled:opacity-40 ${n ? 'border-brand-dark bg-brand-lightest/60' : 'border-brand-light bg-white hover:bg-slate-50'}">
+        ${n > 0 && T.h`<span class="absolute right-1.5 top-1.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-brand-dark px-1 text-[11px] font-bold text-white">${n}</span>`}
+        <span class="block text-2xl" aria-hidden="true">${p.emoji || '📦'}</span>
+        <span class="mt-1 block truncate text-xs font-semibold">${p.nombre}</span>
+        <span class="block text-xs text-brand-dark">${pesos(p.precio)}</span>
+        <span class="block text-[10px] text-brand-darkest/45">${p.stock ? 'Quedan ' + quedan : 'Agotado'}</span>
+      </button>`;
+    }));
 
     var total = 0;
-    $('carrito').innerHTML = enCarrito().map(function (id) {
+    T.pintar($('carrito'), enCarrito().map(function (id) {
       var p = producto(id), sub = p.precio * carrito[id];
       total += sub;
-      return '<li class="flex items-center gap-2">' +
-        '<button type="button" data-quitar="' + id + '" class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-lg font-semibold" aria-label="Quitar una unidad de ' + esc(p.nombre) + '">−</button>' +
-        '<span class="min-w-0 flex-1 truncate text-sm">' + carrito[id] + ' × ' + esc(p.nombre) + '</span>' +
-        '<span class="shrink-0 text-sm font-semibold">' + pesos(sub) + '</span>' +
-      '</li>';
-    }).join('');
+      return T.h`<li class="flex items-center gap-2">
+        <button type="button" data-quitar="${id}" class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-lg font-semibold" aria-label="Quitar una unidad de ${p.nombre}">−</button>
+        <span class="min-w-0 flex-1 truncate text-sm">${carrito[id]} × ${p.nombre}</span>
+        <span class="shrink-0 text-sm font-semibold">${pesos(sub)}</span>
+      </li>`;
+    }));
 
     pagoVenta.total(total);
     $('carrito-vacio').classList.toggle('hidden', total > 0);
@@ -573,14 +558,14 @@
     carrito = {};
     $('codigo').value = '';
     pagoVenta.reiniciar(0);
-    $('productos').innerHTML = '<div class="esqueleto h-24"></div><div class="esqueleto h-24"></div><div class="esqueleto h-24"></div>';
+    T.pintar($('productos'), T.h`<div class="esqueleto h-24"></div><div class="esqueleto h-24"></div><div class="esqueleto h-24"></div>`);
     $('productos-titulo').textContent = 'Cargando productos…';
     sheetV.showModal();
     T.api('GET', '/api/productos').then(function (r) {
       productos = r.productos;
       pintarVenta();
     }).catch(function (e) {
-      $('productos').innerHTML = '';
+      $('productos').replaceChildren();
       $('productos-titulo').textContent = 'No se pudieron cargar los productos';
       T.fallo(e);
     });

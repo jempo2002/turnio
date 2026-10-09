@@ -1,8 +1,8 @@
 {% extends "panel/_base.html" %}
+{% import "panel/_iconos.html" as iconos %}
 {% block title %}Citas{% endblock %}
 {% block color %}#FFFFFF{% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='js/panel/citas.js') }}" defer></script>{% endblock %}
-{% set cerrar_svg = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>' %}
 {% block content %}
 <div class="mx-auto max-w-md">
 
@@ -115,7 +115,7 @@
         <p class="text-xs text-brand-darkest/55">Toca un producto, búscalo o escanea su código.</p>
       </div>
       <form method="dialog">
-        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar venta rápida">{{ cerrar_svg|safe }}</button>
+        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar venta rápida">{{ iconos.cerrar() }}</button>
       </form>
     </div>
 
@@ -164,7 +164,7 @@
     <div class="mt-4 flex items-center justify-between gap-3">
       <h2 id="pago-titulo" class="text-lg font-semibold tracking-tight">Completar cita</h2>
       <form method="dialog">
-        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar">{{ cerrar_svg|safe }}</button>
+        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar">{{ iconos.cerrar() }}</button>
       </form>
     </div>
 
@@ -208,7 +208,7 @@
         <h2 id="sheet-titulo" class="text-lg font-semibold tracking-tight">Nueva cita</h2>
       </div>
       <form method="dialog">
-        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar">{{ cerrar_svg|safe }}</button>
+        <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Cerrar">{{ iconos.cerrar() }}</button>
       </form>
     </div>
 

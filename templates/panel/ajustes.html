@@ -1,10 +1,9 @@
 {% extends "panel/_base.html" %}
+{% import "panel/_iconos.html" as iconos %}
 {% block title %}Ajustes{% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='js/panel/ajustes.js') }}" defer></script>{% endblock %}
-{% set cerrar_svg = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>' %}
 {% set campo = 'mt-2 block w-full rounded-xl border border-brand-light bg-slate-50 px-4 py-3.5 text-base transition focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/25' %}
 {% set enlace = 'flex min-h-[44px] items-center justify-between gap-2 rounded-xl px-4 text-sm font-semibold text-brand-dark transition hover:bg-brand-lightest/50' %}
-{% set flecha = '<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>' %}
 {% block content %}
 <div class="mx-auto max-w-md">
 
@@ -96,10 +95,10 @@
 
     <!-- ═══ EQUIPO Y SEDES ═══ -->
     <section class="rounded-3xl border border-slate-200 bg-white p-3 shadow-soft">
-      <a href="{{ url_for('negocio.equipo_page') }}" class="{{ enlace }}">Equipo e invitaciones {{ flecha|safe }}</a>
-      <a href="{{ url_for('negocio.sedes_page') }}" class="{{ enlace }}">Sedes {{ flecha|safe }}</a>
+      <a href="{{ url_for('negocio.equipo_page') }}" class="{{ enlace }}">Equipo e invitaciones {{ iconos.flecha() }}</a>
+      <a href="{{ url_for('negocio.sedes_page') }}" class="{{ enlace }}">Sedes {{ iconos.flecha() }}</a>
       {% if yo.cambia_sede %}
-      <a href="{{ url_for('auth.seleccionar_sede') }}" class="{{ enlace }}">Cambiar de sede{% if yo.sede %} (estás en {{ yo.sede }}){% endif %} {{ flecha|safe }}</a>
+      <a href="{{ url_for('auth.seleccionar_sede') }}" class="{{ enlace }}">Cambiar de sede{% if yo.sede %} (estás en {{ yo.sede }}){% endif %} {{ iconos.flecha() }}</a>
       {% endif %}
     </section>
     {% endif %}
@@ -170,7 +169,7 @@
     <div class="mt-4 flex items-center justify-between">
       <h2 id="clave-titulo" class="text-lg font-semibold tracking-tight">Cambiar contraseña</h2>
       <form method="dialog">
-        <button class="grid h-11 w-11 place-items-center rounded-full bg-brand-lightest/70 transition hover:bg-brand-light/60" aria-label="Cerrar">{{ cerrar_svg|safe }}</button>
+        <button class="grid h-11 w-11 place-items-center rounded-full bg-brand-lightest/70 transition hover:bg-brand-light/60" aria-label="Cerrar">{{ iconos.cerrar() }}</button>
       </form>
     </div>
 

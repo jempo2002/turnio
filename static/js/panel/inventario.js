@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  var T = window.Turnio, $ = T.$, esc = T.esc, pesos = T.pesos;
+  var T = window.Turnio, $ = T.$, pesos = T.pesos;
   var ADMIN = T.yo.rol === 'Admin';
 
   var productos = [];
@@ -58,47 +58,41 @@
     $('productos').removeAttribute('aria-busy');
     var enAlerta = 0, agotados = 0;
 
-    $('productos').innerHTML = productos.map(function (p) {
+    T.pintar($('productos'), productos.length ? productos.map(function (p) {
       var agotado = p.stock <= 0;
       var bajo = !agotado && p.stock_bajo;
       if (agotado) agotados++; else if (bajo) enAlerta++;
 
       var aviso = agotado
-        ? '<span class="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-700">Agotado</span>'
+        ? T.h`<span class="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-700">Agotado</span>`
         : bajo
-          ? '<span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">Quedan pocas</span>'
+          ? T.h`<span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">Quedan pocas</span>`
           : '';
 
       var borde = agotado ? 'border-rose-200' : bajo ? 'border-amber-200' : 'border-slate-200';
-      var nombre = esc(p.nombre);
+      var nombre = p.nombre;
 
-      return '<li class="rounded-2xl border ' + borde + ' bg-white p-4 shadow-soft' + (agotado ? ' opacity-75' : '') + '">' +
-        '<div class="flex items-center gap-3">' +
-          '<span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-lightest/70 text-xl" aria-hidden="true">' + esc(p.emoji || '📦') + '</span>' +
-          '<div class="min-w-0 flex-1">' +
-            '<div class="flex flex-wrap items-center gap-x-2 gap-y-1">' +
-              '<p class="truncate text-sm font-semibold">' + nombre + '</p>' + aviso +
-            '</div>' +
-            '<p class="mt-0.5 text-xs text-brand-darkest/55">Compra ' + pesos(p.costo) + ' · Venta ' + pesos(p.precio) +
-              ' · <span class="font-medium text-brand-dark">+' + pesos(p.precio - p.costo) + '</span></p>' +
-            (p.codigo_barras ? '<p class="mt-0.5 truncate text-[11px] tabular-nums text-brand-darkest/40">Cód. ' + esc(p.codigo_barras) + '</p>' : '') +
-          '</div>' +
-        '</div>' +
-        '<div class="mt-3 flex items-center gap-1 border-t border-brand-light/40 pt-3">' +
-          (ADMIN
-            ? '<button type="button" data-editar="' + p.id_producto + '" class="' + BTN_EDITAR + '" aria-label="Editar ' + nombre + '">Editar</button>' +
-              '<button type="button" data-eliminar="' + p.id_producto + '" class="' + BTN_ELIMINAR + '" aria-label="Eliminar ' + nombre + '">Eliminar</button>'
-            : '') +
-          '<div class="ml-auto flex shrink-0 items-center gap-1">' +
-            '<button type="button" data-menos="' + p.id_producto + '"' + (agotado ? ' disabled' : '') +
-              ' class="grid h-11 w-11 place-items-center rounded-xl border border-brand-light text-lg font-semibold transition hover:bg-brand-lightest/60 disabled:opacity-30" aria-label="Quitar una unidad de ' + nombre + '">−</button>' +
-            '<span class="w-9 text-center text-base font-semibold tabular-nums" aria-label="' + p.stock + ' unidades">' + p.stock + '</span>' +
-            '<button type="button" data-mas="' + p.id_producto + '" class="grid h-11 w-11 place-items-center rounded-xl border border-brand-light text-lg font-semibold transition hover:bg-brand-lightest/60" aria-label="Agregar una unidad de ' + nombre + '">+</button>' +
-          '</div>' +
-        '</div>' +
-      '</li>';
-    }).join('') || '<li class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-brand-darkest/60">' +
-      (ADMIN ? 'Todavía no hay productos. Toca “Producto” para agregar el primero.' : 'Todavía no hay productos.') + '</li>';
+      return T.h`<li class="rounded-2xl border ${borde} bg-white p-4 shadow-soft${agotado ? ' opacity-75' : ''}">
+        <div class="flex items-center gap-3">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-lightest/70 text-xl" aria-hidden="true">${p.emoji || '📦'}</span>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <p class="truncate text-sm font-semibold">${nombre}</p>${aviso}
+            </div>
+            <p class="mt-0.5 text-xs text-brand-darkest/55">Compra ${pesos(p.costo)} · Venta ${pesos(p.precio)} · <span class="font-medium text-brand-dark">+${pesos(p.precio - p.costo)}</span></p>
+            ${p.codigo_barras && T.h`<p class="mt-0.5 truncate text-[11px] tabular-nums text-brand-darkest/40">Cód. ${p.codigo_barras}</p>`}
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-1 border-t border-brand-light/40 pt-3">
+          ${ADMIN && T.h`<button type="button" data-editar="${p.id_producto}" class="${BTN_EDITAR}" aria-label="Editar ${nombre}">Editar</button><button type="button" data-eliminar="${p.id_producto}" class="${BTN_ELIMINAR}" aria-label="Eliminar ${nombre}">Eliminar</button>`}
+          <div class="ml-auto flex shrink-0 items-center gap-1">
+            <button type="button" data-menos="${p.id_producto}" ${agotado && T.h`disabled`} class="grid h-11 w-11 place-items-center rounded-xl border border-brand-light text-lg font-semibold transition hover:bg-brand-lightest/60 disabled:opacity-30" aria-label="Quitar una unidad de ${nombre}">−</button>
+            <span class="w-9 text-center text-base font-semibold tabular-nums" aria-label="${p.stock} unidades">${p.stock}</span>
+            <button type="button" data-mas="${p.id_producto}" class="grid h-11 w-11 place-items-center rounded-xl border border-brand-light text-lg font-semibold transition hover:bg-brand-lightest/60" aria-label="Agregar una unidad de ${nombre}">+</button>
+          </div>
+        </div>
+      </li>`;
+    }) : T.h`<li class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-brand-darkest/60">${ADMIN ? 'Todavía no hay productos. Toca “Producto” para agregar el primero.' : 'Todavía no hay productos.'}</li>`);
 
     var partes = [];
     if (agotados) partes.push(agotados + ' agotado' + (agotados > 1 ? 's' : ''));
@@ -161,26 +155,23 @@
   /* ══ Servicios ══ */
   function pintarServicios() {
     $('servicios').removeAttribute('aria-busy');
-    $('servicios').innerHTML = servicios.map(function (s) {
+    T.pintar($('servicios'), servicios.length ? servicios.map(function (s) {
       var paga = T.pagoProfesional(s.precio, s.pago_profesional);
-      var nombre = esc(s.nombre);
-      return '<li class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">' +
-        '<div class="flex items-start gap-3">' +
-          '<div class="min-w-0 flex-1">' +
-            '<p class="truncate text-sm font-semibold">' + nombre + '</p>' +
-            '<p class="mt-0.5 truncate text-xs text-brand-darkest/55">' + s.duracion_min + ' min · Profesional ' + pesos(paga) + ' · Local ' + pesos(s.precio - paga) + '</p>' +
-          '</div>' +
-          '<p class="shrink-0 text-base font-semibold">' + pesos(s.precio) + '</p>' +
-        '</div>' +
-        (ADMIN
-          ? '<div class="mt-3 flex items-center justify-end gap-1 border-t border-brand-light/40 pt-3">' +
-              '<button type="button" data-editar="' + s.id_servicio + '" class="' + BTN_EDITAR + '" aria-label="Editar ' + nombre + '">Editar</button>' +
-              '<button type="button" data-eliminar="' + s.id_servicio + '" class="' + BTN_ELIMINAR + '" aria-label="Eliminar ' + nombre + '">Eliminar</button>' +
-            '</div>'
-          : '') +
-      '</li>';
-    }).join('') || '<li class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-brand-darkest/60">' +
-      (ADMIN ? 'Todavía no hay servicios. Toca “Servicio” para crear el primero.' : 'Todavía no hay servicios.') + '</li>';
+      var nombre = s.nombre;
+      return T.h`<li class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+        <div class="flex items-start gap-3">
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold">${nombre}</p>
+            <p class="mt-0.5 truncate text-xs text-brand-darkest/55">${s.duracion_min} min · Profesional ${pesos(paga)} · Local ${pesos(s.precio - paga)}</p>
+          </div>
+          <p class="shrink-0 text-base font-semibold">${pesos(s.precio)}</p>
+        </div>
+        ${ADMIN && T.h`<div class="mt-3 flex items-center justify-end gap-1 border-t border-brand-light/40 pt-3">
+          <button type="button" data-editar="${s.id_servicio}" class="${BTN_EDITAR}" aria-label="Editar ${nombre}">Editar</button>
+          <button type="button" data-eliminar="${s.id_servicio}" class="${BTN_ELIMINAR}" aria-label="Eliminar ${nombre}">Eliminar</button>
+        </div>`}
+      </li>`;
+    }) : T.h`<li class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-brand-darkest/60">${ADMIN ? 'Todavía no hay servicios. Toca “Servicio” para crear el primero.' : 'Todavía no hay servicios.'}</li>`);
   }
 
   $('servicios').addEventListener('click', function (e) {
@@ -210,9 +201,9 @@
   function mostrarUtilidad() {
     var c = Number(compra.value) || 0, v = Number(venta.value) || 0;
     var dif = v - c;
-    utilidad.innerHTML = dif >= 0
-      ? 'Ganas <strong class="font-semibold text-brand-dark">' + pesos(dif) + '</strong> por unidad.'
-      : '<strong class="font-semibold text-rose-700">Pierdes ' + pesos(-dif) + '</strong> por unidad: vendes más barato de lo que compras.';
+    T.pintar(utilidad, dif >= 0
+      ? T.h`Ganas <strong class="font-semibold text-brand-dark">${pesos(dif)}</strong> por unidad.`
+      : T.h`<strong class="font-semibold text-rose-700">Pierdes ${pesos(-dif)}</strong> por unidad: vendes más barato de lo que compras.`);
   }
 
   function calcularVenta() {
@@ -273,7 +264,7 @@
       var dur = $('s-duracion');
       /* Una duración que no está en la lista (la puso otro) se agrega para no perderla */
       if (!dur.querySelector('option[value="' + s.duracion_min + '"]')) {
-        dur.insertAdjacentHTML('beforeend', '<option value="' + s.duracion_min + '">' + s.duracion_min + ' min</option>');
+        dur.add(new Option(s.duracion_min + ' min', s.duracion_min));
       }
       dur.value = s.duracion_min;
       $('s-precio').value = s.precio;
