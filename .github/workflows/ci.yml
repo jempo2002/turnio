@@ -19,18 +19,31 @@ concurrency:
 
 jobs:
   pruebas:
-    name: Pruebas del backend (pytest)
+    name: Pruebas del backend (pytest, ${{ matrix.base.nombre }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # MariaDB en local; MySQL 8 es el de Railway (T11): las migraciones
+        # tienen que correr, y repetirse, en los dos.
+        base:
+          - nombre: MariaDB 10.11
+            imagen: mariadb:10.11
+            salud: healthcheck.sh --connect --innodb_initialized
+          - nombre: MySQL 8.0
+            imagen: mysql:8.0
+            salud: mysqladmin ping -h 127.0.0.1 -proot
     services:
       mariadb:
-        image: mariadb:10.11
+        image: ${{ matrix.base.imagen }}
         env:
           MARIADB_ROOT_PASSWORD: root
+          MYSQL_ROOT_PASSWORD: root
         ports: ["3306:3306"]
         options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=5s --health-timeout=5s --health-retries=20
+          --health-cmd="${{ matrix.base.salud }}"
+          --health-interval=5s --health-timeout=5s --health-retries=30
       redis:
         image: redis:7
         ports: ["6379:6379"]

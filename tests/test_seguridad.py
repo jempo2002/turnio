@@ -72,6 +72,22 @@ def test_produccion_redirige_http_a_https(app_produccion):
     assert "max-age=31536000" in r.headers["Strict-Transport-Security"]
 
 
+def test_health_responde_por_http_interno_en_produccion(app_produccion):
+    """El healthcheck de Railway no manda X-Forwarded-Proto: no se redirige."""
+    r = app_produccion.test_client().get("/health", environ_base={"REMOTE_ADDR": PROXY})
+    assert r.status_code == 200 and r.get_json()["ok"] is True
+
+
+def test_health_sin_base_responde_503(client, monkeypatch):
+    import app as paquete
+
+    def sin_base():
+        raise RuntimeError("sin MySQL")
+
+    monkeypatch.setattr(paquete, "get_db", sin_base)
+    assert client.get("/health").status_code == 503
+
+
 def test_health_responde_sin_sesion(client):
     r = client.get("/health")
     assert r.status_code == 200 and r.get_json()["ok"] is True
