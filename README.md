@@ -86,3 +86,13 @@ TEST_DB_USER=usuario TEST_DB_PASSWORD=clave TEST_REDIS_URL=redis://localhost:637
 ```
 
 Sin base, solo corren las de planes. El prototipo tiene las suyas: `node test-calculo.js`.
+
+### CI y seguridad (T10)
+
+En cada PR hacia `test` o `main` corren en GitHub Actions (`.github/workflows/`):
+
+- **CI**: `pytest` contra MariaDB 10.11 y Redis 7 (si la base no responde, falla en vez de saltarse), `node test-calculo.js` y `pip-audit` sobre `requirements.txt`.
+- **CodeQL**: análisis de seguridad de Python y JavaScript; los hallazgos salen en la pestaña Security.
+- **Dependabot**: PR semanales hacia `test` con dependencias y acciones al día.
+
+`tests/test_seguridad.py` cuida lo de producción detrás del proxy de Railway: el límite de intentos cuenta por la IP real del cliente (ProxyFix) y no se burla con un `X-Forwarded-For` inventado, HTTP redirige a HTTPS con HSTS, la API no abre CORS a otros orígenes, `/health` responde sin sesión, y ni las plantillas (`|safe`, `Markup`) ni el JS de `static/` meten HTML sin escapar. El prototipo de la raíz usa `innerHTML`, pero cada dato del usuario pasa por `esc()` (revisado en T10; el único que faltaba, el teléfono del enlace de WhatsApp en `citas.html`, ahora se limpia a solo dígitos); al pasarlo a plantillas (T7/T9) queda cubierto por esa prueba.

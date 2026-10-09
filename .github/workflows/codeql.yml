@@ -1,0 +1,34 @@
+# T10: análisis de seguridad del código (gratis en repos públicos). Los
+# hallazgos salen en la pestaña Security y como comentarios en el PR.
+name: CodeQL
+
+on:
+  pull_request:
+    branches: [test, main]
+  push:
+    branches: [test, main]
+  schedule:
+    - cron: "17 9 * * 1"  # lunes, 4:17 a. m. en Colombia
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analizar:
+    name: CodeQL (${{ matrix.lenguaje }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        lenguaje: [python, javascript-typescript]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.lenguaje }}
+          config-file: .github/codeql/codeql-config.yml
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.lenguaje }}

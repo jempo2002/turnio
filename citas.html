@@ -326,7 +326,7 @@
       : '<div class="mt-3 flex gap-2">' +
           '<button type="button" data-accion="liberar" data-i="' + i + '" class="' + BTN + 'border border-slate-200 text-rose-700 hover:bg-rose-50" aria-label="Liberar el turno de ' + esc(c.cliente) + '">Liberar</button>' +
           (c.tel
-            ? '<a href="https://wa.me/' + c.tel + '?text=' + encodeURIComponent('Hola ' + c.cliente + ', te recordamos tu cita hoy a las ' + c.hora + ' en Barbería El Cuartel.') + '" target="_blank" rel="noopener" ' +
+            ? '<a href="https://wa.me/' + String(c.tel).replace(/\D/g, '') + '?text=' + encodeURIComponent('Hola ' + c.cliente + ', te recordamos tu cita hoy a las ' + c.hora + ' en Barbería El Cuartel.') + '" target="_blank" rel="noopener" ' +
               'class="' + BTN + 'min-h-[44px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100" aria-label="Recordar por WhatsApp a ' + esc(c.cliente) + '">Recordar</a>'
             : '') +
           '<button type="button" data-accion="completar" data-i="' + i + '" class="' + BTN + 'bg-brand-dark text-white hover:bg-brand-darkest" aria-label="Completar la cita de ' + esc(c.cliente) + '">Completar</button>' +

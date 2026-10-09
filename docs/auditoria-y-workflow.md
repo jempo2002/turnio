@@ -131,7 +131,7 @@ main   ← producción (Railway "production"). Solo se toca con tu confirmación
 **T9. Multi-vertical y producción del frontend.** "Barbero" → "profesional", textos y nombre del negocio dinámicos, Tailwind compilado (sin CDN), CSP compatible, PWA instalable (manifest + íconos), revisión de rendimiento en celular de gama media.
 
 ### Fase 3: Calidad y deploy
-**T10. Seguridad y CI.** `trust proxy`, CORS cerrado, rate limit correcto, `/health`, auditoría de `innerHTML`, GitHub Actions corriendo tests contra un Postgres real en cada PR.
+**T10. Seguridad y CI.** `trust proxy`, CORS cerrado, rate limit correcto, `/health`, auditoría de `innerHTML`, GitHub Actions corriendo tests contra un Postgres real en cada PR. *(Con el backend Flask de T2: ProxyFix, Talisman y `/health` ya venían de jemPOS Chef; la CI corre contra MariaDB + Redis. Detalle en el README.)*
 
 **T11. Deploy en Railway.** Un servicio Node (API + estáticos), Postgres de Railway, variables de entorno (`DATABASE_URL`, `JWT_SECRET`, `NODE_ENV`), entornos **staging (rama `test`)** y **production (rama `main`)**, migraciones al desplegar, dominio propio y backups.
 *Listo cuando:* staging funciona de punta a punta en tu celular y tú confirmas el primer merge `test → main`.
