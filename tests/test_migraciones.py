@@ -107,11 +107,13 @@ def test_la_base_rechaza_valores_imposibles(crear, db):
             "INSERT INTO servicios (id_tienda, nombre, duracion_min, precio, pago_profesional) "
             "VALUES (%s, 'Corte', 45, 20000, 25000)", (id_tienda,),
         )
+    cur.execute("INSERT INTO productos (id_tienda, codigo_barras, nombre, precio) VALUES (%s, '1', 'Gel', 100)",
+                (id_tienda,))
+    id_gel = cur.lastrowid
     with pytest.raises(mysql.connector.Error):  # stock negativo
-        cur.execute(
-            "INSERT INTO productos (id_tienda, codigo_barras, nombre, stock, precio) VALUES (%s, '1', 'Gel', -1, 100)",
-            (id_tienda,),
-        )
+        cur.execute("INSERT INTO stock_sedes (id_sede, id_producto, stock) VALUES (%s, %s, -1)", (sede, id_gel))
+    with pytest.raises(mysql.connector.Error):  # precio negativo
+        cur.execute("INSERT INTO productos (id_tienda, nombre, precio) VALUES (%s, 'Cera', -1)", (id_tienda,))
     with pytest.raises(mysql.connector.Error):  # cita que termina antes de empezar
         cur.execute(
             "INSERT INTO citas (id_tienda, id_sede, inicio, fin) VALUES (%s, %s, '2026-10-09 10:00', '2026-10-09 09:00')",
@@ -130,3 +132,24 @@ def test_la_base_rechaza_valores_imposibles(crear, db):
             "INSERT INTO productos (id_tienda, codigo_barras, nombre, precio) VALUES (%s, '77', 'Cera', 100)",
             (id_tienda,),
         )
+
+
+def test_el_stock_viejo_pasa_a_la_sede_principal(conn_vacia, tmp_path):
+    """T5: productos.stock (de la tienda) pasa a stock_sedes de la principal."""
+    rutas = m.archivos()
+    t5 = next(r for r in rutas if r.endswith("_07_caja_inventario.sql"))
+    for ruta in rutas[:rutas.index(t5)]:
+        shutil.copy(ruta, tmp_path)
+    m.migrar(conn_vacia, carpeta=str(tmp_path), salida=lambda _: None)
+    cur = conn_vacia.cursor()
+    cur.execute("INSERT INTO tiendas (nombre_negocio, slug) VALUES ('Vieja', 'vieja')")
+    id_tienda = cur.lastrowid
+    cur.execute("INSERT INTO sedes (id_tienda, nombre, es_principal) VALUES (%s, 'Otra', 0)", (id_tienda,))
+    cur.execute("INSERT INTO sedes (id_tienda, nombre, es_principal) VALUES (%s, 'Principal', 1)", (id_tienda,))
+    principal = cur.lastrowid
+    cur.execute("INSERT INTO productos (id_tienda, codigo_barras, nombre, stock, precio) VALUES (%s, '1', 'Gel', 7, 100)",
+                (id_tienda,))
+    shutil.copy(t5, tmp_path)
+    m.migrar(conn_vacia, carpeta=str(tmp_path), salida=lambda _: None)
+    cur.execute("SELECT id_sede, stock FROM stock_sedes")
+    assert cur.fetchall() == [(principal, 7)]

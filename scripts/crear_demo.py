@@ -133,11 +133,22 @@ def sembrar(clave: str) -> int | None:
                 (id_tienda, nombre, duracion, precio, pago),
             )
             servicios[nombre] = (cur.lastrowid, duracion, precio, pago)
-        cur.executemany(
-            "INSERT INTO productos (id_tienda, codigo_barras, emoji, nombre, stock, costo, precio, vendidos) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-            [(id_tienda, *p) for p in PRODUCTOS],
-        )
+        for codigo, emoji, nombre, stock, costo, precio, vendidos in PRODUCTOS:
+            cur.execute(
+                "INSERT INTO productos (id_tienda, codigo_barras, emoji, nombre, costo, precio, stock_minimo, vendidos) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                (id_tienda, codigo, emoji, nombre, costo, precio, 3, vendidos),
+            )
+            id_producto = cur.lastrowid
+            # El stock es de la sede (stock_sedes); la carga inicial va al kardex.
+            cur.execute("INSERT INTO stock_sedes (id_sede, id_producto, stock) VALUES (%s, %s, %s)",
+                        (id_sede, id_producto, stock))
+            if stock:
+                cur.execute(
+                    "INSERT INTO movimientos_inventario (id_tienda, id_sede, id_producto, id_usuario, tipo, cantidad, "
+                    "stock_anterior, stock_posterior, motivo) VALUES (%s, %s, %s, %s, 'Entrada', %s, 0, %s, 'Carga inicial')",
+                    (id_tienda, id_sede, id_producto, id_admin, stock, stock),
+                )
 
         hoy = hoy_local()
         for profesional, hora, cliente, servicio, telefono, estado in CITAS:

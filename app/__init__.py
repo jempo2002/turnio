@@ -97,6 +97,7 @@ def create_app() -> Flask:
 
     from app.routes.agenda import agenda
     from app.routes.auth import auth
+    from app.routes.caja import caja
     from app.routes.catalogo import catalogo
     from app.routes.core import core
     from app.routes.master import master
@@ -104,6 +105,7 @@ def create_app() -> Flask:
 
     app.register_blueprint(agenda)
     app.register_blueprint(auth)
+    app.register_blueprint(caja)
     app.register_blueprint(catalogo)
     app.register_blueprint(core)
     app.register_blueprint(master)
