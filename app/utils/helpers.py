@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import re
 from datetime import date, datetime, timedelta, timezone
+from urllib.parse import quote
 
 # Hora del negocio. Un servidor en UTC (lo normal en la nube) cortaba "hoy" a
 # las 7 p.m. de Colombia: la venta de las 11:30 p.m. caia en el dia siguiente.
@@ -62,3 +63,10 @@ def normalize_phone(raw_value: str | None, max_len: int = 10) -> str | None:
     """Return normalized phone digits or None when empty."""
     digits = only_digits(raw_value, max_len=max_len)
     return digits or None
+
+
+def enlace_whatsapp(telefono: str | None, texto: str) -> str:
+    """wa.me al numero si es un celular colombiano; si no, WhatsApp abre para
+    elegir el contacto."""
+    destino = f"57{telefono}" if telefono and len(telefono) == 10 and telefono.startswith("3") else ""
+    return f"https://wa.me/{destino}?text={quote(texto)}"

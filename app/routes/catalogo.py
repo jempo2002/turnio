@@ -146,7 +146,6 @@ def api_foto_quitar(id_usuario):
 @roles_required(*ROLES_NEGOCIO)
 def api_negocio():
     datos = local_service.datos_negocio(session["id_tienda"])
-    # ponytail: la pagina publica /r/<slug> llega con T8.
     datos["enlace_reservas"] = f"{request.host_url}r/{datos['slug']}"
     return jsonify({"ok": True, "negocio": datos})
 

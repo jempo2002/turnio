@@ -22,8 +22,8 @@ csrf = CSRFProtect()
 server_session = Session()
 # Redis se usa solo para dos cosas: las sesiones (Flask-Session) y estos
 # contadores de intentos. Sin limites globales: el panel hace muchas peticiones
-# legitimas; los limites van en las rutas de login, recuperacion y (T8)
-# reservas publicas. memory:// solo sirve en desarrollo: cuenta
+# legitimas; los limites van en las rutas de login, recuperacion y reservas
+# publicas (app/routes/publico.py). memory:// solo sirve en desarrollo: cuenta
 # por worker y se pierde al reiniciar.
 limiter = Limiter(
     key_func=get_remote_address,
@@ -103,6 +103,7 @@ def create_app() -> Flask:
     from app.routes.master import master
     from app.routes.negocio import negocio
     from app.routes.panel import panel
+    from app.routes.publico import publico
 
     app.register_blueprint(agenda)
     app.register_blueprint(auth)
@@ -112,6 +113,7 @@ def create_app() -> Flask:
     app.register_blueprint(master)
     app.register_blueprint(negocio)
     app.register_blueprint(panel)
+    app.register_blueprint(publico)
 
     from app.utils.helpers import fmt_money
 

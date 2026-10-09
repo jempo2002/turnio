@@ -6,10 +6,10 @@ Reglas de trabajo y ramas: [CLAUDE.md](CLAUDE.md). Plan hasta el deploy: [docs/a
 
 ## Qué hay en el repo
 
-- **App Flask** (`app/`, `templates/`, `static/`, `migrations/`, `scripts/`, `tests/`): el backend de Turnio, construido sobre la base de jemPOS Chef (Flask + MySQL + Redis). Hoy trae registro de negocios, login, invitaciones al equipo, recuperación de contraseña, sesiones revalidadas en cada petición, modo solo lectura al vencer la suscripción, cabeceras de seguridad, planes, panel Master, sedes y equipo, catálogo y configuración (T4), caja e inventario (T5) y agenda (T6).
+- **App Flask** (`app/`, `templates/`, `static/`, `migrations/`, `scripts/`, `tests/`): el backend de Turnio, construido sobre la base de jemPOS Chef (Flask + MySQL + Redis). Hoy trae registro de negocios, login, invitaciones al equipo, recuperación de contraseña, sesiones revalidadas en cada petición, modo solo lectura al vencer la suscripción, cabeceras de seguridad, planes, panel Master, sedes y equipo, catálogo y configuración (T4), caja e inventario (T5) agenda (T6) y reservas públicas (T8).
 - **Panel del negocio** (T7, `templates/panel/`, `static/js/panel/`): Citas, Caja, Inventario y Ajustes, con el diseño del prototipo y los datos de la API. Ver [Panel](#panel-t7).
-- **Prototipo que queda** (`index.html` y `reservar.html`, con `theme.js` y `datos.js`): la landing y la reserva pública, todavía con datos en `localStorage`; son el diseño de referencia de T8 y T9. Para verlos: `python3 -m http.server 8000`.
-- **Backend Node** (`backend/`): el primer backend (Express + PostgreSQL). Ya no se desarrolla; queda como referencia hasta portar sus piezas (candado de reservas, cobro atómico, reservas públicas) en T6 y T8, y entonces se borra.
+- **Página pública de reservas** (T8, `/r/<slug>`, `app/routes/publico.py`, `templates/publico/`, `static/js/publico/`): el cliente final elige sede, servicio, día, hora y profesional sin crear cuenta, y avisa al negocio por WhatsApp. Ver [Reservas públicas](#reservas-públicas-t8).
+- **Prototipo que queda** (`index.html` con `theme.js`): la landing, diseño de referencia de T9. Para verla: `python3 -m http.server 8000`.
 
 ## App Flask
 
@@ -68,6 +68,14 @@ Las pantallas del prototipo ya son de la app: `/citas`, `/caja`, `/inventario` y
 - **Inventario**: stock de la sede con +1/−1 (kardex), producto nuevo con calculadora de precio, conteo (ajuste) al editar y mínimo por producto para "Quedan pocas"; servicios.
 - **Estados**: esqueletos mientras carga, "Reintentar" si falla, spinner en cada botón y el mensaje del servidor en un aviso. Al volver a la pestaña (y cada minuto en Citas y Caja) los datos se refrescan.
 - **CSS**: Tailwind compilado (sin CDN), así la CSP estricta de `app/security.py` sigue igual: sin JS ni estilos inline. Al cambiar clases en `templates/panel/` o `static/js/panel/`: `cd frontend && npm install && npm run css`, y se sube `static/css/panel.css` (Railway solo corre Python).
+
+### Reservas públicas (T8)
+
+`/r/<slug>` es la página de cada negocio (el enlace que se copia en Citas y se edita en Ajustes). El cliente no crea cuenta: elige sede (si hay varias), servicio, día (hasta 30 días adelante), hora libre (cada 15 min, con la duración del servicio) y profesional, o "cualquiera disponible", y deja nombre y WhatsApp. La cita entra a la agenda con origen `publica` y el cliente tiene un botón para avisarle al negocio por WhatsApp (los recordatorios automáticos son de T12).
+
+- Solo salen quienes tienen "reserva en línea" encendido, y solo servicios que alguno de ellos hace. La API pública (`/api/publico/<slug>`) nunca entrega correos, roles, pagos ni citas: de la agenda solo salen horas libres.
+- Anti-abuso: 5 reservas por minuto y 20 por hora por IP, 5 por día por WhatsApp (Redis), máximo 3 citas por venir por WhatsApp en cada negocio, campo trampa `sitio_web` y token CSRF de la página.
+- Negocio suspendido = 404; suscripción vencida = la página se ve, pero no recibe reservas.
 
 ### Arrancar en local
 

@@ -1,4 +1,4 @@
-"""Crea una barberia de demostracion con los datos del prototipo (datos.js).
+"""Crea una barberia de demostracion con los datos del prototipo.
 
 Plan Basico, sede Principal con el horario de configuracion.html, 7
 servicios, 7 productos, las citas de hoy de Carlos y Junior (con su bloqueo
@@ -15,7 +15,6 @@ existe no toca nada.
 
     python scripts/crear_demo.py
 
-Toma el lugar de backend/db/seed.sql (PostgreSQL) del backend Node.
 """
 from __future__ import annotations
 

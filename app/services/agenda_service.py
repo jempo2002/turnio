@@ -162,7 +162,7 @@ def _profesional(cur, id_tienda: int, id_sede: int, id_profesional) -> dict:
     """Quien atiende en la sede, bloqueado para esta transaccion."""
     id_profesional = parse_int(id_profesional, "Profesional", min_value=1)
     cur.execute(
-        "SELECT id_usuario, nombre_completo, atiende_todos FROM usuarios "
+        "SELECT id_usuario, nombre_completo, atiende_todos, reserva_online FROM usuarios "
         "WHERE id_usuario = %s AND id_tienda = %s AND estado_activo = 1 AND atiende = 1 AND rol <> 'Master' "
         "AND (id_sede IS NULL OR id_sede = %s) FOR UPDATE",
         (id_profesional, id_tienda, id_sede),
@@ -433,10 +433,12 @@ def quitar_bloqueo(id_tienda: int, id_sede: int, id_cita: int) -> None:
 
 # ── Espacios libres ─────────────────────────────────────────────────
 
-def disponibilidad(id_tienda: int, id_sede: int, dia: date, id_servicio, id_profesional=None) -> dict:
+def disponibilidad(id_tienda: int, id_sede: int, dia: date, id_servicio, id_profesional=None,
+                   solo_online: bool = False) -> dict:
     """Horas de inicio libres ese dia para el servicio, por profesional: dentro
     del horario, fuera del almuerzo, sin cruzar citas ni bloqueos y, si es
-    hoy, desde ahora. Cada PASO_MIN minutos."""
+    hoy, desde ahora. Cada PASO_MIN minutos. `solo_online`: solo quienes
+    reciben reservas en linea (la pagina publica, T8)."""
     conn = get_db()
     try:
         cur = conn.cursor(dictionary=True)
@@ -446,6 +448,8 @@ def disponibilidad(id_tienda: int, id_sede: int, dia: date, id_servicio, id_prof
             "AND (id_sede IS NULL OR id_sede = %s)"
         )
         params: list = [id_tienda, id_sede]
+        if solo_online:
+            sql += " AND reserva_online = 1"
         if id_profesional not in (None, ""):
             sql += " AND id_usuario = %s"
             params.append(parse_int(id_profesional, "Profesional", min_value=1))
