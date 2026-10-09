@@ -1,0 +1,62 @@
+/* Avisos de Turnio (docs/ux-avisos.md). CSS plano, sin Tailwind: lo cargan el
+   panel, la página pública de reservas, el login y las pantallas de cuenta
+   (base.html), así todas usan el mismo aviso, la misma confirmación y la misma
+   guía (static/js/panel/turnio.js). */
+
+/* Base propia: las pantallas de cuenta no traen el reset de Tailwind */
+#toast, #toast *, dialog.confirmar, dialog.confirmar *, .guia, .guia * { box-sizing: border-box; }
+#toast p, .guia p, dialog.confirmar h2 { margin: 0; }
+#toast button, dialog.confirmar button, .guia button { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+#toast a { text-decoration: none; }
+
+/* Avisos (T.aviso, docs/ux-avisos.md): icono + título + qué hacer, nunca solo color */
+#toast { position: fixed; left: 50%; top: calc(.75rem + env(safe-area-inset-top)); z-index: 100; display: flex; align-items: flex-start; gap: .625rem; width: calc(100vw - 2rem); max-width: 26rem; padding: .875rem .75rem .875rem 1rem; border-radius: 1.25rem; border: 1px solid #e2e8f0; border-left-width: 5px; background: #fff; color: #1B2B36; box-shadow: 0 16px 40px -16px rgba(15,23,42,.45); opacity: 0; transform: translate(-50%,-150%); transition: transform .3s cubic-bezier(.32,.72,0,1), opacity .2s; pointer-events: none; }
+#toast.ver { opacity: 1; transform: translate(-50%,0); pointer-events: auto; }
+#toast .icono { width: 1.375rem; height: 1.375rem; flex-shrink: 0; margin-top: .0625rem; }
+#toast .texto { min-width: 0; flex: 1; }
+#toast .titulo { font-size: .9375rem; font-weight: 600; line-height: 1.35; }
+#toast .detalle { margin-top: .125rem; font-size: .8125rem; line-height: 1.45; color: rgba(27,43,54,.8); }
+#toast .accion { flex-shrink: 0; align-self: center; display: inline-flex; align-items: center; min-height: 44px; padding: 0 .75rem; border-radius: .75rem; background: #E8F4F8; color: #17748E; font-size: .8125rem; font-weight: 700; }
+#toast .cerrar { flex-shrink: 0; display: grid; place-items: center; width: 44px; min-height: 44px; margin: -.5rem -.25rem -.5rem 0; border-radius: .75rem; color: rgba(27,43,54,.7); }
+#toast .cerrar svg { width: 1.125rem; height: 1.125rem; }
+#toast.exito { border-left-color: #059669; } #toast.exito .icono { color: #047857; }
+#toast.info { border-left-color: #17748E; } #toast.info .icono { color: #17748E; }
+#toast.aviso { border-left-color: #d97706; } #toast.aviso .icono { color: #b45309; }
+#toast.error { border-left-color: #be123c; background: #fff1f2; } #toast.error .icono { color: #be123c; }
+
+/* Error de un campo: debajo del campo, en rojo y con el borde marcado */
+[aria-invalid=true] { border-color: #be123c !important; }
+.campo-error { margin-top: .375rem; font-size: .8125rem; font-weight: 500; color: #be123c; }
+
+/* Guía de bienvenida (T.guia): una tarjeta, pocos pasos, se puede saltar */
+.guia { margin-bottom: 1rem; padding: 1rem 1.125rem; border-radius: 1.5rem; border: 1px solid #b9dfea; background: #E8F4F8; color: #1B2B36; }
+.guia .paso-guia { font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #17748E; }
+.guia .titulo { margin-top: .25rem; font-size: 1rem; font-weight: 600; }
+.guia .texto { margin-top: .25rem; font-size: .875rem; line-height: 1.5; color: rgba(27,43,54,.8); }
+.guia .botones { margin-top: .75rem; display: flex; justify-content: flex-end; gap: .5rem; }
+.guia button { padding: 0 1rem; border-radius: .875rem; font-size: .875rem; font-weight: 600; }
+.guia .saltar { color: #17748E; }
+.guia .seguir { background: #17748E; color: #fff; }
+
+dialog.confirmar { margin: auto auto 0; width: 100%; max-width: 28rem; border: 0; border-radius: 1.5rem 1.5rem 0 0; padding: 1.5rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom)); background: #fff; color: #1B2B36; }
+dialog.confirmar h2 { font-size: 1.125rem; font-weight: 600; }
+dialog.confirmar p { margin: .375rem 0 1.25rem; font-size: .875rem; line-height: 1.5; color: #64748b; }
+dialog.confirmar button { display: block; width: 100%; min-height: 52px; border-radius: 1rem; font-size: 1rem; font-weight: 600; }
+dialog.confirmar .ok { margin-bottom: .5rem; background: #be123c; color: #fff; }
+dialog.confirmar .ok.normal { background: #17748E; }
+dialog.confirmar p.irreversible { margin-top: -.75rem; font-weight: 600; color: #be123c; }
+
+dialog.confirmar::backdrop { background: rgba(15,23,42,.45); }
+
+@media (prefers-reduced-motion: reduce) {
+  #toast { transition: none; }
+}
+
+/* Mensajes del servidor al recargar (templates/_flashes.html) */
+.flash { box-sizing: border-box; display: flex; align-items: flex-start; gap: .625rem; margin: 0 0 1rem; padding: .75rem .875rem; border-radius: 1rem; border: 1px solid #e2e8f0; border-left-width: 5px; background: #fff; color: #1B2B36; font-size: .875rem; line-height: 1.45; font-weight: 500; }
+.flash p { margin: 0; }
+.flash .icono { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+.flash--exito { border-left-color: #059669; background: #ecfdf5; } .flash--exito .icono { color: #047857; }
+.flash--info { border-left-color: #17748E; background: #E8F4F8; } .flash--info .icono { color: #17748E; }
+.flash--aviso { border-left-color: #d97706; background: #fffbeb; } .flash--aviso .icono { color: #b45309; }
+.flash--error { border-left-color: #be123c; background: #fff1f2; } .flash--error .icono { color: #be123c; }

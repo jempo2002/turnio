@@ -31,7 +31,9 @@
           {% if not s.es_principal %}
             <button class="btn-link btn-link--peligro" type="button"
                     data-api="DELETE {{ url_for('negocio.api_sedes_eliminar', id_sede=s.id_sede) }}"
-                    data-confirmar="¿Eliminar la sede {{ s.nombre }}? Su historial se conserva.">Eliminar</button>
+                    data-confirmar="¿Eliminar la sede {{ s.nombre }}?"
+                    data-detalle="Deja de aparecer para agendar y vender. Su historial se conserva."
+                    data-boton="Eliminar sede">Eliminar</button>
           {% endif %}
         </td>
       </tr>
@@ -58,7 +60,9 @@
     <p class="muted">Llegaste al máximo de {{ max_sedes }} sedes. Para más, escríbenos y lo vemos con un plan corporativo.</p>
   {% endif %}
   <form class="form form--fila" data-api="POST {{ url_for('negocio.api_sedes_crear') }}"
-        data-confirmar="{% if sede_incluida %}La sede nueva viene incluida en tu plan. ¿Crearla?{% else %}La sede nueva suma {{ (sede_extra or 0)|pesos }} al mes y un montaje único de {{ costo_montaje|pesos }}. ¿Crearla?{% endif %}">
+        data-confirmar="¿Crear la sede nueva?"
+        data-detalle="{% if sede_incluida %}Viene incluida en tu plan: no pagas nada más.{% elif sede_extra %}Suma {{ sede_extra|pesos }} al mes y un montaje único de {{ costo_montaje|pesos }}.{% else %}Tiene un montaje único de {{ costo_montaje|pesos }}.{% endif %}"
+        data-boton="Crear sede" data-peligro="no">
     <input name="nombre" placeholder="Nombre (ej. Centro)" maxlength="120" required aria-label="Nombre" />
     <input name="direccion" placeholder="Dirección" maxlength="200" aria-label="Dirección" />
     <input name="telefono" placeholder="Teléfono" maxlength="20" inputmode="tel" aria-label="Teléfono" />

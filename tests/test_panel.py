@@ -63,10 +63,14 @@ def test_paginas_cumplen_la_csp(client, crear):
 
 
 def test_el_panel_no_guarda_datos_en_el_navegador():
+    # Lo único permitido: la marca de "guía ya vista" (T.guia), que es del
+    # dispositivo y no del negocio. Siempre con la llave GUIA + clave.
     carpeta = os.path.join(RAIZ, "static", "js", "panel")
     for nombre in os.listdir(carpeta):
         with open(os.path.join(carpeta, nombre), encoding="utf-8") as f:
-            assert not re.search(r"localStorage\s*[.\[]", f.read()), nombre
+            for linea in f:
+                if re.search(r"localStorage\s*[.\[)]", linea):
+                    assert nombre == "turnio.js" and "GUIA" in linea, (nombre, linea)
 
 
 def test_cambiar_clave_pide_la_actual(app, client, crear):

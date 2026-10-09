@@ -18,7 +18,7 @@ _DUPLICADO = "Ya existe un servicio con ese nombre."
 
 def _campos(data: dict) -> tuple[str, int, int, int]:
     nombre = sanitize_text(data.get("nombre"), "El nombre del servicio", max_len=120)
-    duracion = parse_int(data.get("duracion_min"), "La duracion", min_value=5, max_value=720)
+    duracion = parse_int(data.get("duracion_min"), "La duración", min_value=5, max_value=720)
     precio = parse_int(data.get("precio"), "El precio", min_value=0, max_value=PRECIO_MAX)
     pago = parse_int(data.get("pago_profesional") or 0, "El pago al profesional", min_value=0)
     if pago > precio:

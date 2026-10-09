@@ -30,18 +30,18 @@
       nueva: $('clave-nueva').value
     })).then(function () {
       sheet.close();
-      T.toast('✓ Contraseña actualizada');
+      T.aviso({ tipo: 'exito', titulo: 'Contraseña actualizada', detalle: 'La próxima vez que entres, usa la nueva.' });
     }).catch(function (err) {
-      T.fallo(err);
       var campo = err.datos && err.datos.field === 'actual' ? 'clave-actual' : 'clave-nueva';
-      $(campo).focus();
+      if (err.status === 400) T.marcarCampo($(campo), err.message);
+      T.fallo(err);
     });
   });
 
   /* ══ Cerrar sesión: acción destructiva, se confirma (Nielsen #5) ══ */
   $('btn-salir').addEventListener('click', function () {
     var b = this;
-    T.confirmar('¿Cerrar sesión?', 'Tendrás que volver a ingresar en este dispositivo.', 'Cerrar sesión').then(function (si) {
+    T.confirmar('¿Cerrar sesión?', 'Para volver a entrar en este celular necesitarás tu correo y tu contraseña.', 'Cerrar sesión', { peligro: false }).then(function (si) {
       if (!si) return;
       T.ocupado(b, T.api('POST', '/api/auth/logout')).then(function () {
         location.href = '/login';
@@ -124,7 +124,7 @@
     err.classList.add('hidden');
     if (!f) return;
     if (f.size > 2 * 1024 * 1024) {
-      err.textContent = 'Esa imagen pesa ' + (f.size / 1048576).toFixed(1) + ' MB. El máximo son 2 MB.';
+      err.textContent = 'Esa imagen pesa ' + (f.size / 1048576).toFixed(1) + ' MB y el máximo son 2 MB. Elige una más liviana o recórtala.';
       err.classList.remove('hidden');
       input.value = '';
       return;
@@ -139,7 +139,7 @@
       img.alt = 'Logo del negocio';
       img.classList.remove('hidden');
       $('logo-iniciales').classList.add('hidden');
-      T.toast('✓ Logo actualizado');
+      T.aviso({ tipo: 'exito', titulo: 'Logo actualizado', detalle: 'Ya se ve en tu link de reservas.' });
     }).catch(function (e) {
       err.textContent = e.message;
       err.classList.remove('hidden');
@@ -164,10 +164,10 @@
 
   $('btn-copiar').addEventListener('click', function () {
     var btn = this;
-    if (!navigator.clipboard) { T.toast(urlPublica()); return; }
+    if (!navigator.clipboard) { T.aviso({ tipo: 'info', titulo: 'Copia tu link a mano', detalle: urlPublica() }); return; }
     navigator.clipboard.writeText(urlPublica()).then(
       function () { T.avisar(btn, '✓ Copiado'); },
-      function () { T.avisar(btn, 'Copia a mano', 3000); }
+      function () { T.aviso({ tipo: 'info', titulo: 'Copia tu link a mano', detalle: urlPublica() }); }
     );
   });
 
@@ -177,7 +177,9 @@
     this.classList.add('enviado');
     var malos = dias.filter(function (d) { return errorDia(d); });
     if (malos.length) {
-      T.toast('Revisa el horario de ' + malos.map(function (d) { return d.nombre; }).join(', '), 'error');
+      T.aviso({ tipo: 'error', titulo: 'Revisa el horario',
+        detalle: 'Hay horas que no cuadran el ' + malos.map(function (d) { return d.nombre.toLowerCase(); }).join(', ') + '. Están marcadas en rojo abajo.' });
+      $('horarios').scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     var negocio = {
@@ -190,9 +192,22 @@
     if (dias.length) pedidas.push(T.api('PUT', '/api/horario', { dias: dias }));
     T.ocupado($('btn-guardar'), Promise.all(pedidas)).then(function () {
       document.body.dataset.negocio = negocio.nombre_negocio;
-      T.toast('✓ Cambios guardados');
-    }).catch(T.fallo);
+      T.aviso({ tipo: 'exito', titulo: 'Cambios guardados', detalle: 'Tu link de reservas ya muestra los datos nuevos.' });
+    }).catch(function (err) { T.fallo(err, $('form-ajustes')); });
+  });
+
+  /* Volver a ver las guías de cada pantalla */
+  $('btn-guias').addEventListener('click', function () {
+    T.guiasDeNuevo();
+    T.aviso({ tipo: 'info', titulo: 'Listo, verás las guías otra vez', detalle: 'Aparecen al entrar a Citas, Caja, Inventario y Ajustes.' });
   });
 
   cargarHorario();
+
+  T.guia('ajustes', $('contenido'), T.yo.rol === 'Admin' ? [
+    { titulo: 'Deja tu negocio listo', texto: 'Revisa el nombre, tu WhatsApp y el horario de atención: es lo que ven tus clientes al reservar.' },
+    { titulo: 'Tu link de reservas', texto: 'Elige cómo se ve tu link y compártelo. Toca «Guardar cambios» al terminar.' }
+  ] : [
+    { titulo: 'Tu cuenta', texto: 'Aquí cambias tu contraseña y cierras sesión en este celular.' }
+  ]);
 })();

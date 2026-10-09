@@ -223,9 +223,9 @@
 
     var d = horarioDelDia();
     $('vacio').textContent = !quien ? 'Nadie atiende todavía en esta sede. ' + (T.yo.rol === 'Admin' ? 'Suma a tu equipo desde Ajustes.' : 'Pídele al administrador que configure el equipo.')
-      : filtro !== 'todas' ? 'No hay turnos con este filtro.'
-      : d && !d.abierto ? 'El local no abre este día.'
-      : 'No hay turnos este día.';
+      : filtro !== 'todas' ? 'No hay turnos con este filtro. Toca «Todas» para ver el día completo.'
+      : d && !d.abierto ? 'El local no abre este día. Usa las flechas para ver otro.'
+      : 'No hay turnos este día. Usa las flechas para ver otro.';
     $('vacio').classList.toggle('hidden', visibles > 0);
 
     $('n-reservadas').textContent = todos.filter(function (c) { return c.estado === 'reservada'; }).length;
@@ -261,12 +261,12 @@
       /* Deshacer también retira el cobro de la caja: se confirma */
       T.confirmar(
         '¿Deshacer el cobro de ' + c.cliente_nombre + '?',
-        'La cita vuelve a "Reservada" y los ' + pesos(c.precio) + ' salen de la caja.',
+        'La cita vuelve a "Reservada" y los ' + pesos(c.precio) + ' salen de la caja de hoy. Podrás cobrarla otra vez.',
         'Deshacer cobro'
       ).then(function (si) {
         if (!si) return;
         T.ocupado(b, T.api('DELETE', '/api/citas/' + c.id_cita + '/cobro')).then(function () {
-          T.toast('Cita reabierta · cobro retirado de caja');
+          T.aviso({ tipo: 'info', titulo: 'Cobro deshecho', detalle: 'La cita volvió a Reservada y los ' + pesos(c.precio) + ' salieron de la caja.' });
           return cargarAgenda();
         }).catch(T.fallo);
       });
@@ -274,12 +274,12 @@
       /* Liberar cancela la cita y deja la hora libre: se confirma */
       T.confirmar(
         '¿Liberar el turno de ' + c.cliente_nombre + '?',
-        'La cita se cancela y las ' + c.hora + ' vuelven a quedar reservables.',
-        'Liberar turno'
+        'La cita se cancela y las ' + c.hora + ' vuelven a quedar libres para otro cliente. Avísale a ' + c.cliente_nombre + ' si no lo sabe.',
+        'Liberar turno', { deshacer: false }
       ).then(function (si) {
         if (!si) return;
         T.ocupado(b, T.api('POST', '/api/citas/' + c.id_cita + '/cancelar', {})).then(function () {
-          T.toast('Turno de las ' + c.hora + ' liberado');
+          T.aviso({ tipo: 'exito', titulo: 'Turno de las ' + c.hora + ' liberado', detalle: 'Ya se puede reservar otra vez.' });
           return cargarAgenda();
         }).catch(T.fallo);
       });
@@ -290,10 +290,11 @@
   $('btn-copiar').addEventListener('click', function () {
     var link = this.dataset.link;
     /* ponytail: sin clipboard API (http o navegador viejo) mostramos el link para copiar a mano */
-    if (!navigator.clipboard) { T.toast(link); return; }
+    function aMano() { T.aviso({ tipo: 'info', titulo: 'Copia tu link a mano', detalle: link }); }
+    if (!navigator.clipboard) { aMano(); return; }
     navigator.clipboard.writeText(link).then(
-      function () { T.toast('✓ Link de reservas copiado'); },
-      function () { T.toast(link); }
+      function () { T.aviso({ tipo: 'exito', titulo: 'Link de reservas copiado', detalle: 'Pégalo en tu WhatsApp, Instagram o estados para que te reserven.' }); },
+      aMano
     );
   });
 
@@ -331,13 +332,13 @@
         var horas = d.profesionales.length ? d.profesionales[0].horas : [];
         T.pintar($hora, horas.length
           ? horas.map(function (x) { return T.h`<option value="${x}">${x}</option>`; })
-          : T.h`<option value="">${d.abierto ? 'No quedan horas libres para este servicio' : 'El local no abre este día'}</option>`);
+          : T.h`<option value="">${d.abierto ? 'No quedan horas libres para este servicio. Prueba otro día.' : 'El local no abre este día. Prueba otro día.'}</option>`);
         $hora.disabled = horas.length === 0;
         if (horaPedida && horas.indexOf(horaPedida) >= 0) $hora.value = horaPedida;
       })
       .catch(function (e) {
         if (n !== consultaHoras) return;
-        T.pintar($hora, T.h`<option value="">No se pudieron cargar las horas</option>`);
+        T.pintar($hora, T.h`<option value="">No pudimos cargar las horas. Elige el servicio otra vez.</option>`);
         T.fallo(e);
       });
   }
@@ -346,7 +347,9 @@
 
   function abrir(hora) {
     if (!serviciosDe().length) {
-      T.toast(T.yo.rol === 'Admin' ? 'Crea primero un servicio en Inventario' : 'Este ' + T.voc.profesional + ' no tiene servicios asignados', 'error');
+      T.aviso(T.yo.rol === 'Admin'
+        ? { tipo: 'aviso', titulo: 'Primero crea un servicio', detalle: 'Para agendar necesitas al menos un servicio con su duración y precio.', accion: { texto: 'Crear servicio', href: '/inventario' } }
+        : { tipo: 'aviso', titulo: 'Sin servicios asignados', detalle: 'Este ' + T.voc.profesional + ' todavía no tiene servicios. Pídele al administrador que se los asigne en Ajustes.' });
       return;
     }
     horaPedida = hora || null;
@@ -365,7 +368,7 @@
     e.preventDefault();
     var datos = new FormData(form);
     var hora = String(datos.get('hora') || '');
-    if (!hora) { T.toast('Elige una hora libre', 'error'); return; }
+    if (!hora) { T.aviso({ tipo: 'error', titulo: 'Falta la hora', detalle: 'Elige una de las horas libres de la lista.' }); $hora.focus(); return; }
     T.ocupado($('btn-agendar'), T.api('POST', '/api/citas', {
       id_profesional: quien,
       id_servicio: Number(datos.get('servicio')),
@@ -374,10 +377,10 @@
       cliente_telefono: String(datos.get('telefono')).trim()
     })).then(function (r) {
       sheet.close();
-      T.toast('✓ ' + r.cita.cliente_nombre + ' agendado a las ' + r.cita.hora);
+      T.aviso({ tipo: 'exito', titulo: r.cita.cliente_nombre + ' quedó agendado', detalle: 'A las ' + r.cita.hora + '. Recuérdale el día antes con el botón «Recordar».' });
       return cargarAgenda();
     }).catch(function (err) {
-      T.fallo(err);
+      T.fallo(err, form);
       /* Pudo entrar otra reserva mientras la hoja estaba abierta */
       if (err.status === 409) llenarHoras();
     });
@@ -428,8 +431,8 @@
         if (metodo() !== 'mixto') return { metodo: metodo() };
         var a = Number(ef.value) || 0, b = Number(tr.value) || 0;
         if (a <= 0 || b <= 0 || a + b !== total) {
-          T.toast('Efectivo + transferencia deben sumar ' + pesos(total), 'error');
-          ef.focus();
+          T.marcarCampo(ef, 'Efectivo + transferencia deben sumar ' + pesos(total) + '.');
+          T.aviso({ tipo: 'error', titulo: 'El pago mixto no cuadra', detalle: 'Escribe cuánto llegó en efectivo; la transferencia se calcula sola.' });
           return null;
         }
         return { pagos: [{ metodo: 'efectivo', monto: a }, { metodo: 'transferencia', monto: b }] };
@@ -470,7 +473,7 @@
     if (!cuerpo) return;
     T.ocupado(this, T.api('POST', '/api/citas/' + c.id_cita + '/cobrar', cuerpo)).then(function () {
       sheetP.close();
-      T.toast('✓ Cita completada · ' + pesos(c.precio) + ' en caja');
+      T.aviso({ tipo: 'exito', titulo: 'Cita cobrada', detalle: pesos(c.precio) + ' ya están en la caja de hoy.' });
       return cargarAgenda();
     }).catch(T.fallo);
   });
@@ -536,7 +539,7 @@
 
   function agregar(p) {
     if (!productos.some(function (x) { return x.id_producto === p.id_producto; })) productos.push(p);
-    if ((carrito[p.id_producto] || 0) >= p.stock) { T.toast('No quedan más unidades de ' + p.nombre, 'error'); return; }
+    if ((carrito[p.id_producto] || 0) >= p.stock) { T.aviso({ tipo: 'aviso', titulo: 'No quedan más unidades', detalle: 'De ' + p.nombre + ' hay ' + p.stock + '. Si llegaron más, súmalas en Inventario.' }); return; }
     carrito[p.id_producto] = (carrito[p.id_producto] || 0) + 1;
     pintarVenta();
   }
@@ -550,7 +553,8 @@
       if (navigator.vibrate) navigator.vibrate(40);
       agregar(r.producto);
     }).catch(function (e) {
-      T.toast(e.status === 404 ? 'El código ' + codigo + ' no está en el inventario' : e.message, 'error');
+      if (e.status === 404) T.aviso({ tipo: 'aviso', titulo: 'Código no encontrado', detalle: 'El ' + codigo + ' no está en el inventario. Revisa el número o crea el producto en Inventario.' });
+      else T.fallo(e);
     });
   }
 
@@ -566,7 +570,7 @@
       pintarVenta();
     }).catch(function (e) {
       $('productos').replaceChildren();
-      $('productos-titulo').textContent = 'No se pudieron cargar los productos';
+      $('productos-titulo').textContent = 'No pudimos cargar los productos. Cierra y vuelve a abrir la venta.';
       T.fallo(e);
     });
   });
@@ -603,7 +607,7 @@
     cuerpo.items = enCarrito().map(function (id) { return { id_producto: id, cantidad: carrito[id] }; });
     T.ocupado(this, T.api('POST', '/api/ventas', cuerpo)).then(function (r) {
       sheetV.close();
-      T.toast('✓ Venta de ' + pesos(r.venta.total) + ' registrada en caja');
+      T.aviso({ tipo: 'exito', titulo: 'Venta registrada', detalle: pesos(r.venta.total) + ' en caja y el inventario ya se descontó.' });
       if (T.esCaja) cargarAgenda();   /* "En caja" cambió */
     }).catch(T.fallo);
   });
@@ -639,7 +643,7 @@
 
     /* Los navegadores solo entregan la cámara en HTTPS o localhost */
     if (!window.isSecureContext || !navigator.mediaDevices) {
-      T.toast('La cámara necesita HTTPS. Escribe el código.', 'error');
+      T.aviso({ tipo: 'aviso', titulo: 'La cámara no está disponible', detalle: 'Este navegador solo la deja usar en una conexión segura. Escribe el código en el campo.' });
       $('codigo').focus();
       return;
     }
@@ -670,13 +674,21 @@
     }).catch(function () {
       btn.removeAttribute('aria-busy');
       detener();
-      T.toast('No se pudo abrir la cámara. Escribe el código.', 'error');
+      T.aviso({ tipo: 'aviso', titulo: 'No pudimos abrir la cámara', detalle: 'Revisa que le diste permiso al navegador, o escribe el código en el campo.' });
+      $('codigo').focus();
     });
   });
 
   sheetV.addEventListener('close', detener);
 
   cargarTodo();
+
+  /* Guía de la primera vez (docs/ux-avisos.md) */
+  T.guia('citas', $('contenido'), [
+    { titulo: 'Tu agenda del día', texto: 'Aquí ves cada turno: los rojos están por atender y los verdes, libres. Con las flechas de arriba cambias de día.' },
+    { titulo: 'Agendar es tocar un turno libre', texto: 'Toca un turno verde, elige el servicio y escribe el nombre del cliente. Al atenderlo, toca «Completar» y el cobro entra solo a la caja.' },
+    { titulo: 'Que te reserven solos', texto: 'Con «Copiar link» compartes tu página de reservas por WhatsApp o Instagram. Lo que reserven aparece aquí.' }
+  ]);
 
   /* Lo que otro del equipo (o una reserva online) cambió aparece al volver a la
      pestaña y cada minuto mientras está a la vista. */

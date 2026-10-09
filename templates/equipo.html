@@ -40,7 +40,9 @@
           {% if u.id_usuario != session.id_usuario %}
             <button class="btn-link btn-link--peligro" type="button"
                     data-api="DELETE {{ url_for('negocio.api_usuarios_desactivar', id_usuario=u.id_usuario) }}"
-                    data-confirmar="¿Desactivar a {{ u.nombre_completo }}? No podrá volver a entrar.">Desactivar</button>
+                    data-confirmar="¿Desactivar a {{ u.nombre_completo }}?"
+                    data-detalle="No podrá volver a entrar. Sus citas y ventas se conservan."
+                    data-boton="Desactivar">Desactivar</button>
           {% endif %}
         </td>
       </tr>

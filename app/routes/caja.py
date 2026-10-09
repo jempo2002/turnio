@@ -166,7 +166,7 @@ def api_caja_mes():
         anio, mes = (int(x) for x in raw.split("-"))
         date(anio, mes, 1)
     except ValueError:
-        return jsonify({"ok": False, "msg": "Mes invalido (usa AAAA-MM)."}), 400
+        return jsonify({"ok": False, "msg": "Elige un mes de la lista."}), 400
     try:
         sedes = _sedes_consulta(request.args.get("id_sede"))
     except _ERRORES as exc:

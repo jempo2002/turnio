@@ -124,12 +124,14 @@
       return gasto ? x.id_movimiento === Number(b.dataset.borrar) : x.id_venta === Number(b.dataset.anular);
     });
     var titulo = gasto ? '¿Borrar esta salida?' : '¿Anular esta venta?';
-    var detalle = m.concepto + ' · ' + pesos(m.monto) + (gasto ? '' : '. Las unidades vuelven al inventario.');
-    T.confirmar(titulo, detalle, gasto ? 'Borrar salida' : 'Anular venta').then(function (si) {
+    var detalle = m.concepto + ' · ' + pesos(m.monto) + (gasto
+      ? '. La plata vuelve al total de la caja de hoy.'
+      : '. Sale de la caja de hoy y las unidades vuelven al inventario.');
+    T.confirmar(titulo, detalle, gasto ? 'Borrar salida' : 'Anular venta', { deshacer: false }).then(function (si) {
       if (!si) return;
       var url = gasto ? '/api/caja/movimientos/' + m.id_movimiento : '/api/ventas/' + m.id_venta;
       T.ocupado(b, T.api('DELETE', url)).then(function (r) {
-        T.toast(gasto ? 'Salida borrada' : r.msg);
+        T.aviso({ tipo: 'exito', titulo: gasto ? 'Salida borrada' : 'Venta anulada', detalle: gasto ? 'El total de la caja ya está al día.' : r.msg });
         return cargar();
       }).catch(T.fallo);
     });
@@ -156,9 +158,9 @@
     })).then(function () {
       pagina = 0;   /* la salida nueva queda arriba de la primera página */
       sheet.close();
-      T.toast('✓ Salida de ' + pesos(monto) + ' guardada');
+      T.aviso({ tipo: 'exito', titulo: 'Salida de ' + pesos(monto) + ' guardada', detalle: 'Ya se descontó del total de hoy.' });
       return cargar();
-    }).catch(T.fallo);
+    }).catch(function (err) { T.fallo(err, form); });
   });
 
   /* ══ Cierre con arqueo ══ */
@@ -190,18 +192,18 @@
       observaciones: $('observaciones').value.trim()
     })).then(function () {
       sheetC.close();
-      T.toast('✓ Caja cerrada');
+      T.aviso({ tipo: 'exito', titulo: 'Caja cerrada', detalle: 'El día quedó cuadrado. Si falta algo, puedes reabrirla hoy mismo.' });
       return cargar();
-    }).catch(T.fallo);
+    }).catch(function (err) { T.fallo(err, formC); });
   });
 
   $('cerrada').addEventListener('click', function (e) {
     var b = e.target.closest('#btn-reabrir');
     if (!b) return;
-    T.confirmar('¿Reabrir la caja de hoy?', 'Se borra el arqueo y el día vuelve a recibir cobros y salidas.', 'Reabrir caja').then(function (si) {
+    T.confirmar('¿Reabrir la caja de hoy?', 'Se borra el arqueo y el día vuelve a recibir cobros y salidas. Al terminar, ciérrala de nuevo.', 'Reabrir caja', { peligro: false }).then(function (si) {
       if (!si) return;
       T.ocupado(b, T.api('POST', '/api/caja/reabrir', {})).then(function () {
-        T.toast('Caja reabierta');
+        T.aviso({ tipo: 'info', titulo: 'Caja reabierta', detalle: 'Ya puedes registrar cobros y salidas. Ciérrala de nuevo al terminar el día.' });
         return cargar();
       }).catch(T.fallo);
     });
@@ -259,7 +261,7 @@
         nombre: s.nombre, duracion_min: s.duracion_min, precio: s.precio, pago_profesional: nuevo
       }).then(function () {
         s.pago_profesional = nuevo;
-        T.toast('✓ Reparto guardado');
+        T.toast('Reparto guardado');
       }).catch(function (err) {
         inp.value = antes;
         inp.closest('li').querySelector('[data-local]').textContent = pesos(s.precio - antes);
@@ -269,6 +271,12 @@
   }
 
   cargar();
+
+  T.guia('caja', $('contenido'), [
+    { titulo: 'La caja se llena sola', texto: 'Cada cita cobrada y cada venta de productos entra aquí, con efectivo y transferencia por separado.' },
+    { titulo: 'Anota lo que sale', texto: 'Si pagas algo con la plata del día (insumos, domicilio), regístralo en «Registrar salida» para que el total cuadre.' },
+    { titulo: 'Cierra al final del día', texto: 'Cuenta el efectivo y toca «Cerrar caja del día»: te decimos si cuadra, sobra o falta.' }
+  ]);
 
   /* Lo que se cobró en otro celular aparece al volver a la pestaña y cada minuto */
   T.alVolver(cargar, 60000);

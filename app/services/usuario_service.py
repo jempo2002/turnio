@@ -53,7 +53,7 @@ def _parse_cc(raw) -> str:
 def _parse_rol(raw) -> str:
     rol = str(raw or "").strip().capitalize()
     if rol not in ROLES_NEGOCIO:
-        raise ValueError("Rol invalido.")
+        raise ValueError("Elige el rol de la lista.")
     return rol
 
 
@@ -94,9 +94,9 @@ def listar_usuarios(id_tienda: int) -> list[dict]:
 def validar_clave_nueva(password, confirm) -> str:
     password = str(password or "")
     if len(password) > 128:
-        raise ValueError("La contrasena supera el maximo permitido.")
+        raise ValueError("La contraseña es muy larga: usa máximo 128 caracteres.")
     if password != str(confirm or ""):
-        raise ValueError("Las contrasenas no coinciden.")
+        raise ValueError("Las contraseñas no coinciden. Escríbela igual en los dos campos.")
     pwd_error = first_password_policy_error(password)
     if pwd_error:
         raise ValueError(pwd_error)
@@ -111,7 +111,7 @@ def crear_usuario(id_tienda: int, data: dict) -> int:
     rol = _parse_rol(data.get("rol"))
     correo = str(data.get("correo", "")).strip().lower()
     if not correo or len(correo) > 150 or not is_valid_email(correo):
-        raise ValueError("El correo no es valido.")
+        raise ValueError("Revisa el correo: debe verse así, nombre@gmail.com.")
     telefono = normalize_phone(data.get("telefono"), max_len=20)
     invitar = not data.get("password") and not data.get("confirm_password")
     if invitar:
@@ -239,7 +239,7 @@ def datos_invitacion(id_tienda: int, id_usuario: int) -> dict:
     if not usuario:
         raise UsuarioError("Usuario no encontrado.", 404)
     if not usuario["invitacion_pendiente"]:
-        raise UsuarioError("Esta persona ya acepto la invitacion. Si olvido la clave, que use \"Olvide mi contrasena\".")
+        raise UsuarioError("Esta persona ya aceptó la invitación. Si olvidó la contraseña, que toque «¿Olvidaste tu contraseña?» al entrar.")
     return usuario
 
 
@@ -277,7 +277,7 @@ def aceptar_invitacion(usuario: dict, password, confirm) -> None:
             (generate_password_hash(password), usuario["id_usuario"], usuario["clave_hash"]),
         )
         if cur.rowcount != 1:
-            raise UsuarioError("Enlace invalido o expirado.", 410)
+            raise UsuarioError("Ese enlace ya venció o ya se usó. Pídele al administrador uno nuevo.", 410)
         conn.commit()
     finally:
         conn.close()

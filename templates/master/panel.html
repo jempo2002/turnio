@@ -27,7 +27,9 @@
             <br /><small class="muted">Montaje pendiente {{ r.montaje_pendiente|pesos }}</small>
             <button class="btn-link" type="button"
                     data-api="POST {{ url_for('master.api_montaje', id_tienda=r.id_tienda) }}"
-                    data-confirmar="¿Registrar el pago del montaje de {{ r.montaje_pendiente|pesos }}?">Marcar pagado</button>
+                    data-confirmar="¿Registrar el pago del montaje?"
+                    data-detalle="El montaje de {{ r.montaje_pendiente|pesos }} queda como pagado."
+                    data-boton="Marcar pagado" data-peligro="no">Marcar pagado</button>
           {% endif %}
         </td>
         <td>
@@ -42,7 +44,9 @@
           </form>
           <button class="btn-link btn-link--peligro" type="button"
                   data-api="DELETE {{ url_for('master.api_eliminar', id_tienda=r.id_tienda) }}"
-                  data-confirmar="¿Eliminar {{ r.nombre_negocio }}? Sus usuarios dejan de entrar; el historial se conserva.">Eliminar</button>
+                  data-confirmar="¿Eliminar {{ r.nombre_negocio }}?"
+                  data-detalle="Sus usuarios dejan de entrar. El historial se conserva."
+                  data-boton="Eliminar negocio">Eliminar</button>
         </td>
       </tr>
     {% else %}

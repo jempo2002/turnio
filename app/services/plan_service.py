@@ -303,7 +303,7 @@ def verificar_cambio_plan(cur, id_tienda: int, plan_nuevo: str) -> None:
     primero hay que quitarlos. Mismo FOR UPDATE que verificar_limite.
     """
     if plan_nuevo not in PLANES:
-        raise ValueError("Plan invalido.")
+        raise ValueError("Ese plan no existe. Elige uno de la lista.")
     cur.execute("SELECT 1 FROM tiendas WHERE id_tienda = %s FOR UPDATE", (id_tienda,))
     cur.fetchone()
     sedes = _contar_sedes(cur, id_tienda)

@@ -66,7 +66,31 @@
     return libres;
   }
 
+  /* Avisos (docs/ux-avisos.md): todo error que ve una persona dice qué pasó
+     (titulo) y qué hacer (detalle), sin jerga. `status` es el HTTP de la API
+     (0 = sin conexión), `msg` lo que explicó el servidor y `datos` su JSON. */
+  function explicar(status, msg, datos) {
+    datos = datos || {};
+    msg = String(msg || '').trim();
+    if (datos.code === 'limite_plan') {
+      return { tipo: 'aviso', titulo: 'Llegaste al tope de tu plan', detalle: msg,
+               accion: datos.accion_url ? { texto: datos.accion_texto || 'Ver planes', href: datos.accion_url } : null };
+    }
+    if (status === 401) return { tipo: 'aviso', titulo: 'Tu sesión se cerró', detalle: 'Vuelve a entrar con tu correo y contraseña.' };
+    if (status === 0) return { tipo: 'error', titulo: 'Sin conexión', detalle: 'Revisa el internet del celular y vuelve a intentarlo. No se guardó nada.' };
+    if (status === 402 || datos.code === 'suscripcion_vencida') {
+      return { tipo: 'aviso', titulo: 'Tu suscripción venció', detalle: 'Puedes ver todo, pero para guardar cambios renueva tu plan.', accion: { texto: 'Ver mi plan', href: '/ajustes#plan' } };
+    }
+    if (status === 429) return { tipo: 'aviso', titulo: 'Espera un momento', detalle: msg || 'Hiciste varios intentos seguidos. Espera un minuto y vuelve a intentarlo.' };
+    if (status === 403) return { tipo: 'error', titulo: 'No tienes permiso para esto', detalle: (msg && !/permis/i.test(msg) ? msg + ' ' : '') + 'Pídele al administrador que lo haga o que te dé acceso.' };
+    if (status === 404) return { tipo: 'error', titulo: 'Ya no está disponible', detalle: (msg ? msg + ' ' : '') + 'Recarga la pantalla para ver los datos al día.', accion: { texto: 'Recargar', recargar: true } };
+    if (status === 409) return { tipo: 'error', titulo: 'No se pudo guardar', detalle: msg || 'Alguien cambió esto hace un momento. Recarga y vuelve a intentarlo.' };
+    if (status >= 500) return { tipo: 'error', titulo: 'Algo falló de nuestro lado', detalle: 'No es tu culpa. Intenta de nuevo en un momento; si sigue pasando, escríbenos por WhatsApp.' };
+    return { tipo: 'error', titulo: 'Revisa los datos', detalle: msg || 'Algo no quedó bien. Revisa lo que escribiste y vuelve a intentarlo.' };
+  }
+
   var api = {
+    explicar: explicar,
     pesos: pesos, precioVenta: precioVenta, pctGanancia: pctGanancia,
     pagoProfesional: pagoProfesional, turnosLibres: turnosLibres, minutos: minutos, hhmm: hhmm
   };
@@ -142,10 +166,14 @@
      rechaza con un Error cuyo mensaje ya sirve para mostrar. Lo que no es de
      una pantalla en particular se resuelve aquí: sesión vencida → login, sin
      sede → elegirla. */
+  /* El mensaje del error ya es el texto amable (detalle de explicar()); el
+     título y la acción van en e.aviso para T.fallo. */
   function ErrorApi(msg, status, datos) {
-    var e = new Error(msg);
+    var aviso = explicar(status, msg, datos);
+    var e = new Error(aviso.detalle);
     e.status = status;
     e.datos = datos || {};
+    e.aviso = aviso;
     return e;
   }
 
@@ -164,15 +192,15 @@
         location.href = '/login';
         throw ErrorApi('Tu sesión se cerró. Vuelve a entrar.', 401);
       }
-      return r.json().catch(function () { return { ok: false, msg: 'Error ' + r.status + '. Intenta de nuevo.' }; })
+      return r.json().catch(function () { return { ok: false, msg: '' }; })
         .then(function (d) {
           if (d.code === 'sin_sede') { location.href = '/seleccionar-sede'; }
-          if (!r.ok || d.ok === false) throw ErrorApi(d.msg || 'No se pudo completar.', r.status, d);
+          if (!r.ok || d.ok === false) throw ErrorApi(d.msg || '', r.status, d);
           return d;
         });
     }, function (e) {
       if (e && e.name === 'AbortError') throw e;
-      throw ErrorApi('Sin conexión. Revisa el internet e intenta de nuevo.', 0);
+      throw ErrorApi('', 0);
     });
   };
 
@@ -187,21 +215,49 @@
     });
   };
 
-  /* Error de una acción: aviso rojo. Devuelve null para encadenar en un catch. */
-  T.fallo = function (e) {
+  /* ── Errores en un campo: el mensaje va debajo del campo, no solo arriba ── */
+  T.marcarCampo = function (campo, msg) {
+    if (!campo) return;
+    var id = (campo.id || campo.name) + '-error';
+    var p = document.getElementById(id);
+    if (!p) {
+      p = document.createElement('p');
+      p.id = id;
+      p.className = 'campo-error';
+      campo.insertAdjacentElement('afterend', p);
+    }
+    p.textContent = msg;
+    campo.setAttribute('aria-invalid', 'true');
+    campo.setAttribute('aria-describedby', id);
+    campo.addEventListener('input', function limpiar() {
+      campo.removeAttribute('aria-invalid');
+      p.remove();
+      campo.removeEventListener('input', limpiar);
+    });
+    campo.focus();
+  };
+
+  /* Error de una acción: aviso con qué pasó y qué hacer. Si el servidor dice
+     qué campo está mal (`field`) y viene el formulario, se marca ese campo.
+     Devuelve null para encadenar en un catch. */
+  T.fallo = function (e, form) {
     if (e && e.name === 'AbortError') return null;
-    T.toast((e && e.message) || 'No se pudo completar.', 'error');
+    var a = (e && e.aviso) || explicar(e && e.status, e && e.message);
+    var campo = form && e && e.datos && e.datos.field && form.elements[e.datos.field];
+    if (campo) T.marcarCampo(campo, a.detalle);
+    T.aviso(a);
     return null;
   };
 
-  /* Error al cargar una sección: tarjeta con "Reintentar" en lugar del contenido. */
+  /* Error al cargar una sección: tarjeta con qué pasó y "Reintentar" en lugar del contenido. */
   T.errorCarga = function (contenedor, e, reintentar) {
     if (e && e.name === 'AbortError') return;
+    var a = (e && e.aviso) || explicar(e && e.status, e && e.message);
     contenedor.removeAttribute('aria-busy');
     T.pintar(contenedor, T.h`
       <div class="rounded-3xl border border-rose-200 bg-white p-6 text-center shadow-soft" role="alert">
-        <p class="text-sm font-semibold text-rose-700">No se pudo cargar</p>
-        <p class="mt-1 text-xs text-brand-darkest/70">${(e && e.message) || 'Intenta de nuevo.'}</p>
+        <p class="text-sm font-semibold text-rose-700">No pudimos cargar esta parte · ${a.titulo}</p>
+        <p class="mt-1 text-xs text-brand-darkest/70">${a.detalle}</p>
         <button type="button" data-reintentar class="mt-4 rounded-xl bg-brand-dark px-5 text-sm font-semibold text-white transition hover:bg-brand-darkest active:scale-95">Reintentar</button>
       </div>`);
     contenedor.querySelector('[data-reintentar]').addEventListener('click', reintentar);
@@ -215,37 +271,135 @@
     el._t = setTimeout(function () { el.textContent = el.dataset.original; }, ms || 2000);
   };
 
-  /* Aviso flotante arriba (no tapa la nav ni los botones del pulgar).
-     Si hay una hoja abierta se cuelga de ella: un <dialog> modal tapa todo lo demás. */
-  T.toast = function (msg, tipo) {
+  /* ── Aviso flotante (docs/ux-avisos.md) ──
+     T.aviso({tipo, titulo, detalle, accion: {texto, href | fn | recargar}, ms})
+     tipo: exito (verde, se va solo), info, aviso (ámbar) o error (rojo, se
+     queda hasta 8 s y se puede cerrar). Siempre icono + texto: nunca solo
+     color. Arriba, para no tapar la barra ni los botones del pulgar; si hay
+     una hoja abierta se cuelga de ella (un <dialog> modal tapa lo demás). */
+  var ICONOS = {
+    exito: T.h`<path d="M20 6.5L9.5 17 4 11.5"></path>`,
+    error: T.h`<circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5"></path><path d="M12 16.2v.3"></path>`,
+    aviso: T.h`<path d="M12 3.5 2.5 20h19L12 3.5Z"></path><path d="M12 10v4"></path><path d="M12 17.2v.3"></path>`,
+    info: T.h`<circle cx="12" cy="12" r="9"></circle><path d="M12 11v5.5"></path><path d="M12 7.8v.3"></path>`
+  };
+  var DURACION = { exito: 3200, info: 4500, aviso: 7000, error: 8000 };
+
+  T.aviso = function (o) {
+    var tipo = ICONOS[o.tipo] ? o.tipo : 'info';
     var t = document.getElementById('toast');
     if (!t) {
       t = document.createElement('div');
       t.id = 'toast';
-      t.setAttribute('role', 'status');
     }
     (document.querySelector('dialog[open]') || document.body).appendChild(t);
-    t.textContent = msg;
-    t.className = tipo === 'error' ? 'error' : '';
+    /* Los errores interrumpen al lector de pantalla; lo demás espera su turno. */
+    t.setAttribute('role', tipo === 'error' ? 'alert' : 'status');
+    t.className = tipo;
+    var accion = o.accion;
+    T.pintar(t, T.h`
+      <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONOS[tipo]}</svg>
+      <div class="texto"><p class="titulo">${o.titulo}</p>${o.detalle && T.h`<p class="detalle">${o.detalle}</p>`}</div>
+      ${accion && (accion.href
+        ? T.h`<a class="accion" href="${accion.href}">${accion.texto}</a>`
+        : T.h`<button type="button" class="accion">${accion.texto}</button>`)}
+      <button type="button" class="cerrar" aria-label="Cerrar aviso">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+      </button>`);
+    function cerrar() { t.classList.remove('ver'); }
+    t.querySelector('.cerrar').addEventListener('click', cerrar);
+    var btn = t.querySelector('button.accion');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        cerrar();
+        if (accion.recargar) location.reload();
+        else if (accion.fn) accion.fn();
+      });
+    }
     void t.offsetWidth;   /* reinicia la animación si ya había un aviso visible */
     t.classList.add('ver');
     clearTimeout(t._t);
-    t._t = setTimeout(function () { t.classList.remove('ver'); }, tipo === 'error' ? 4000 : 2600);
+    t._t = setTimeout(cerrar, o.ms || DURACION[tipo]);
+  };
+
+  /* Atajo para un aviso de una línea. Sin tipo = éxito. */
+  T.toast = function (msg, tipo) {
+    T.aviso({ tipo: tipo || 'exito', titulo: msg });
   };
 
   /* Reemplazo de confirm(): hoja inferior con la acción al alcance del pulgar.
-     Devuelve una promesa con true/false. ESC o tocar fuera = cancelar. */
-  T.confirmar = function (titulo, detalle, textoOk) {
+     `detalle` dice qué va a pasar; con {deshacer: false} se avisa que no tiene
+     vuelta atrás. {peligro: false} pinta el botón con el color de la marca
+     (una acción normal, no destructiva). Devuelve una promesa con true/false.
+     ESC o tocar fuera = cancelar. */
+  T.confirmar = function (titulo, detalle, textoOk, opciones) {
+    opciones = opciones || {};
+    var peligro = opciones.peligro !== false;
     return new Promise(function (resolve) {
       var d = document.createElement('dialog');
       d.className = 'confirmar';
       T.pintar(d, T.h`<form method="dialog"><h2>${titulo}</h2><p>${detalle || ''}</p>
-        <button value="ok" class="ok">${textoOk || 'Confirmar'}</button><button value="no" autofocus>Cancelar</button></form>`);
+        ${opciones.deshacer === false && T.h`<p class="irreversible">Esto no se puede deshacer.</p>`}
+        <button value="ok" class="${peligro ? 'ok' : 'ok normal'}">${textoOk || 'Confirmar'}</button><button value="no" autofocus>Cancelar</button></form>`);
       d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
       d.addEventListener('close', function () { resolve(d.returnValue === 'ok'); d.remove(); });
       document.body.appendChild(d);
       d.showModal();
     });
+  };
+
+  /* ── Guía de bienvenida (onboarding) ──
+     T.guia('caja', contenedor, [{titulo, texto}, ...]): tarjeta al inicio de
+     la pantalla con pocos pasos (máximo 3), que se puede saltar y no vuelve a
+     salir en este dispositivo. T.guiasDeNuevo() las vuelve a mostrar todas. */
+  var GUIA = 'turnio:guia:';
+
+  function guardado(clave, valor) {
+    try {
+      if (valor === undefined) return localStorage.getItem(GUIA + clave);
+      if (valor === null) localStorage.removeItem(GUIA + clave);
+      else localStorage.setItem(GUIA + clave, valor);
+    } catch (e) { /* modo privado o sin almacenamiento: la guía sale cada vez */ }
+    return null;
+  }
+
+  T.guia = function (clave, contenedor, pasos) {
+    if (!contenedor || !pasos.length || guardado(clave) === 'vista') return;
+    var i = 0;
+    var caja = document.createElement('section');
+    caja.className = 'guia';
+    caja.setAttribute('aria-label', 'Guía rápida');
+    function cerrar() {
+      guardado(clave, 'vista');
+      caja.remove();
+    }
+    function pintar() {
+      var p = pasos[i], ultimo = i === pasos.length - 1;
+      T.pintar(caja, T.h`
+        <p class="paso-guia">${pasos.length > 1 ? 'Guía rápida · ' + (i + 1) + ' de ' + pasos.length : 'Guía rápida'}</p>
+        <p class="titulo">${p.titulo}</p>
+        <p class="texto">${p.texto}</p>
+        <div class="botones">
+          ${!ultimo && T.h`<button type="button" data-saltar class="saltar">Saltar guía</button>`}
+          <button type="button" data-seguir class="seguir">${ultimo ? '¡Entendido!' : 'Siguiente'}</button>
+        </div>`);
+      var saltar = caja.querySelector('[data-saltar]');
+      if (saltar) saltar.addEventListener('click', cerrar);
+      caja.querySelector('[data-seguir]').addEventListener('click', function () {
+        if (ultimo) { cerrar(); return; }
+        i++;
+        pintar();
+        caja.querySelector('[data-seguir]').focus();
+      });
+    }
+    pintar();
+    contenedor.prepend(caja);
+  };
+
+  T.guiasDeNuevo = function () {
+    try {
+      Object.keys(localStorage).forEach(function (k) { if (k.indexOf(GUIA) === 0) localStorage.removeItem(k); });
+    } catch (e) { /* sin almacenamiento: ya salen siempre */ }
   };
 
   /* Hojas inferiores: tocar fuera cierra. */

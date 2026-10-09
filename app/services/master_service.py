@@ -75,14 +75,14 @@ def _slug_libre(cur, nombre: str) -> str:
 def _parse_tipo(raw) -> str:
     tipo = str(raw or "otro").strip()
     if tipo not in TIPOS_NEGOCIO:
-        raise ValueError("Tipo de negocio invalido.")
+        raise ValueError("Elige el tipo de negocio de la lista.")
     return tipo
 
 
 def _parse_plan(raw) -> str:
     plan = str(raw or "").strip()
     if plan not in plan_service.PLANES:
-        raise ValueError("Plan invalido.")
+        raise ValueError("Ese plan no existe. Elige uno de la lista.")
     return plan
 
 
@@ -122,15 +122,15 @@ def crear_negocio(data: dict) -> int:
     telefono = normalize_phone(data.get("telefono"), max_len=20)
     plan_id = plan_service.PLAN_PRUEBA
     sede_nombre = sanitize_text(data.get("sede_nombre") or "Principal", "El nombre de la sede", max_len=120)
-    sede_direccion = sanitize_optional_text(data.get("sede_direccion"), "La direccion", max_len=200)
+    sede_direccion = sanitize_optional_text(data.get("sede_direccion"), "La dirección", max_len=200)
     admin_nombre = sanitize_text(data.get("admin_nombre"), "El nombre del administrador", max_len=150)
     admin_cc = _parse_cc(data.get("admin_cc"))
     admin_correo = str(data.get("admin_correo", "")).strip().lower()
     password = str(data.get("admin_password", ""))
     if not admin_correo or len(admin_correo) > 150 or not is_valid_email(admin_correo):
-        raise ValueError("El correo del administrador no es valido.")
+        raise ValueError("Revisa el correo del administrador: debe verse así, nombre@gmail.com.")
     if len(password) > 128:
-        raise ValueError("La contrasena supera el maximo permitido.")
+        raise ValueError("La contraseña es muy larga: usa máximo 128 caracteres.")
     pwd_error = first_password_policy_error(password)
     if pwd_error:
         raise ValueError(pwd_error)
@@ -235,7 +235,7 @@ def renovar(id_tienda: int, raw_meses) -> date:
     try:
         meses = int(raw_meses)
     except (TypeError, ValueError) as exc:
-        raise ValueError("Selecciona un periodo valido.") from exc
+        raise ValueError("Elige un periodo de la lista.") from exc
     if meses not in PERIODOS:
         raise ValueError("Periodo de suscripcion no permitido.")
     conn = get_db()

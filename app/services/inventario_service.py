@@ -251,7 +251,7 @@ def registrar_movimiento(id_tienda: int, id_sede: int, id_usuario: int, id_produ
     `cantidad` es el stock contado). Devuelve el stock nuevo."""
     tipo = str(data.get("tipo") or "")
     if tipo not in TIPOS_MOVIMIENTO:
-        raise ValueError("Tipo de movimiento invalido.")
+        raise ValueError("Elige si es entrada, salida o ajuste.")
     cantidad = parse_int(data.get("cantidad"), "La cantidad", min_value=0, max_value=CANTIDAD_MAX)
     if tipo != "Ajuste" and cantidad <= 0:
         raise ValueError("La cantidad debe ser mayor a cero.")

@@ -150,10 +150,13 @@
     T.api('GET', url, null, { signal: pedido.signal }).then(function (d) {
       libres = d;
       pintarHoras(antes);
-      if (antes && !elegido('hora')) T.toast('La hora de las ' + antes + ' se acaba de ocupar. Elige otra.', 'error');
+      if (antes && !elegido('hora')) {
+        T.aviso({ tipo: 'aviso', titulo: 'Esa hora se acaba de ocupar', detalle: 'Alguien reservó las ' + antes + ' hace un momento. Elige otra de las horas libres.' });
+      }
     }).catch(function (e) {
       if (e && e.name === 'AbortError') return;
-      $('horas-ayuda').textContent = (e && e.message) || 'No se pudieron cargar las horas.';
+      var a = (e && e.aviso) || T.explicar(0);
+      $('horas-ayuda').textContent = 'No pudimos cargar las horas. ' + a.detalle;
     });
   }
 
@@ -258,20 +261,43 @@
   $('semana-ant').addEventListener('click', function () { semana--; pintarDias(); cargarHoras(); });
   $('semana-sig').addEventListener('click', function () { semana++; pintarDias(); cargarHoras(); });
 
-  function falta(mensaje, id) {
-    T.toast(mensaje, 'error');
+  /* Falta un paso: no es un error, es la guía de qué sigue (docs/ux-avisos.md). */
+  function falta(titulo, detalle, id) {
+    T.aviso({ tipo: 'aviso', titulo: titulo, detalle: detalle });
     var el = id && $(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
+  var AYUDA_CAMPO = {
+    nombre: 'Escribe tu nombre para que sepan quién llega.',
+    telefono: 'Escribe tu WhatsApp de 10 dígitos, ej. 300 123 4567. Ahí te pueden confirmar la cita.'
+  };
+
+  /* Errores al reservar, dichos para el cliente (no para el equipo del negocio). */
+  function falloReserva(err) {
+    if (err && err.status === 409) {
+      T.aviso({ tipo: 'error', titulo: 'Esa hora ya no está libre', detalle: 'Alguien la reservó hace un momento. Elige otra de las horas que quedan.' });
+    } else if (err && err.status === 429) {
+      T.aviso({ tipo: 'aviso', titulo: 'No puedes reservar más por ahora', detalle: err.message });
+    } else if (err && err.status === 403) {
+      T.aviso({ tipo: 'aviso', titulo: 'Reservas en línea en pausa', detalle: err.message || 'Escríbele al negocio por WhatsApp para pedir tu cita.' });
+    } else {
+      T.fallo(err, form);
+    }
+  }
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    if (!servicio()) return falta('Elige un servicio.', 'servicios');
-    if (!elegido('dia')) return falta('Elige un día.', 'dias');
-    if (!elegido('hora')) return falta('Elige una hora.', 'horas');
-    if (!elegido('profesional')) return falta('Elige quién te atiende.', 'pros');
+    if (!servicio()) return falta('Falta elegir el servicio', 'Toca el que quieres en la lista de servicios.', 'servicios');
+    if (!elegido('dia')) return falta('Falta elegir el día', 'Toca un día de la semana; con las flechas ves otras semanas.', 'dias');
+    if (!elegido('hora')) return falta('Falta elegir la hora', 'Toca una de las horas libres de ese día.', 'horas');
+    if (!elegido('profesional')) return falta('Falta elegir quién te atiende', 'Toca un nombre, o «Cualquiera disponible» si te da igual.', 'pros');
     form.classList.add('enviado');
-    if (!form.checkValidity()) return falta('Escribe tu nombre y tu WhatsApp completo.', 'nombre');
+    if (!form.checkValidity()) {
+      var malo = form.querySelector('#nombre:invalid, #telefono:invalid');
+      if (malo) T.marcarCampo(malo, AYUDA_CAMPO[malo.id]);
+      return falta('Faltan tus datos', 'Escribe tu nombre y tu WhatsApp completo para apartar la cita.');
+    }
     var d = new FormData(form);
     var cuerpo = {
       id_sede: sede().id_sede,
@@ -285,7 +311,7 @@
     T.ocupado($('btn-reservar'), T.api('POST', API + '/reservas', cuerpo)).then(function (r) {
       exito(r.cita);
     }).catch(function (err) {
-      T.fallo(err);
+      falloReserva(err);
       /* Otro cliente ganó la hora: se vuelven a pedir las horas libres. */
       if (err && err.status === 409) cargarHoras(true);
     });
@@ -332,7 +358,7 @@
   T.api('GET', API).then(function (d) {
     datos = d;
     hoy = fecha(d.hoy);
-    if (!d.sedes.length) return aviso('Sin sedes', 'Este negocio todavía no tiene sedes activas.', d.negocio.whatsapp);
+    if (!d.sedes.length) return aviso('Todavía no hay sedes', 'Este negocio aún no abre su agenda en línea. Escríbele por WhatsApp para pedir tu cita.', d.negocio.whatsapp);
     pintarSedes();
     pintarCabecera();
     if (!d.negocio.recibe_reservas) {

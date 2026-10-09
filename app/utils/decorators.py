@@ -89,7 +89,7 @@ def _bloqueo_solo_lectura():
 def _sesion_expirada():
     session.clear()
     if _is_api_request():
-        return jsonify({"ok": False, "msg": "Sesion expirada."}), 401
+        return jsonify({"ok": False, "msg": "Tu sesión se cerró. Vuelve a entrar."}), 401
     return redirect(url_for("auth.login"))
 
 
@@ -179,8 +179,8 @@ def roles_required(*roles: str):
             if current_role not in allowed_roles:
                 log_seguridad("rol_denegado", requerido=sorted(allowed_roles))
                 if _is_api_request():
-                    return jsonify({"ok": False, "msg": "No tienes permisos para esta accion."}), 403
-                flash("No tienes permisos para ver esta pantalla.", "error")
+                    return jsonify({"ok": False, "msg": "Tu usuario no tiene permiso para esto."}), 403
+                flash("Tu usuario no puede ver esa pantalla. Si la necesitas, pídele acceso al administrador.", "error")
                 return redirect(url_for("core.inicio"))
             return f(*args, **kwargs)
 

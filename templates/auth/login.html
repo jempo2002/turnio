@@ -9,6 +9,7 @@
 <meta name="robots" content="noindex">
 {% include "_pwa.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/avisos.css') }}">
 </head>
 {#- Diseño del prototipo (login.html, T1) con el formulario real de jemPOS Chef:
     POST con CSRF, sin JS. -#}
@@ -34,11 +35,7 @@
         Ingresa para ver tu agenda del día y cerrar la caja.
       </p>
 
-      {% with mensajes = get_flashed_messages(with_categories=true) %}
-        {% for categoria, mensaje in mensajes %}
-          <p class="mt-5 rounded-xl px-4 py-3 text-sm font-medium {{ 'bg-rose-50 text-rose-800' if categoria == 'error' else 'bg-emerald-50 text-emerald-800' }}" role="{{ 'alert' if categoria == 'error' else 'status' }}">{{ mensaje }}</p>
-        {% endfor %}
-      {% endwith %}
+      <div class="mt-5">{% include "_flashes.html" %}</div>
 
       <form method="post" action="{{ url_for('auth.login') }}" class="mt-8 space-y-5">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

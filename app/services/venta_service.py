@@ -27,7 +27,7 @@ def _carrito(cur, id_tienda: int, items) -> tuple[dict[int, int], dict[int, dict
     por_codigo: dict[str, int] = {}
     for item in items:
         if not isinstance(item, dict):
-            raise ValueError("Producto invalido.")
+            raise ValueError("Ese producto ya no está en el inventario. Recarga la caja.")
         cantidad = parse_int(item.get("cantidad") or 1, "La cantidad", min_value=1,
                              max_value=inventario_service.CANTIDAD_MAX)
         if item.get("id_producto") not in (None, ""):
@@ -36,7 +36,7 @@ def _carrito(cur, id_tienda: int, items) -> tuple[dict[int, int], dict[int, dict
         else:
             codigo = inventario_service.parse_codigo(item.get("codigo_barras"))
             if not codigo:
-                raise ValueError("Producto invalido.")
+                raise ValueError("Ese producto ya no está en el inventario. Recarga la caja.")
             por_codigo[codigo] = por_codigo.get(codigo, 0) + cantidad
 
     condiciones, params = [], []

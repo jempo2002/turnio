@@ -28,7 +28,7 @@ class SedeError(Exception):
 
 def _campos(data: dict) -> tuple[str, str | None, str | None]:
     nombre = sanitize_text(data.get("nombre"), "El nombre de la sede", max_len=120)
-    direccion = sanitize_optional_text(data.get("direccion"), "La direccion", max_len=200)
+    direccion = sanitize_optional_text(data.get("direccion"), "La dirección", max_len=200)
     telefono = normalize_phone(data.get("telefono"), max_len=20)
     return nombre, direccion, telefono
 
@@ -209,7 +209,7 @@ def sede_de_tienda(cur, id_tienda: int, id_sede) -> int:
     try:
         id_sede = int(id_sede)
     except (TypeError, ValueError) as exc:
-        raise ValueError("Sede invalida.") from exc
+        raise ValueError("Elige la sede de la lista.") from exc
     cur.execute(
         "SELECT 1 FROM sedes WHERE id_sede = %s AND id_tienda = %s AND estado = 'Activa' LIMIT 1",
         (id_sede, id_tienda),

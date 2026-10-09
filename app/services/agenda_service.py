@@ -40,7 +40,7 @@ def parse_fecha(raw, etiqueta: str = "La fecha") -> date:
     try:
         return date.fromisoformat(str(raw or "").strip()[:10])
     except ValueError as exc:
-        raise ValueError(f"{etiqueta}: fecha invalida (usa AAAA-MM-DD).") from exc
+        raise ValueError(f"{etiqueta}: revisa la fecha y vuelve a elegirla.") from exc
 
 
 def parse_momento(raw, etiqueta: str = "La hora") -> datetime:
@@ -51,7 +51,7 @@ def parse_momento(raw, etiqueta: str = "La hora") -> datetime:
     try:
         momento = datetime.fromisoformat(texto)
     except ValueError as exc:
-        raise ValueError(f"{etiqueta}: fecha y hora invalidas (usa AAAA-MM-DDTHH:MM).") from exc
+        raise ValueError(f"{etiqueta}: revisa la fecha y la hora y vuelve a elegirlas.") from exc
     if momento.tzinfo is not None:
         momento = momento.astimezone(ZONA_NEGOCIO).replace(tzinfo=None)
     return momento.replace(second=0, microsecond=0)
@@ -114,7 +114,7 @@ def listar(id_tienda: int, id_sede: int, desde: date, hasta: date, id_profesiona
     if hasta < desde:
         raise ValueError("La fecha final debe ser igual o posterior a la inicial.")
     if (hasta - desde).days >= MAX_DIAS_CONSULTA:
-        raise ValueError(f"Consulta como maximo {MAX_DIAS_CONSULTA} dias.")
+        raise ValueError(f"Consulta máximo {MAX_DIAS_CONSULTA} días a la vez.")
     sql = (
         _SELECT_CITA + "WHERE c.id_tienda = %s AND c.id_sede = %s AND c.estado <> 'cancelada' "
         "AND c.inicio < %s AND c.fin > %s"
@@ -259,7 +259,7 @@ def _duracion(data: dict, servicio: dict) -> int:
     """La del servicio, o una propia para esta cita (un combo, un cabello largo)."""
     if data.get("duracion_min") in (None, ""):
         return int(servicio["duracion_min"])
-    return parse_int(data["duracion_min"], "La duracion", min_value=5, max_value=720)
+    return parse_int(data["duracion_min"], "La duración", min_value=5, max_value=720)
 
 
 def _escribir(fn):
@@ -397,7 +397,7 @@ def crear_bloqueo(id_tienda: int, id_sede: int, id_usuario: int, data: dict) -> 
     if hasta <= desde:
         raise ValueError("El bloqueo debe terminar después de empezar.")
     if hasta - desde > timedelta(days=MAX_DIAS_BLOQUEO):
-        raise ValueError(f"Un bloqueo dura como maximo {MAX_DIAS_BLOQUEO} días.")
+        raise ValueError(f"Un bloqueo dura máximo {MAX_DIAS_BLOQUEO} días. Si es más largo, crea otro después.")
     if hasta.date() < hoy_local():
         raise ErrorServicio("Ese horario ya pasó.")
 
