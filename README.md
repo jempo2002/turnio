@@ -2,7 +2,7 @@
 
 Agenda, reservas 24/7, caja e inventario para negocios con cita, pensada para el celular.
 
-Reglas de trabajo y ramas: [CLAUDE.md](CLAUDE.md). Plan hasta el deploy: [docs/auditoria-y-workflow.md](docs/auditoria-y-workflow.md).
+Reglas de trabajo y ramas: [CLAUDE.md](CLAUDE.md). Despliegue en Railway (staging desde `test`, producción desde `main`): [DEPLOY.md](DEPLOY.md). Plan hasta el deploy: [docs/auditoria-y-workflow.md](docs/auditoria-y-workflow.md).
 
 ## Qué hay en el repo
 

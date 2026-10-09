@@ -84,7 +84,10 @@ def init_security(app) -> None:
     # guarda su configuracion (y `self.app`) en atributos de la instancia, asi
     # que un segundo init_app sobre el mismo objeto pisaria los ajustes de la
     # primera app (los scripts de scripts/ crean varias en un proceso).
-    Talisman().init_app(
+    talisman = Talisman()
+    # Para eximir rutas por vista (ver /health en app/__init__.py).
+    app.extensions["talisman"] = talisman
+    talisman.init_app(
         app,
         # En produccion: HTTP -> HTTPS + HSTS + cookie Secure.
         force_https=not desarrollo,

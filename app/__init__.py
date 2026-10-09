@@ -14,7 +14,7 @@ from flask_wtf.csrf import CSRFProtect
 from app.performance import init_rendimiento
 from app.security import es_desarrollo, init_security
 from app.utils.decorators import _is_api_request, log_seguridad
-from database import init_pool_from_app
+from database import get_db, init_pool_from_app
 
 # Antes del Limiter: su storage_uri se lee al importar, no en create_app.
 load_dotenv()
@@ -145,7 +145,23 @@ def create_app() -> Flask:
         return render_template("landing.html")
 
     @app.get("/health")
+    # El healthcheck de Railway entra por la red interna en http y sin
+    # X-Forwarded-Proto: con force_https recibiria un 301 y el despliegue se
+    # marcaria como caido (le paso a jemPOS). Solo esta ruta queda exenta.
+    @app.extensions["talisman"](force_https=False)
     def health() -> tuple[dict, int]:
+        """Vivo y con base: un despliegue sin MySQL no recibe trafico."""
+        try:
+            conn = get_db()
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT 1")
+                cur.fetchall()
+            finally:
+                conn.close()
+        except Exception:
+            app.logger.exception("health: sin base de datos")
+            return {"ok": False, "app": "Turnio", "db": False}, 503
         return {"ok": True, "app": "Turnio"}, 200
 
     @app.errorhandler(429)
