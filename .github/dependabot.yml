@@ -1,0 +1,14 @@
+# T10: avisos semanales de dependencias. Los PR van a `test`, como toda tarea.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    target-branch: test
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: test
+    schedule:
+      interval: weekly

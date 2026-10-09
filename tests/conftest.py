@@ -5,7 +5,7 @@
 Tomado de jemPOS Chef. La base TEST_DB_NAME (por defecto turnio_pytest) se
 BORRA y se crea de nuevo con scripts/migrar.py (todas las migraciones). Sin
 base disponible, las pruebas que la necesitan se saltan; las de plan_service
-corren igual.
+corren igual. Con TEST_DB_OBLIGATORIA=1 (la CI) fallan en vez de saltarse.
 """
 from __future__ import annotations
 
@@ -65,7 +65,9 @@ def base_vacia(nombre: str):
 def base():
     try:
         conn = base_vacia(DB_NAME)
-    except Exception as exc:  # sin servidor: se saltan
+    except Exception as exc:  # sin servidor: se saltan (en CI fallan)
+        if os.getenv("TEST_DB_OBLIGATORIA") == "1":
+            pytest.fail(f"Sin base de pruebas: {exc}")
         pytest.skip(f"Sin base de pruebas: {exc}")
     from scripts.migrar import migrar
 

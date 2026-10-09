@@ -1,0 +1,5 @@
+name: Turnio
+paths-ignore:
+  - lib            # html5-qrcode minificado, de terceros
+  - backend        # backend Node retirado; se borra al terminar T8
+  - tests
