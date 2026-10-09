@@ -118,7 +118,7 @@ def _puede_cambiar_foto(id_usuario: int) -> bool:
 @roles_required(*ROLES_NEGOCIO)
 def api_foto_subir(id_usuario):
     if not _puede_cambiar_foto(id_usuario):
-        return jsonify({"ok": False, "msg": "No tienes permisos para esta accion."}), 403
+        return jsonify({"ok": False, "msg": "Tu usuario no tiene permiso para esto."}), 403
     try:
         foto_url = profesional_service.cambiar_foto(session["id_tienda"], id_usuario, _archivo())
     except _ERRORES as exc:
@@ -131,7 +131,7 @@ def api_foto_subir(id_usuario):
 @roles_required(*ROLES_NEGOCIO)
 def api_foto_quitar(id_usuario):
     if not _puede_cambiar_foto(id_usuario):
-        return jsonify({"ok": False, "msg": "No tienes permisos para esta accion."}), 403
+        return jsonify({"ok": False, "msg": "Tu usuario no tiene permiso para esto."}), 403
     try:
         profesional_service.cambiar_foto(session["id_tienda"], id_usuario, None)
     except _ERRORES as exc:

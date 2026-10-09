@@ -1,35 +1,24 @@
 /* Turnio (tomado de jemPOS Chef): formularios y botones que llaman a la API.
  *
- *   <form data-api="POST /api/sedes" data-confirmar="...">  envia los campos como JSON
- *   <button data-api="DELETE /api/sedes/3" data-confirmar="...">
+ *   <form data-api="POST /api/sedes">  envia los campos como JSON
+ *   <button data-api="DELETE /api/sedes/3"
+ *           data-confirmar="¿Eliminar la sede Centro?"   pregunta (título)
+ *           data-detalle="Su historial se conserva."     qué va a pasar
+ *           data-boton="Eliminar sede"                    texto del botón
+ *           data-peligro="no">                            acción normal (azul)
  *
- * Sin JS inline (la CSP lo bloquea). Con ok recarga la pagina; con error
- * muestra el mensaje y, si es un limite del plan, el enlace para subir.
- * Si la respuesta trae `invitacion` (equipo), muestra el enlace con botones
- * de WhatsApp y copiar, y recarga al cerrar el aviso.
+ * Sin JS inline (la CSP lo bloquea). Los avisos y la confirmación son los
+ * mismos del panel (Turnio.aviso, Turnio.confirmar y Turnio.explicar en
+ * static/js/panel/turnio.js; reglas en docs/ux-avisos.md). Con ok recarga la
+ * página; con error dice qué pasó y qué hacer, con el botón para subir de plan
+ * si es un límite. Si la respuesta trae `invitacion` (equipo), muestra el
+ * enlace con botones de WhatsApp y copiar, y recarga al cerrar el aviso.
  */
 (function () {
   'use strict';
 
+  var T = window.Turnio;
   var csrf = document.querySelector('meta[name="csrf-token"]');
-
-  function mostrar(msg, error, enlace) {
-    var caja = document.getElementById('mensaje');
-    if (!caja) { window.alert(msg); return; }
-    caja.textContent = msg;
-    caja.className = 'aviso aviso--' + (error ? 'error' : 'ok');
-    if (enlace && enlace.url) {
-      var a = document.createElement('a');
-      a.href = enlace.url;
-      a.target = '_blank';
-      a.rel = 'noopener';
-      a.textContent = enlace.texto;
-      caja.appendChild(document.createTextNode(' '));
-      caja.appendChild(a);
-    }
-    caja.hidden = false;
-    caja.scrollIntoView({ block: 'nearest' });
-  }
 
   function crearBoton(texto, clase) {
     var b = document.createElement(clase === 'a' ? 'a' : 'button');
@@ -41,7 +30,7 @@
 
   function mostrarInvitacion(msg, inv) {
     var caja = document.getElementById('mensaje');
-    if (!caja) { window.prompt(msg, inv.enlace); window.location.reload(); return; }
+    if (!caja) { T.aviso({ tipo: 'exito', titulo: msg, detalle: inv.enlace, ms: 15000 }); return; }
     caja.textContent = msg;
     caja.className = 'aviso aviso--ok';
     var campo = document.createElement('input');
@@ -69,9 +58,10 @@
     caja.scrollIntoView({ block: 'nearest' });
   }
 
-  function llamar(spec, cuerpo, boton) {
+  function llamar(spec, cuerpo, boton, form) {
     var partes = spec.split(' ');
-    if (boton) boton.disabled = true;
+    var status = 0;
+    if (boton) { boton.disabled = true; boton.setAttribute('aria-busy', 'true'); }
     return fetch(partes[1], {
       method: partes[0],
       credentials: 'same-origin',
@@ -83,9 +73,14 @@
       body: cuerpo ? JSON.stringify(cuerpo) : null
     })
       .then(function (r) {
-        if (r.status === 401) { window.location.href = '/login'; return null; }
-        return r.json().catch(function () { return { ok: false, msg: 'Error ' + r.status }; });
-      })
+        status = r.status;
+        if (r.status === 401) {
+          T.aviso(T.explicar(401));
+          window.setTimeout(function () { window.location.href = '/login'; }, 1500);
+          return null;
+        }
+        return r.json().catch(function () { return { ok: false, msg: '' }; });
+      }, function () { return { ok: false, msg: '' }; })
       .then(function (data) {
         if (!data) return;
         if (data.ok && data.invitacion) {
@@ -93,32 +88,45 @@
           return;
         }
         if (data.ok) {
-          mostrar(data.msg || 'Listo.', false);
-          window.setTimeout(function () { window.location.reload(); }, 600);
+          T.aviso({ tipo: 'exito', titulo: data.msg || 'Listo, quedó guardado.' });
+          window.setTimeout(function () { window.location.reload(); }, 900);
           return;
         }
         if (data.code === 'sin_sede') { window.location.href = '/seleccionar-sede'; return; }
-        mostrar(data.msg || 'No se pudo completar.', true,
-          data.code === 'limite_plan' ? { url: data.accion_url, texto: data.accion_texto } : null);
+        var aviso = T.explicar(status, data.msg, data);
+        var campo = form && data.field && form.elements[data.field];
+        if (campo) T.marcarCampo(campo, aviso.detalle);
+        T.aviso(aviso);
       })
-      .catch(function () { mostrar('Sin conexión. Intenta de nuevo.', true); })
-      .finally(function () { if (boton) boton.disabled = false; });
+      .finally(function () {
+        if (boton) { boton.disabled = false; boton.removeAttribute('aria-busy'); }
+      });
+  }
+
+  /* Pregunta antes de lo que borra o cuesta plata; sin data-confirmar, sigue derecho. */
+  function confirmar(el) {
+    var d = el.dataset;
+    if (!d.confirmar) return Promise.resolve(true);
+    return T.confirmar(d.confirmar, d.detalle || '', d.boton || 'Confirmar', { peligro: d.peligro !== 'no' });
   }
 
   document.addEventListener('submit', function (ev) {
     var form = ev.target;
     if (!form.dataset || !form.dataset.api) return;
     ev.preventDefault();
-    if (form.dataset.confirmar && !window.confirm(form.dataset.confirmar)) return;
-    var datos = {};
-    new FormData(form).forEach(function (v, k) { datos[k] = v; });
-    llamar(form.dataset.api, datos, form.querySelector('[type="submit"]'));
+    confirmar(form).then(function (ok) {
+      if (!ok) return;
+      var datos = {};
+      new FormData(form).forEach(function (v, k) { datos[k] = v; });
+      llamar(form.dataset.api, datos, form.querySelector('[type="submit"]'), form);
+    });
   });
 
   document.addEventListener('click', function (ev) {
     var boton = ev.target.closest('button[data-api]');
     if (!boton) return;
-    if (boton.dataset.confirmar && !window.confirm(boton.dataset.confirmar)) return;
-    llamar(boton.dataset.api, null, boton);
+    confirmar(boton).then(function (ok) {
+      if (ok) llamar(boton.dataset.api, null, boton);
+    });
   });
 })();

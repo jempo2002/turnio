@@ -17,15 +17,7 @@ dialog[open] { animation: sheet-up .3s cubic-bezier(.32,.72,0,1); }
 /* Rojo de validación sólo tras el primer intento de envío, no mientras se escribe */
 form.enviado input:invalid, form.enviado select:invalid { border-color: #dc2626; }
 
-#toast { position: fixed; left: 50%; top: calc(.75rem + env(safe-area-inset-top)); z-index: 100; width: max-content; max-width: calc(100vw - 2rem); padding: .75rem 1.125rem; border-radius: 999px; background: #1B2B36; color: #fff; font-size: .875rem; font-weight: 600; text-align: center; box-shadow: 0 12px 32px -12px rgba(15,23,42,.5); opacity: 0; transform: translate(-50%,-150%); transition: transform .3s cubic-bezier(.32,.72,0,1), opacity .2s; pointer-events: none; }
-#toast.ver { opacity: 1; transform: translate(-50%,0); }
-#toast.error { background: #be123c; }
-
-dialog.confirmar { margin: auto auto 0; width: 100%; max-width: 28rem; border: 0; border-radius: 1.5rem 1.5rem 0 0; padding: 1.5rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom)); background: #fff; color: #1B2B36; }
-dialog.confirmar h2 { font-size: 1.125rem; font-weight: 600; }
-dialog.confirmar p { margin: .375rem 0 1.25rem; font-size: .875rem; line-height: 1.5; color: #64748b; }
-dialog.confirmar button { display: block; width: 100%; min-height: 52px; border-radius: 1rem; font-size: 1rem; font-weight: 600; }
-dialog.confirmar .ok { margin-bottom: .5rem; background: #be123c; color: #fff; }
+/* Avisos, confirmaciones, errores de campo y guías: static/css/avisos.css (CSS plano, lo comparten todas las pantallas). */
 
 /* Pasos numerados de la reserva publica: un paso oculto (una sola sede) no cuenta */
 #form-reserva { counter-reset: paso; }
@@ -42,6 +34,5 @@ button[aria-busy=true]::before { content: ""; display: inline-block; width: 1em;
 
 @media (prefers-reduced-motion: reduce) {
   dialog[open] { animation: none; }
-  #toast { transition: none; }
   .esqueleto { animation: none; }
 }

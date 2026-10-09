@@ -1,5 +1,17 @@
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% for category, message in messages %}
-    <p class="aviso aviso--{{ 'ok' if category == 'success' else 'error' }}" role="alert">{{ message }}</p>
+{# Mensajes del servidor al recargar (login, registro, contraseña, sedes...).
+   Mismo aviso que T.aviso: icono + texto, nunca solo color (docs/ux-avisos.md). #}
+{% with mensajes = get_flashed_messages(with_categories=true) %}
+  {% for categoria, mensaje in mensajes %}
+    {% set tipo = {'success': 'exito', 'info': 'info', 'warning': 'aviso'}.get(categoria, 'error') %}
+    <div class="flash flash--{{ tipo }}" role="{{ 'alert' if tipo == 'error' else 'status' }}">
+      <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        {%- if tipo == 'exito' %}<path d="M20 6.5L9.5 17 4 11.5"></path>
+        {%- elif tipo == 'aviso' %}<path d="M12 3.5 2.5 20h19L12 3.5Z"></path><path d="M12 10v4"></path><path d="M12 17.2v.3"></path>
+        {%- elif tipo == 'info' %}<circle cx="12" cy="12" r="9"></circle><path d="M12 11v5.5"></path><path d="M12 7.8v.3"></path>
+        {%- else %}<circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5"></path><path d="M12 16.2v.3"></path>
+        {%- endif %}
+      </svg>
+      <p>{{ mensaje }}</p>
+    </div>
   {% endfor %}
 {% endwith %}

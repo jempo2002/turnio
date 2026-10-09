@@ -5,4 +5,7 @@
 <meta name="csrf-token" content="{{ csrf_token() }}" />
 {% include "_pwa.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/avisos.css') }}" />
+{# Una sola utilidad de avisos (docs/ux-avisos.md): app.js usa Turnio.aviso y Turnio.confirmar #}
+<script src="{{ url_for('static', filename='js/panel/turnio.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>

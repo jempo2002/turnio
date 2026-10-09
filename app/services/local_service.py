@@ -138,13 +138,13 @@ def _parse_hora(raw, etiqueta: str, opcional: bool = False) -> time | None:
 
 def _parse_dia(item) -> tuple:
     if not isinstance(item, dict):
-        raise ValueError("Horario invalido.")
+        raise ValueError("Revisa el horario: hay un día sin hora de abrir o de cerrar.")
     try:
         dia = int(item.get("dia"))
     except (TypeError, ValueError) as exc:
-        raise ValueError("Dia invalido.") from exc
+        raise ValueError("Revisa el horario: hay un día que no existe.") from exc
     if not 0 <= dia <= 6:
-        raise ValueError("Dia invalido.")
+        raise ValueError("Revisa el horario: hay un día que no existe.")
     nombre = DIAS[dia]
     abierto = parse_bool(item.get("abierto", False))
     abre = _parse_hora(item.get("abre") or ABRE, nombre)
@@ -163,10 +163,10 @@ def _parse_dia(item) -> tuple:
 def guardar_horario(id_tienda: int, id_sede, dias) -> None:
     """Reemplaza los 7 dias de la sede."""
     if not isinstance(dias, list):
-        raise ValueError("Horario invalido.")
+        raise ValueError("Revisa el horario: hay un día sin hora de abrir o de cerrar.")
     filas = [_parse_dia(item) for item in dias]
     if sorted(f[0] for f in filas) != list(range(7)):
-        raise ValueError("El horario debe traer los 7 dias de la semana.")
+        raise ValueError("El horario debe traer los 7 días de la semana.")
     conn = get_db()
     try:
         cur = conn.cursor()

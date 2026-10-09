@@ -67,11 +67,11 @@ def parse_pagos(data: dict, total: int) -> list[tuple[str, int]]:
     if not pagos:
         return [(parse_metodo(data.get("metodo") or "efectivo"), total)]
     if not isinstance(pagos, list) or len(pagos) > len(METODOS):
-        raise ValueError("Pago invalido.")
+        raise ValueError("Revisa el pago: elige efectivo, transferencia o mixto.")
     partes: dict[str, int] = {}
     for p in pagos:
         if not isinstance(p, dict):
-            raise ValueError("Pago invalido.")
+            raise ValueError("Revisa el pago: elige efectivo, transferencia o mixto.")
         metodo = parse_metodo(p.get("metodo"))
         partes[metodo] = partes.get(metodo, 0) + parse_int(
             p.get("monto"), "El monto del pago", min_value=1, max_value=MONTO_MAX)

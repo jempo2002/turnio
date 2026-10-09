@@ -137,11 +137,11 @@
       T.confirmar(
         '¿Eliminar "' + p.nombre + '"?',
         'Sale del inventario y de la venta rápida. Las ventas ya registradas en caja no cambian.',
-        'Eliminar producto'
+        'Eliminar producto', { deshacer: false }
       ).then(function (si) {
         if (!si) return;
         T.ocupado(b, T.api('DELETE', '/api/productos/' + p.id_producto)).then(function () {
-          T.toast('Producto eliminado');
+          T.aviso({ tipo: 'exito', titulo: 'Producto eliminado', detalle: 'Ya no aparece en el inventario ni en la venta rápida.' });
           return cargarProductos();
         }).catch(T.fallo);
       });
@@ -184,11 +184,11 @@
     T.confirmar(
       '¿Eliminar "' + s.nombre + '"?',
       'Deja de aparecer en el link público de reservas. Las citas ya agendadas con este servicio no cambian.',
-      'Eliminar servicio'
+      'Eliminar servicio', { deshacer: false }
     ).then(function (si) {
       if (!si) return;
       T.ocupado(b, T.api('DELETE', '/api/servicios/' + s.id_servicio)).then(function () {
-        T.toast('Servicio eliminado');
+        T.aviso({ tipo: 'exito', titulo: 'Servicio eliminado', detalle: 'Ya no se puede reservar en tu link público.' });
         return cargarServicios();
       }).catch(T.fallo);
     });
@@ -291,8 +291,8 @@
     /* Dos productos con el mismo código harían ambigua la venta por escáner (la API también lo frena) */
     var repetido = codigo && productos.find(function (p) { return p !== editP && p.codigo_barras === codigo; });
     if (repetido) {
-      T.toast('Ese código ya lo tiene "' + repetido.nombre + '"', 'error');
-      $('p-codigo').focus();
+      T.marcarCampo($('p-codigo'), 'Ese código ya lo tiene "' + repetido.nombre + '". Escanea otro o déjalo vacío.');
+      T.aviso({ tipo: 'error', titulo: 'Código repetido', detalle: 'Cada producto necesita su propio código para venderlo con el escáner.' });
       return;
     }
 
@@ -322,10 +322,10 @@
 
     T.ocupado($('btn-guardar-producto'), guardar).then(function () {
       sheetP.close();
-      T.toast(p ? '✓ Producto actualizado' : '✓ Producto guardado');
+      T.aviso({ tipo: 'exito', titulo: p ? 'Producto actualizado' : 'Producto guardado', detalle: p ? null : 'Ya lo puedes vender desde Citas con el escáner o la lista.' });
       return cargarProductos();
     }).catch(function (err) {
-      T.fallo(err);
+      T.fallo(err, formP);
       if (p) cargarProductos();   /* pudo quedar guardado a medias (datos sí, conteo no) */
     });
   });
@@ -346,12 +346,19 @@
       : T.api('POST', '/api/servicios', campos)
     ).then(function () {
       sheetS.close();
-      T.toast(s ? '✓ Servicio actualizado' : '✓ Servicio guardado');
+      T.aviso({ tipo: 'exito', titulo: s ? 'Servicio actualizado' : 'Servicio guardado', detalle: s ? null : 'Ya aparece en la agenda y en tu link de reservas.' });
       return cargarServicios();
-    }).catch(T.fallo);
+    }).catch(function (err) { T.fallo(err, formS); });
   });
 
   pintarTabs();
+  T.guia('inventario', $('contenido'), ADMIN ? [
+    { titulo: 'Productos y servicios en un lugar', texto: 'En «Productos» llevas lo que vendes (ceras, shampoo) y en «Servicios», lo que se reserva, con su duración y precio.' },
+    { titulo: 'Agrega con el botón de arriba', texto: 'Toca «Producto» o «Servicio». Si pones el código de barras, luego vendes escaneando con la cámara.' },
+    { titulo: 'Te avisamos si algo se acaba', texto: 'Ponle a cada producto un mínimo y lo marcamos cuando quede poco.' }
+  ] : [
+    { titulo: 'Lo que hay para vender', texto: 'Aquí ves los productos con sus unidades y los servicios con su precio. Los cambios los hace el administrador.' }
+  ]);
   cargarProductos();
   cargarServicios();
 

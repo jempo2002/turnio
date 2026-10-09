@@ -69,4 +69,24 @@ assert.deepStrictEqual(panel.turnosLibres(Object.assign({}, lunes, { abierto: fa
 assert.deepStrictEqual(panel.turnosLibres(undefined, []), []);
 assert.deepStrictEqual(panel.turnosLibres(lunes, [{ hora: '00:00', fin: '24:00' }]), [], 'bloqueo de todo el día');
 
-console.log('OK — fórmulas de dinero y agenda del panel');
+/* ── Avisos (docs/ux-avisos.md): todo error dice qué pasó y qué hacer ── */
+const explicar = panel.explicar;
+const sinRed = explicar(0);
+assert.strictEqual(sinRed.titulo, 'Sin conexión');
+assert.ok(/No se guardó nada/.test(sinRed.detalle), 'sin red: dice que no se perdió nada a medias');
+assert.strictEqual(explicar(400, 'Escribe el precio.').detalle, 'Escribe el precio.', 'el mensaje del servidor es el qué hacer');
+assert.ok(explicar(400, '').detalle.length > 10, 'sin mensaje del servidor igual dice qué hacer');
+assert.strictEqual(explicar(500, 'Traceback secreto').detalle.indexOf('Traceback'), -1, 'un 500 no muestra nada interno');
+const tope = explicar(403, 'Tu plan permite 2 sedes.', { code: 'limite_plan', accion_url: '/ajustes#plan', accion_texto: 'Subir de plan' });
+assert.strictEqual(tope.tipo, 'aviso', 'el tope del plan no es un error');
+assert.deepStrictEqual(tope.accion, { texto: 'Subir de plan', href: '/ajustes#plan' });
+assert.strictEqual(explicar(404).accion.recargar, true, 'lo que ya no existe ofrece recargar');
+assert.strictEqual(explicar(429, 'Ya tienes 3 citas por venir.').detalle, 'Ya tienes 3 citas por venir.');
+[0, 400, 401, 402, 403, 404, 409, 429, 500, 503].forEach(function (st) {
+  const a = explicar(st, '');
+  assert.ok(a.titulo && a.detalle, 'status ' + st + ': título y qué hacer');
+  assert.ok(['exito', 'info', 'aviso', 'error'].indexOf(a.tipo) >= 0);
+  assert.ok(!/\b(error|inv[aá]lido|status|request)\b/i.test(a.titulo + ' ' + a.detalle), 'status ' + st + ': sin jerga');
+});
+
+console.log('OK — fórmulas de dinero y agenda del panel, y avisos');

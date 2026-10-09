@@ -151,25 +151,26 @@ def create_app() -> Flask:
     @app.errorhandler(429)
     def rate_limit_exceeded(_err):
         log_seguridad("rate_limit")
+        msg = "Demasiados intentos seguidos. Espera un minuto y vuelve a intentarlo."
+        if request.endpoint == "publico.api_reservar":
+            msg = ("Demasiados intentos de reserva. Espera un rato; si necesitas otra cita hoy, "
+                   "escríbele al negocio por WhatsApp.")
         if not _is_api_request():
             # Formulario de login o recuperacion: volver a la pagina con aviso.
-            flash("Demasiados intentos. Espera un momento e intenta de nuevo.", "error")
+            flash(msg, "warning")
             return redirect(request.path)
-        return (
-            jsonify({"ok": False, "msg": "Demasiados intentos. Espera un momento e intenta de nuevo."}),
-            429,
-        )
+        return jsonify({"ok": False, "msg": msg}), 429
 
     @app.errorhandler(413)
     def archivo_muy_grande(_err):
-        return jsonify({"ok": False, "msg": "El archivo es demasiado grande."}), 413
+        return jsonify({"ok": False, "msg": "La foto pesa demasiado. Usa una de menos de 3 MB."}), 413
 
     @app.errorhandler(500)
     def error_interno(_err):
         # Flask ya dejo la traza en el log; al usuario, nada interno.
         if _is_api_request():
-            return jsonify({"ok": False, "msg": "Error interno del servidor."}), 500
-        return "Error interno del servidor. Intenta de nuevo.", 500
+            return jsonify({"ok": False, "msg": "Algo falló de nuestro lado. No es tu culpa: intenta de nuevo en un momento."}), 500
+        return "Algo falló de nuestro lado. No es tu culpa: recarga la página en un momento.", 500
 
     @app.after_request
     def _log_ids_ajenos(response):

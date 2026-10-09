@@ -23,15 +23,15 @@ def is_valid_email(email: str) -> bool:
 def first_password_policy_error(password: str) -> str | None:
     raw = str(password or "")
     if not raw:
-        return "La contrasena es requerida."
+        return "Escribe una contraseña."
     if len(raw) < 8:
-        return "La contrasena debe tener al menos 8 caracteres."
+        return "La contraseña necesita al menos 8 caracteres."
     if not _PWD_UPPER_RE.search(raw):
-        return "La contrasena debe incluir al menos una letra mayuscula."
+        return "A la contraseña le falta una letra mayúscula (A-Z)."
     if not _PWD_LOWER_RE.search(raw):
-        return "La contrasena debe incluir al menos una letra minuscula."
+        return "A la contraseña le falta una letra minúscula (a-z)."
     if not _PWD_NUMBER_RE.search(raw):
-        return "La contrasena debe incluir al menos un numero."
+        return "A la contraseña le falta un número (0-9)."
     return None
 
 

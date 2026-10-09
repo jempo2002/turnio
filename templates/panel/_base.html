@@ -8,6 +8,7 @@
 <meta name="robots" content="noindex">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/avisos.css') }}">
 {% include "_pwa.html" %}
 <script src="{{ url_for('static', filename='js/panel/turnio.js') }}" defer></script>
 {% block scripts %}{% endblock %}

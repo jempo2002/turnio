@@ -34,8 +34,8 @@ LOGIN_CUENTA_RATE_LIMIT = "10 per 15 minutes"
 # Hash valido para comparar cuando el correo no existe: iguala el tiempo de
 # respuesta y no delata que cuentas existen.
 _HASH_SENUELO = generate_password_hash("turnio-senuelo")
-_CREDENCIALES_INVALIDAS = "Correo o contrasena incorrectos."
-_SEDE_INACTIVA = "Tu sede no esta activa. Pide al administrador que te asigne otra."
+_CREDENCIALES_INVALIDAS = "Correo o contraseña incorrectos. Revisa que estén bien escritos o toca «¿Olvidaste tu contraseña?»."
+_SEDE_INACTIVA = "Tu sede ya no está activa. Pídele al administrador que te asigne otra."
 _USUARIO_LOGIN_SQL = (
     "SELECT id_usuario, id_tienda, id_sede, nombre_completo, clave_hash, rol, estado_activo "
     "FROM usuarios WHERE correo = %s LIMIT 1"
@@ -77,11 +77,11 @@ def login():
     contrasena = str(data.get("contrasena", ""))
 
     if not correo or not contrasena:
-        return _error_login("Correo y contrasena son requeridos.", 400)
+        return _error_login("Escribe tu correo y tu contraseña para entrar.", 400)
     if len(correo) > 150 or not is_valid_email(correo):
-        return _error_login("Correo invalido.", 400)
+        return _error_login("Revisa el correo: debe verse así, nombre@gmail.com.", 400)
     if len(contrasena) > 128:
-        return _error_login("La contrasena supera el maximo permitido.", 400)
+        return _error_login("La contraseña es muy larga: usa máximo 128 caracteres.", 400)
 
     conn = get_db()
     try:
@@ -166,7 +166,7 @@ def registro():
     if not str(data.get("telefono", "")).strip():
         return _error_registro("El WhatsApp del negocio es requerido.", 400, data)
     if str(data.get("admin_password", "")) != str(data.get("confirm_password", "")):
-        return _error_registro("Las contrasenas no coinciden.", 400, data)
+        return _error_registro("Las contraseñas no coinciden. Escríbela igual en los dos campos.", 400, data)
     try:
         id_tienda = master_service.crear_negocio(data)
     except (ValueError, master_service.MasterError) as exc:
@@ -298,7 +298,7 @@ def olvide_password():
         correo = str(request.form.get("correo", "")).strip().lower()
         if correo:
             if len(correo) > 150 or not is_valid_email(correo):
-                flash("Debes ingresar un correo valido.", "error")
+                flash("Escribe un correo válido, por ejemplo nombre@gmail.com.", "error")
                 return redirect(url_for("auth.olvide_password"))
             conn = get_db()
             try:
@@ -317,7 +317,7 @@ def olvide_password():
                 # En segundo plano: los fallos de SMTP quedan en el log.
                 send_recovery_email(correo, enlace)
 
-        flash("Si el correo existe, recibiras un enlace de recuperacion.", "success")
+        flash("Si ese correo tiene cuenta, te llegó un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.", "success")
         return redirect(url_for("auth.olvide_password"))
 
     return render_template("auth/olvide_password.html")
@@ -329,7 +329,7 @@ def reset_password(token):
     try:
         correo, huella = decode_reset_token(current_app.secret_key, token)
     except (SignatureExpired, BadSignature):
-        flash("Enlace inválido o expirado", "error")
+        flash("Ese enlace ya venció o ya se usó. Pide uno nuevo en «¿Olvidaste tu contraseña?».", "error")
         return redirect(url_for("auth.login"))
 
     conn = get_db()
@@ -349,7 +349,7 @@ def reset_password(token):
         or not user.get("estado_activo")
         or not hmac.compare_digest(huella, huella_clave(user["clave_hash"]))
     ):
-        flash("Enlace inválido o expirado", "error")
+        flash("Ese enlace ya venció o ya se usó. Pide uno nuevo en «¿Olvidaste tu contraseña?».", "error")
         return redirect(url_for("auth.login"))
 
     if request.method == "POST":
@@ -357,10 +357,10 @@ def reset_password(token):
         confirm = str(request.form.get("confirm_password", ""))
 
         if password != confirm:
-            flash("Las contrasenas no coinciden.", "error")
+            flash("Las contraseñas no coinciden. Escríbela igual en los dos campos.", "error")
             return redirect(url_for("auth.reset_password", token=token))
         if len(password) > 128:
-            flash("La contrasena supera el maximo permitido.", "error")
+            flash("La contraseña es muy larga: usa máximo 128 caracteres.", "error")
             return redirect(url_for("auth.reset_password", token=token))
         pwd_error = first_password_policy_error(password)
         if pwd_error:
@@ -378,7 +378,7 @@ def reset_password(token):
         finally:
             conn.close()
 
-        flash("Tu contrasena fue actualizada correctamente.", "success")
+        flash("Listo, cambiaste tu contraseña. Ya puedes entrar con la nueva.", "success")
         return redirect(url_for("auth.login"))
 
     return render_template("auth/reset_password.html", token=token)

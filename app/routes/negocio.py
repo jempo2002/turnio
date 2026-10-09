@@ -115,7 +115,7 @@ def api_usuarios_crear():
     if not data.get("password"):
         cuerpo.update(
             invitacion=_invitacion(id_usuario),
-            msg="Usuario creado. Mándale este enlace para que elija su contraseña:",
+            msg="Usuario creado. Mándale este enlace para que elija su contraseña; sirve por 7 días.",
         )
     return jsonify(cuerpo), 201
 
@@ -129,7 +129,7 @@ def api_usuarios_invitacion(id_usuario):
         invitacion = _invitacion(id_usuario)
     except _ERRORES as exc:
         return _error(exc)
-    return jsonify({"ok": True, "invitacion": invitacion, "msg": "Mándale este enlace para que elija su contraseña:"})
+    return jsonify({"ok": True, "invitacion": invitacion, "msg": "Enlace nuevo listo. Mándaselo para que elija su contraseña; sirve por 7 días."})
 
 
 @negocio.put("/api/usuarios/<int:id_usuario>")

@@ -20,9 +20,10 @@ La auditoría y las tareas (T1 a T15) están en `docs/auditoria-y-workflow.md`.
 
 ## Pruebas
 - Backend: `pytest` (necesita MariaDB/MySQL; ver README)
-- Fórmulas del panel: `node test-calculo.js`
+- Fórmulas del panel y avisos: `node test-calculo.js`
 
 ## Panel
 - Pantallas en `templates/panel/` y su JS en `static/js/panel/` (sin JS ni estilos inline: la CSP los bloquea). Al cambiar clases de Tailwind: `cd frontend && npm run css` y subir `static/css/panel.css` y `static/css/landing.css`.
 - Textos que dependen del tipo de negocio (barbero, estilista, manicurista...): `app/services/vertical_service.py`, en plantillas como `negocio.voc` y en JS como `T.voc`.
+- Avisos, errores, confirmaciones y guías: siguen `docs/ux-avisos.md` y usan la utilidad compartida (`Turnio.aviso`, `T.fallo`, `T.confirmar`, `T.guia` en `static/js/panel/turnio.js`, estilos en `static/css/avisos.css`). Nada de `alert()`, `confirm()` ni mensajes como "inválido" o "error 500".
 - Iconos de la app: `python scripts/generar_iconos.py` (necesita Pillow, que no va en requirements).
