@@ -49,4 +49,27 @@ assert.strictEqual(pagoBarbero(18000, -500), 0, 'nunca negativo');
 assert.strictEqual(pagoBarbero(18000, NaN), 0);
 assert.strictEqual(pagoBarbero(18000, undefined), 0, 'servicio sin reparto configurado: todo al local');
 
-console.log('OK — 27 comprobaciones de cálculo');
+/* ── Agenda por profesional: a la misma hora, cada uno se reserva por separado ── */
+const { ocupado, disponibilidad, reservar, horasAgenda } = require('./theme.js');
+const turno = (barbero, estado) => ({ id: barbero + '-15:00', hora: '15:00', barbero, estado, cliente: '', tel: '', servicio: '', precio: 0 });
+const citas = [turno('Carlos', 'disponible'), turno('Junior', 'reservada')];
+const equipo = [{ nombre: 'Carlos', correo: 'carlos@x.co' }, { nombre: 'Junior', correo: 'junior@x.co' }];
+const ana = { cliente: 'Ana', tel: '573001112233', servicio: 'Fade', precio: 18000 };
+
+assert.deepStrictEqual(disponibilidad(citas, equipo, '15:00'),
+  [{ nombre: 'Carlos', disponible: true }, { nombre: 'Junior', disponible: false }],
+  'la vista pública solo lleva nombre y disponibilidad, sin correo');
+assert.strictEqual(reservar(citas, '15:00', 'Junior', ana), null, 'no se reserva con un profesional ocupado');
+assert.strictEqual(reservar(citas, '23:00', 'Carlos', ana), null, 'hora fuera de la agenda');
+assert.strictEqual(reservar(citas, '15:00', 'Carlos', ana), citas[0], 'ocupa el turno libre de Carlos');
+assert.strictEqual(reservar(citas, '15:00', 'Carlos', ana), null, 'dos clientes no caben en la misma franja');
+
+/* Al completar la cita, el profesional vuelve a estar disponible en esa franja */
+citas[1].estado = 'completada';
+assert.strictEqual(ocupado(citas, '15:00', 'Junior'), false);
+const nueva = reservar(citas, '15:00', 'Junior', ana);
+assert.ok(nueva && nueva !== citas[1] && nueva.id !== citas[1].id, 'el turno completado no se pisa: se crea otro');
+assert.strictEqual(citas.indexOf(nueva), 2, 'queda justo después del completado');
+assert.deepStrictEqual(horasAgenda(citas), ['15:00']);
+
+console.log('OK — 36 comprobaciones de cálculo');

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  {% include "_head.html" %}
+  <title>{% block title %}{% endblock %} · Turnio</title>
+</head>
+<body class="auth">
+  <main class="auth__card">
+    <p class="marca">Turn<span>io</span></p>
+    {% include "_flashes.html" %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -346,6 +346,9 @@
 
   pintar();
   pintarReparto();
+
+  /* Otra pestaña cobró o registró algo: la caja se actualiza sola */
+  document.addEventListener('turnio:datos', pintar);
 })();
 </script>
 
