@@ -3,7 +3,7 @@ sin cuenta.
 
 Solo sale lo que el cliente necesita para reservar: nombre, logo y WhatsApp
 del negocio, sedes con su direccion y horario, servicios con duracion y
-precio, y quienes reciben reservas en linea (`reserva_online`) con su foto.
+precio, y quienes reciben reservas en linea (`reserva_online`).
 Nunca correos, roles, pagos al profesional ni citas de otros clientes: de la
 agenda solo salen horas libres.
 
@@ -99,7 +99,7 @@ def _catalogo_sede(id_tienda: int, id_sede: int) -> tuple[list[dict], list[dict]
             })
         # Columnas explicitas: ni rol, ni pago, ni sede fija.
         profesionales.append({
-            "id_profesional": p["id_usuario"], "nombre": p["nombre_completo"], "foto_url": p["foto_url"],
+            "id_profesional": p["id_usuario"], "nombre": p["nombre_completo"],
             "servicios": [s["id_servicio"] for s in p["servicios"]],
         })
     return sorted(servicios.values(), key=lambda s: s["nombre"].lower()), profesionales

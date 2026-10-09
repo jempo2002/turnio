@@ -49,9 +49,7 @@
   }
 
   function avatar(p, libre) {
-    return p.foto_url
-      ? T.h`<img src="${p.foto_url}" alt="" class="h-10 w-10 shrink-0 rounded-full object-cover${libre ? '' : ' opacity-50 grayscale'}">`
-      : T.h`<span class="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${libre ? 'bg-brand-dark' : 'bg-slate-400'}" aria-hidden="true">${T.iniciales(p.nombre)}</span>`;
+    return T.h`<span class="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${libre ? 'bg-brand-dark' : 'bg-slate-400'}" aria-hidden="true">${T.iniciales(p.nombre)}</span>`;
   }
 
   function aviso(titulo, detalle, whatsapp) {

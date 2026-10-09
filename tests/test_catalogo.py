@@ -131,17 +131,17 @@ def test_un_profesional_no_ve_el_pago_propio_de_otro(client, crear):
     assert pagos == {"carlos": 13000, "junior": 13000}
 
 
-def test_foto_y_logo(client, crear):
+def test_logo_y_sin_fotos_de_profesionales(client, crear):
     id_tienda, (sede,), id_admin = _admin(client, crear)
-    r = client.post(f"/api/usuarios/{id_admin}/foto", data={"imagen": (io.BytesIO(PNG), "yo.png")})
-    assert r.status_code == 200
-    url = r.get_json()["foto_url"]
+    r = client.post("/api/negocio/logo", data={"imagen": (io.BytesIO(PNG), "logo.png")})
+    url = r.get_json()["logo_url"]
+    assert url == client.get("/api/negocio").get_json()["negocio"]["logo_url"]
     img = client.get(url)
     assert img.status_code == 200 and img.mimetype == "image/png" and img.data == PNG
     assert "immutable" in img.headers["Cache-Control"]
 
-    # Cambiarla borra la anterior.
-    r = client.post(f"/api/usuarios/{id_admin}/foto", data={"imagen": (io.BytesIO(PNG), "yo.png")})
+    # Cambiarlo borra el anterior.
+    client.post("/api/negocio/logo", data={"imagen": (io.BytesIO(PNG), "logo.png")})
     assert client.get(url).status_code == 404
     assert crear.fila("SELECT COUNT(*) AS n FROM imagenes")["n"] == 1
 
@@ -152,17 +152,20 @@ def test_foto_y_logo(client, crear):
     grande = b"\xff\xd8\xff" + b"\x00" * (2 * 1024 * 1024)
     assert client.post("/api/negocio/logo", data={"imagen": (io.BytesIO(grande), "l.jpg")}).status_code == 400
 
-    r = client.post("/api/negocio/logo", data={"imagen": (io.BytesIO(PNG), "logo.png")})
-    assert r.get_json()["logo_url"] == client.get("/api/negocio").get_json()["negocio"]["logo_url"]
     assert client.delete("/api/negocio/logo").status_code == 200
     assert client.get("/api/negocio").get_json()["negocio"]["logo_url"] is None
 
-    # Un Profesional cambia su foto, no la de otro.
+    # Fotos de profesionales: ya no hay (jempo, 2026-10-09). Una que se subio
+    # antes deja de servirse.
+    assert client.post(f"/api/usuarios/{id_admin}/foto", data={"imagen": (io.BytesIO(PNG), "yo.png")}).status_code \
+        in (404, 405)
+    crear.fila("INSERT INTO imagenes (id_tienda, tipo, datos) VALUES (%s, 'image/png', %s)", (id_tienda, PNG))
+    vieja = crear.fila("SELECT MAX(id_imagen) AS id FROM imagenes")["id"]
     carlos = crear.usuario("carlos@turnio.co", "Profesional", id_tienda, sede)
-    client.post("/logout")
-    entrar(client, "carlos@turnio.co")
-    assert client.post(f"/api/usuarios/{carlos}/foto", data={"imagen": (io.BytesIO(PNG), "c.png")}).status_code == 200
-    assert client.post(f"/api/usuarios/{id_admin}/foto", data={"imagen": (io.BytesIO(PNG), "c.png")}).status_code == 403
+    crear.fila("UPDATE usuarios SET id_foto = %s WHERE id_usuario = %s", (vieja, carlos))
+    assert client.get(f"/img/{vieja}").status_code == 404
+    (profesional,) = client.get("/api/profesionales").get_json()["profesionales"]
+    assert "foto_url" not in profesional
 
 
 def test_datos_del_negocio_y_enlace(client, crear):

@@ -1,8 +1,8 @@
 """API de catalogo y configuracion (T4): servicios, profesionales, datos del
-local, horario de cada sede, y las imagenes (logo y fotos).
+local, horario de cada sede y el logo.
 
 Leer es para todo el equipo (la agenda y la caja necesitan el catalogo);
-cambiar es del Admin, salvo la foto propia, que cada quien puede cambiar.
+cambiar es del Admin.
 Todo filtra por el id_tienda de la sesion, nunca por uno que mande el cliente.
 """
 from __future__ import annotations
@@ -109,36 +109,6 @@ def api_profesionales_actualizar(id_usuario):
     return jsonify({"ok": True, "msg": "Profesional actualizado."})
 
 
-def _puede_cambiar_foto(id_usuario: int) -> bool:
-    return session.get("rol") == "Admin" or session.get("id_usuario") == id_usuario
-
-
-@catalogo.post("/api/usuarios/<int:id_usuario>/foto")
-@login_required
-@roles_required(*ROLES_NEGOCIO)
-def api_foto_subir(id_usuario):
-    if not _puede_cambiar_foto(id_usuario):
-        return jsonify({"ok": False, "msg": "Tu usuario no tiene permiso para esto."}), 403
-    try:
-        foto_url = profesional_service.cambiar_foto(session["id_tienda"], id_usuario, _archivo())
-    except _ERRORES as exc:
-        return _error(exc)
-    return jsonify({"ok": True, "foto_url": foto_url, "msg": "Foto actualizada."})
-
-
-@catalogo.delete("/api/usuarios/<int:id_usuario>/foto")
-@login_required
-@roles_required(*ROLES_NEGOCIO)
-def api_foto_quitar(id_usuario):
-    if not _puede_cambiar_foto(id_usuario):
-        return jsonify({"ok": False, "msg": "Tu usuario no tiene permiso para esto."}), 403
-    try:
-        profesional_service.cambiar_foto(session["id_tienda"], id_usuario, None)
-    except _ERRORES as exc:
-        return _error(exc)
-    return jsonify({"ok": True, "msg": "Foto eliminada."})
-
-
 # ── Datos del local ─────────────────────────────────────────────────
 
 @catalogo.get("/api/negocio")
@@ -210,7 +180,7 @@ def api_horario_guardar():
 
 @catalogo.get("/img/<int:id_imagen>")
 def imagen(id_imagen):
-    """Logo y fotos: publicas porque salen en la pagina de reservas. Cada
+    """Logo: publico porque sale en la pagina de reservas. Cada
     cambio crea un id nuevo, asi que se cachean un ano."""
     fila = imagen_service.leer(id_imagen)
     if not fila:

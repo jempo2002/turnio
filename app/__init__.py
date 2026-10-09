@@ -179,7 +179,7 @@ def create_app() -> Flask:
 
     @app.errorhandler(413)
     def archivo_muy_grande(_err):
-        return jsonify({"ok": False, "msg": "La foto pesa demasiado. Usa una de menos de 3 MB."}), 413
+        return jsonify({"ok": False, "msg": "La imagen pesa demasiado. Usa una de menos de 3 MB."}), 413
 
     @app.errorhandler(500)
     def error_interno(_err):

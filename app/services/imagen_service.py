@@ -1,4 +1,4 @@
-"""Logo del negocio y fotos de los profesionales, guardados en la base.
+"""Logo del negocio, guardado en la base.
 
 Solo PNG, JPEG y WebP, reconocidos por sus primeros bytes (no por el nombre
 ni por lo que diga el navegador): asi nunca se sirve un SVG o un HTML
@@ -51,7 +51,13 @@ def leer(id_imagen: int) -> dict | None:
     conn = get_db()
     try:
         cur = conn.cursor(dictionary=True)
-        cur.execute("SELECT tipo, datos FROM imagenes WHERE id_imagen = %s", (id_imagen,))
+        # Solo logos: las fotos de profesionales se quitaron (jempo, 2026-10-09)
+        # y las que ya se habian subido dejan de servirse.
+        cur.execute(
+            "SELECT i.tipo, i.datos FROM imagenes i JOIN tiendas t ON t.id_logo = i.id_imagen "
+            "WHERE i.id_imagen = %s",
+            (id_imagen,),
+        )
         return cur.fetchone()
     finally:
         conn.close()

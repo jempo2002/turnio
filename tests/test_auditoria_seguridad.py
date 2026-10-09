@@ -114,7 +114,6 @@ def test_ningun_id_de_otro_negocio_sirve(client, crear):
         ("put", f"/api/usuarios/{victima['carlos']}", {"nombre": "Intruso", "rol": "Admin"}),
         ("delete", f"/api/usuarios/{victima['carlos']}", None),
         ("post", f"/api/usuarios/{victima['carlos']}/invitacion", {}),
-        ("delete", f"/api/usuarios/{victima['carlos']}/foto", None),
         ("put", f"/api/sedes/{b1}", {"nombre": "Mía"}),
         ("delete", f"/api/sedes/{b1}", None),
         ("put", "/api/horario", {"id_sede": b0, "dias": _semana()}),

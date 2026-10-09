@@ -1,4 +1,4 @@
-"""Quienes atienden en el negocio (T4): foto, si reciben reservas en linea,
+"""Quienes atienden en el negocio (T4): si reciben reservas en linea,
 que servicios hacen y cuanto ganan por cada uno.
 
 Un profesional es cualquier usuario activo con `atiende = 1`: todo
@@ -9,7 +9,7 @@ propio (NULL = el del servicio).
 """
 from __future__ import annotations
 
-from app.services import imagen_service, plan_service
+from app.services import plan_service
 from app.services.errores import ErrorServicio, NoEncontrado
 from app.utils.validation import parse_bool, parse_int
 from database import get_db
@@ -55,7 +55,7 @@ def listar_profesionales(id_tienda: int, id_sede: int | None = None) -> list[dic
     try:
         cur = conn.cursor(dictionary=True)
         sql = (
-            "SELECT id_usuario, nombre_completo, rol, id_sede, reserva_online, atiende_todos, id_foto "
+            "SELECT id_usuario, nombre_completo, rol, id_sede, reserva_online, atiende_todos "
             "FROM usuarios WHERE id_tienda = %s AND estado_activo = 1 AND atiende = 1 AND rol <> 'Master'"
         )
         params: list = [id_tienda]
@@ -70,13 +70,12 @@ def listar_profesionales(id_tienda: int, id_sede: int | None = None) -> list[dic
     for p in profesionales:
         p["reserva_online"] = bool(p["reserva_online"])
         p["atiende_todos"] = bool(p["atiende_todos"])
-        p["foto_url"] = imagen_service.url(p.pop("id_foto"))
     return profesionales
 
 
 def _usuario_de_tienda(cur, id_tienda: int, id_usuario: int) -> dict:
     cur.execute(
-        "SELECT id_usuario, rol, atiende, id_foto FROM usuarios "
+        "SELECT id_usuario, rol, atiende FROM usuarios "
         "WHERE id_usuario = %s AND id_tienda = %s AND estado_activo = 1 AND rol <> 'Master' FOR UPDATE",
         (id_usuario, id_tienda),
     )
@@ -146,26 +145,6 @@ def actualizar_profesional(id_tienda: int, id_usuario: int, data: dict) -> None:
             cur.execute(f"UPDATE usuarios SET {asignaciones} WHERE id_usuario = %s AND id_tienda = %s",
                         [*cambios.values(), id_usuario, id_tienda])
         conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
-
-
-def cambiar_foto(id_tienda: int, id_usuario: int, datos: bytes | None) -> str | None:
-    """Pone la foto (datos) o la quita (None). Devuelve su URL."""
-    tipo = imagen_service.validar(datos) if datos is not None else None
-    conn = get_db()
-    try:
-        cur = conn.cursor(dictionary=True)
-        usuario = _usuario_de_tienda(cur, id_tienda, id_usuario)
-        id_foto = imagen_service.guardar(cur, id_tienda, datos, tipo) if datos is not None else None
-        cur.execute("UPDATE usuarios SET id_foto = %s WHERE id_usuario = %s AND id_tienda = %s",
-                    (id_foto, id_usuario, id_tienda))
-        imagen_service.borrar(cur, id_tienda, usuario["id_foto"])
-        conn.commit()
-        return imagen_service.url(id_foto)
     except Exception:
         conn.rollback()
         raise
