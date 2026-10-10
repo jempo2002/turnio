@@ -44,6 +44,21 @@
     return String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
   }
 
+  /* Hora para mostrar, como se lee en Colombia: '14:30' → '2:30 PM',
+     '12:00' → '12:00 PM' (mediodía), '00:15' → '12:15 AM'. La API sigue en 24 h. */
+  function hora12(hhmm) {
+    var p = String(hhmm || '').split(':'), h = Number(p[0]);
+    if (p.length < 2 || isNaN(h)) return String(hhmm || '');
+    return (h % 12 || 12) + ':' + p[1].slice(0, 2) + ' ' + (h < 12 ? 'AM' : 'PM');
+  }
+
+  /* Parte del día de una hora 'HH:MM', para agrupar los horarios al reservar:
+     mañana antes de las 12, tarde hasta las 6 p. m., noche desde las 6. */
+  function franja(hhmm) {
+    var h = Number(String(hhmm).split(':')[0]);
+    return h < 12 ? 'manana' : h < 18 ? 'tarde' : 'noche';
+  }
+
   /* Turnos libres de una agenda para pintar en la línea de tiempo: una tarjeta
      por hora en punto, desde la apertura hasta la última hora que cabe antes del
      cierre. Una hora está libre si nada vigente la toca: citas reservadas,
@@ -92,7 +107,8 @@
   var api = {
     explicar: explicar,
     pesos: pesos, precioVenta: precioVenta, pctGanancia: pctGanancia,
-    pagoProfesional: pagoProfesional, turnosLibres: turnosLibres, minutos: minutos, hhmm: hhmm
+    pagoProfesional: pagoProfesional, turnosLibres: turnosLibres, minutos: minutos, hhmm: hhmm,
+    hora12: hora12, franja: franja
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

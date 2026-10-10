@@ -89,4 +89,18 @@ assert.strictEqual(explicar(429, 'Ya tienes 3 citas por venir.').detalle, 'Ya ti
   assert.ok(!/\b(error|inv[aá]lido|status|request)\b/i.test(a.titulo + ' ' + a.detalle), 'status ' + st + ': sin jerga');
 });
 
-console.log('OK — fórmulas de dinero y agenda del panel, y avisos');
+/* ── Hora en 12 h con AM/PM (solo para mostrar; la API sigue en 24 h) ── */
+const { hora12, franja } = panel;
+assert.strictEqual(hora12('09:00'), '9:00 AM');
+assert.strictEqual(hora12('14:30'), '2:30 PM');
+assert.strictEqual(hora12('12:00'), '12:00 PM', 'mediodía es PM');
+assert.strictEqual(hora12('00:15'), '12:15 AM', 'medianoche es 12 AM');
+assert.strictEqual(hora12('23:45'), '11:45 PM');
+assert.strictEqual(hora12('08:30:00'), '8:30 AM', 'ignora los segundos');
+assert.strictEqual(hora12(''), '', 'sin hora no inventa una');
+assert.strictEqual(franja('11:45'), 'manana');
+assert.strictEqual(franja('12:00'), 'tarde');
+assert.strictEqual(franja('17:59'), 'tarde');
+assert.strictEqual(franja('18:00'), 'noche');
+
+console.log('OK — fórmulas de dinero y agenda del panel, avisos y horas en 12 h');

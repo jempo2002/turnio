@@ -31,7 +31,7 @@ from app.services.agenda_service import (
     _validar_horario,
 )
 from app.services.errores import Conflicto, ErrorServicio, NoEncontrado
-from app.utils.helpers import ahora_local, enlace_whatsapp, hoy_local, only_digits
+from app.utils.helpers import ahora_local, enlace_whatsapp, hora_12, hoy_local, only_digits
 from app.utils.validation import parse_int, sanitize_text
 from database import get_db
 
@@ -275,7 +275,7 @@ def _confirmacion(t: dict, sedes: list[dict], id_sede: int, inicio: datetime, cl
     donde = plano(t["nombre_negocio"]) + (f" ({plano(sede['nombre'])})" if len(sedes) > 1 else "")
     texto = (
         f"Hola, soy {plano(cliente)}. Reservé {plano(hecha['servicio'])} con {plano(hecha['profesional'])} "
-        f"el {fecha} a las {inicio:%H:%M} en {donde}. ¡Nos vemos!"
+        f"el {fecha} a las {hora_12(inicio)} en {donde}. ¡Nos vemos!"
     )
     return {
         "id_cita": hecha["id_cita"],

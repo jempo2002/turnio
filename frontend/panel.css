@@ -19,9 +19,17 @@ form.enviado input:invalid, form.enviado select:invalid { border-color: #dc2626;
 
 /* Avisos, confirmaciones, errores de campo y guías: static/css/avisos.css (CSS plano, lo comparten todas las pantallas). */
 
-/* Pasos numerados de la reserva publica: un paso oculto (una sola sede) no cuenta */
+/* Pasos numerados de la reserva publica: un paso oculto (una sola sede) no cuenta.
+   Circulo azul con el numero; gris mientras el paso espera al anterior; verde con
+   ✓ cuando ya esta listo (reservar.js pone la clase `listo`). */
 #form-reserva { counter-reset: paso; }
-#form-reserva .paso::before { counter-increment: paso; content: counter(paso) ". "; }
+#form-reserva fieldset { scroll-margin-top: 1rem; }
+#form-reserva .paso { display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; margin-right: .625rem; flex-shrink: 0; border-radius: 9999px; background: #17748E; color: #fff; font-size: .8125rem; font-weight: 700; transition: background-color .2s; }
+#form-reserva .paso::before { counter-increment: paso; content: counter(paso); }
+#form-reserva fieldset:disabled .paso { background: #CBD5E1; }
+#form-reserva fieldset:disabled > legend { color: rgba(27,43,54,.7); }
+#form-reserva fieldset.listo .paso { background: #059669; }
+#form-reserva fieldset.listo .paso::before { content: "✓"; }
 
 /* Spinner: basta con poner aria-busy="true" en el botón */
 button[aria-busy=true] { pointer-events: none; opacity: .85; }
