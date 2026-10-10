@@ -23,7 +23,7 @@ from datetime import date, datetime, time, timedelta
 from mysql.connector import IntegrityError
 
 from app.services.errores import Conflicto, ErrorServicio, NoEncontrado
-from app.utils.helpers import ZONA_NEGOCIO, ahora_local, hoy_local, normalize_phone
+from app.utils.helpers import ZONA_NEGOCIO, ahora_local, hora_12, hoy_local, normalize_phone
 from app.utils.validation import parse_int, sanitize_optional_text, sanitize_text
 from database import get_db
 
@@ -219,12 +219,12 @@ def _validar_horario(cur, id_sede: int, inicio: datetime, fin: datetime) -> None
         raise ErrorServicio("La sede no abre ese día.")
     if inicio < horario["abre"] or fin > horario["cierra"]:
         raise ErrorServicio(
-            f"Fuera del horario: ese día se atiende de {horario['abre']:%H:%M} a {horario['cierra']:%H:%M} "
-            f"y la cita terminaría a las {fin:%H:%M}."
+            f"Fuera del horario: ese día se atiende de {hora_12(horario['abre'])} a {hora_12(horario['cierra'])} "
+            f"y la cita terminaría a las {hora_12(fin)}."
         )
     almuerzo = horario["almuerzo"]
     if almuerzo and _se_cruzan(inicio, fin, *almuerzo):
-        raise ErrorServicio(f"Se cruza con el almuerzo ({almuerzo[0]:%H:%M} a {almuerzo[1]:%H:%M}).")
+        raise ErrorServicio(f"Se cruza con el almuerzo ({hora_12(almuerzo[0])} a {hora_12(almuerzo[1])}).")
 
 
 def _cruce(cur, id_tienda: int, id_sede: int, id_profesional: int | None, inicio: datetime, fin: datetime,
@@ -252,7 +252,7 @@ def _sin_cruces(cur, id_tienda, id_sede, id_profesional, inicio, fin, excluir: i
     otra = _cruce(cur, id_tienda, id_sede, id_profesional, inicio, fin, excluir=excluir)
     if otra:
         que = "un bloqueo" if otra["estado"] == "bloqueada" else "otra cita"
-        raise Conflicto(f"{_OCUPADO} Se cruza con {que} de {otra['inicio']:%H:%M} a {otra['fin']:%H:%M}.")
+        raise Conflicto(f"{_OCUPADO} Se cruza con {que} de {hora_12(otra['inicio'])} a {hora_12(otra['fin'])}.")
 
 
 def _duracion(data: dict, servicio: dict) -> int:
@@ -409,7 +409,7 @@ def crear_bloqueo(id_tienda: int, id_sede: int, id_usuario: int, data: dict) -> 
         cita = _cruce(cur, id_tienda, id_sede, id_profesional, desde, hasta, estados=("reservada",))
         if cita:
             raise Conflicto(
-                f"Hay citas reservadas en ese horario (la primera el {cita['inicio']:%d/%m a las %H:%M}). "
+                f"Hay citas reservadas en ese horario (la primera el {cita['inicio']:%d/%m} a las {hora_12(cita['inicio'])}). "
                 "Reprográmalas o cancélalas antes de bloquear."
             )
         cur.execute(

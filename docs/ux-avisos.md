@@ -10,6 +10,7 @@ Toda alerta, error, confirmación o mensaje vacío de Turnio sigue estas reglas,
 4. **Concreto.** Con el dato que sirve: la hora que se cruza, cuántas unidades quedan, el tope del plan y cuánto cuesta subir.
 5. **Una sola acción sugerida.** Si hay un arreglo directo, el aviso trae el botón: Reintentar, Recargar, Ver mi plan, Escribir por WhatsApp.
 6. **Ortografía completa**, con tildes y signos de apertura.
+7. **Horas en 12 h con AM/PM** ("2:30 PM"), como se leen en Colombia: en pantalla, avisos y mensajes de WhatsApp. Se formatean con `T.hora12` (JS) y `hora_12` (`app/utils/helpers.py`); la API y la base siguen en 24 h.
 
 ## 2. Cómo se ve
 

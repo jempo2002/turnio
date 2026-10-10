@@ -139,6 +139,8 @@ def test_reserva_llega_a_la_agenda_del_negocio(client, negocio, crear):
     assert (cita["hora"], cita["hasta"], cita["profesional"], cita["precio"]) == ("10:00", "11:00", "Carlos", 25000)
     assert cita["whatsapp_url"].startswith("https://wa.me/573001112233?text=")
     assert "Ana%20Gomez" in cita["whatsapp_url"]
+    # La API sigue en 24 h; el mensaje para el negocio va en 12 h con AM/PM.
+    assert "a%20las%2010%3A00%20AM" in cita["whatsapp_url"]
     fila = crear.fila("SELECT origen, estado, cliente_telefono, id_usuario_registra FROM citas WHERE id_cita = %s",
                       (cita["id_cita"],))
     assert fila == {"origen": "publica", "estado": "reservada", "cliente_telefono": "3105550101",
@@ -225,3 +227,12 @@ def test_la_sesion_del_admin_no_se_toca(negocio):
     admin = negocio["admin"]
     assert admin.get("/r/barberia-cuartel").status_code == 200
     assert admin.get("/api/citas").status_code == 200
+
+
+def test_hora_12_para_mostrar():
+    from datetime import time
+
+    from app.utils.helpers import hora_12
+
+    assert [hora_12(time(h, m)) for h, m in ((9, 0), (12, 0), (0, 15), (14, 30), (23, 45))] == [
+        "9:00 AM", "12:00 PM", "12:15 AM", "2:30 PM", "11:45 PM"]

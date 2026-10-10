@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import re
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from urllib.parse import quote
 
 # Hora del negocio. Un servidor en UTC (lo normal en la nube) cortaba "hoy" a
@@ -25,6 +25,13 @@ def ahora_local() -> datetime:
 
 def hoy_local() -> date:
     return ahora_local().date()
+
+
+def hora_12(momento: datetime | time) -> str:
+    """Hora como la lee la gente en Colombia: "9:00 AM", "2:30 PM", "12:00 PM"
+    (mediodia). Solo para mostrar: la API y la base siguen en 24 h."""
+    hora = momento.hour % 12 or 12
+    return f"{hora}:{momento.minute:02d} {'AM' if momento.hour < 12 else 'PM'}"
 
 
 def avatar_iniciales(nombre: str) -> str:

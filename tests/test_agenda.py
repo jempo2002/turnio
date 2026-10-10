@@ -60,7 +60,7 @@ def test_la_duracion_bloquea_los_huecos_siguientes(client, negocio):
 
     r = _cita(client, n, "10:30")  # el corte de las 10 sigue hasta las 11
     assert r.status_code == 409
-    assert "10:00 a 11:00" in r.get_json()["msg"]
+    assert "10:00 AM a 11:00 AM" in r.get_json()["msg"]
     assert _cita(client, n, "09:30").status_code == 409  # terminaria a las 10:30
     assert _cita(client, n, "09:00").status_code == 201  # termina justo a las 10
     assert _cita(client, n, "11:00").status_code == 201  # empieza justo al terminar

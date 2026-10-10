@@ -20,6 +20,9 @@
   var semana = 0;          /* cuántas semanas adelante se está viendo */
   var libres = null;       /* disponibilidad del día elegido */
   var pedido = null;       /* AbortController de la consulta de horas en curso */
+  var franjaVista = '';    /* 'manana' | 'tarde' | 'noche': el grupo de horas que se ve */
+  var FRANJAS = [['manana', 'Mañana'], ['tarde', 'Tarde'], ['noche', 'Noche']];
+  var hora12 = T.hora12;
 
   /* ── Fechas: todo en UTC para que la zona del celular no mueva el día ── */
   function fecha(iso) {
@@ -77,7 +80,7 @@
     var e = $('estado-hoy');
     e.className = 'mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ' +
       (h.abierto ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-brand-darkest/70');
-    T.pintar(e, T.h`<span class="h-1.5 w-1.5 rounded-full ${h.abierto ? 'bg-emerald-500' : 'bg-slate-400'}" aria-hidden="true"></span>${h.abierto ? 'Hoy atiende de ' + h.abre + ' a ' + h.cierra : 'Hoy no atiende'}`);
+    T.pintar(e, T.h`<span class="h-1.5 w-1.5 rounded-full ${h.abierto ? 'bg-emerald-500' : 'bg-slate-400'}" aria-hidden="true"></span>${h.abierto ? 'Hoy atiende de ' + hora12(h.abre) + ' a ' + hora12(h.cierra) : 'Hoy no atiende'}`);
   }
 
   /* ── 1. Sede ── */
@@ -124,6 +127,9 @@
       </label>`);
     }
     T.pintar($('dias'), celdas);
+    $('dias-ayuda').textContent = servicio()
+      ? 'Toca el día que te sirve. Con las flechas ves otras semanas.'
+      : 'Primero elige un servicio.';
   }
 
   /* ── 4. Hora: una hora se ofrece si al menos un profesional está libre ──
@@ -135,13 +141,17 @@
       libres = null;
       $('paso-hora').disabled = $('paso-pro').disabled = true;
       T.pintar($('horas'), '');
+      $('franjas').classList.add('hidden');
       pintarPros();
     }
     if (!s || !dia) {
       $('horas-ayuda').textContent = s ? 'Elige un día.' : 'Elige un servicio y un día.';
       return;
     }
-    if (!refrescar) $('horas-ayuda').textContent = 'Buscando horas libres…';
+    if (!refrescar) {
+      $('horas-ayuda').textContent = 'Buscando horas libres…';
+      T.pintar($('horas'), T.h`<div class="grid grid-cols-3 gap-2.5" aria-hidden="true"><div class="esqueleto h-14"></div><div class="esqueleto h-14"></div><div class="esqueleto h-14"></div></div>`);
+    }
     if (pedido) pedido.abort();
     pedido = new AbortController();
     var url = API + '/disponibilidad?id_sede=' + sede().id_sede + '&id_servicio=' + s.id_servicio + '&fecha=' + dia;
@@ -149,11 +159,12 @@
       libres = d;
       pintarHoras(antes);
       if (antes && !elegido('hora')) {
-        T.aviso({ tipo: 'aviso', titulo: 'Esa hora se acaba de ocupar', detalle: 'Alguien reservó las ' + antes + ' hace un momento. Elige otra de las horas libres.' });
+        T.aviso({ tipo: 'aviso', titulo: 'Esa hora se acaba de ocupar', detalle: 'Alguien reservó las ' + hora12(antes) + ' hace un momento. Elige otra de las horas libres.' });
       }
     }).catch(function (e) {
       if (e && e.name === 'AbortError') return;
       var a = (e && e.aviso) || T.explicar(0);
+      T.pintar($('horas'), '');
       $('horas-ayuda').textContent = 'No pudimos cargar las horas. ' + a.detalle;
     });
   }
@@ -166,22 +177,60 @@
     return cuenta;
   }
 
+  /* Las horas van en tres grupos (Mañana / Tarde / Noche) y se ve uno a la vez:
+     un día con turnos cada 15 min eran 40+ botones seguidos. Se pintan todos y
+     solo se ocultan, así la hora elegida no se pierde al cambiar de grupo. */
   function pintarHoras(antes) {
     var cuenta = cuentaPorHora();
     var horas = Object.keys(cuenta).sort();
+    var grupos = { manana: [], tarde: [], noche: [] };
+    horas.forEach(function (h) { grupos[T.franja(h)].push(h); });
     $('paso-hora').disabled = !horas.length;
+    var dia = fechaLarga(fecha(libres.fecha)).replace(/^./, function (c) { return c.toUpperCase(); });
     $('horas-ayuda').textContent = horas.length
-      ? fechaLarga(fecha(libres.fecha)).replace(/^./, function (c) { return c.toUpperCase(); }) + ':'
+      ? dia + ': ' + (horas.length === 1 ? '1 hora libre' : horas.length + ' horas libres') + '. Toca la que te sirve.'
       : (libres.abierto ? 'Ya no quedan horas libres ese día. Prueba otro.' : 'Ese día no atiende. Prueba otro.');
-    T.pintar($('horas'), horas.map(function (h) {
-      var n = cuenta[h];
-      return T.h`<label class="flex min-h-[52px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-xl border border-brand-light bg-white px-1 text-sm font-semibold tabular-nums transition has-[:checked]:border-brand-dark has-[:checked]:bg-brand-lightest has-[:checked]:text-brand-dark has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand">
-        <input type="radio" name="hora" value="${h}" class="sr-only"${h === antes ? T.h` checked` : ''}>${h}
-        <span class="text-[10px] font-medium text-emerald-700">${n === 1 ? '1 libre' : n + ' libres'}</span>
-      </label>`;
+    if (!horas.length) {
+      $('franjas').classList.add('hidden');
+      T.pintar($('horas'), '');
+      return pintarPros();
+    }
+    /* Se queda en el grupo que se estaba viendo; si no tiene horas, el de la hora
+       elegida o el primero que tenga. */
+    if (!franjaVista || !grupos[franjaVista].length) {
+      franjaVista = antes && cuenta[antes] ? T.franja(antes) : FRANJAS.filter(function (f) { return grupos[f[0]].length; })[0][0];
+    }
+    T.pintar($('franjas'), FRANJAS.map(function (f) {
+      var n = grupos[f[0]].length;
+      return T.h`<button type="button" data-franja="${f[0]}" aria-pressed="${f[0] === franjaVista ? 'true' : 'false'}" aria-controls="horas-${f[0]}"
+          class="flex min-h-[52px] flex-col items-center justify-center rounded-xl text-sm font-semibold transition aria-pressed:bg-white aria-pressed:text-brand-dark aria-pressed:shadow-soft disabled:text-brand-darkest/35"${n ? '' : T.h` disabled`}>
+        ${f[1]}<span class="text-[11px] font-medium text-brand-darkest/70">${n ? (n === 1 ? '1 hora' : n + ' horas') : 'Sin horas'}</span>
+      </button>`;
+    }));
+    $('franjas').classList.remove('hidden');
+    $('franjas').classList.add('grid');
+    T.pintar($('horas'), FRANJAS.map(function (f) {
+      return T.h`<div id="horas-${f[0]}" class="grid grid-cols-3 gap-2.5${f[0] === franjaVista ? '' : ' hidden'}" role="group" aria-label="${f[1]}">
+        ${grupos[f[0]].map(function (h) {
+          var t = hora12(h).split(' ');
+          return T.h`<label class="flex min-h-[56px] min-w-0 cursor-pointer items-baseline justify-center gap-1 rounded-2xl border border-brand-light bg-white px-1 py-3 text-lg font-semibold tabular-nums transition active:scale-95 has-[:checked]:border-brand-dark has-[:checked]:bg-brand-dark has-[:checked]:text-white has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand">
+            <input type="radio" name="hora" value="${h}" class="sr-only" aria-label="${hora12(h)}"${h === antes ? T.h` checked` : ''}>${t[0]}<span class="text-xs font-semibold">${t[1]}</span>
+          </label>`;
+        })}
+      </div>`;
     }));
     return pintarPros();
   }
+
+  $('franjas').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-franja]');
+    if (!b || b.disabled) return;
+    franjaVista = b.dataset.franja;
+    $('franjas').querySelectorAll('[data-franja]').forEach(function (x) {
+      x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+    });
+    FRANJAS.forEach(function (f) { $('horas-' + f[0]).classList.toggle('hidden', f[0] !== franjaVista); });
+  });
 
   /* ── 5. Profesional: los que hacen el servicio; libre u ocupado a esa hora ── */
   function pintarPros() {
@@ -203,7 +252,9 @@
       antes = nLibres === 1 ? String(lista.filter(function (x) { return x.libre; })[0].p.id_profesional) : 'cualquiera';
     }
     $('paso-pro').disabled = false;
-    $('pros-ayuda').textContent = 'A las ' + hora + ':';
+    $('pros-ayuda').textContent = nLibres > 1
+      ? 'A las ' + hora12(hora) + '. Si te da igual quién te atienda, deja «Cualquiera disponible».'
+      : 'A las ' + hora12(hora) + ':';
     var filas = lista.map(function (x) {
       var p = x.p;
       return T.h`<label class="flex min-h-[60px] items-center gap-3 rounded-2xl border p-3 transition ${x.libre
@@ -231,8 +282,39 @@
 
   function pintarResumen() {
     var s = servicio(), dia = elegido('dia'), hora = elegido('hora'), r = $('resumen');
+    marcarListos();
     r.classList.toggle('hidden', !(s && dia && hora));
-    if (s && dia && hora) r.textContent = s.nombre + ' · ' + fechaLarga(fecha(dia)) + ' a las ' + hora + ' · ' + T.pesos(s.precio);
+    if (!(s && dia && hora)) return;
+    var pro = elegido('profesional'), quien = '';
+    if (pro && pro !== 'cualquiera') {
+      quien = sede().profesionales.filter(function (p) { return String(p.id_profesional) === pro; })[0];
+      quien = quien ? quien.nombre : '';
+    }
+    T.pintar(r, T.h`
+      <p class="text-xs font-semibold uppercase tracking-wide text-brand-darkest/70">Tu cita</p>
+      <p class="mt-1 text-base font-semibold first-letter:uppercase">${fechaLarga(fecha(dia))} · ${hora12(hora)}</p>
+      <p class="mt-0.5 text-brand-darkest/70">${s.nombre} · ${s.duracion_min} min${quien && T.h` · con ${quien}`}</p>
+      <p class="mt-2 font-semibold">${T.pesos(s.precio)}</p>`);
+  }
+
+  /* Pasos listos en verde con ✓: el cliente ve cuánto le falta. */
+  function marcarListos() {
+    var hecho = {
+      'paso-sede': !!elegido('sede'),
+      'paso-servicio': !!servicio(),
+      'paso-dia': !!elegido('dia'),
+      'paso-hora': !!elegido('hora'),
+      'paso-pro': !!elegido('profesional'),
+      'paso-datos': $('nombre').validity.valid && $('telefono').validity.valid
+    };
+    Object.keys(hecho).forEach(function (id) { $(id).classList.toggle('listo', hecho[id]); });
+  }
+
+  /* Al elegir algo, la pantalla baja sola al paso que sigue. */
+  var SIN_ANIMAR = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function irA(id) {
+    var el = $(id);
+    if (el) el.scrollIntoView({ behavior: SIN_ANIMAR ? 'auto' : 'smooth', block: 'start' });
   }
 
   /* ── Cambios en el formulario ── */
@@ -246,14 +328,22 @@
       cargarHoras();
     } else if (n === 'servicio') {
       $('paso-dia').disabled = false;
+      pintarDias();
       cargarHoras();
+      irA('paso-dia');
     } else if (n === 'dia') {
+      franjaVista = '';
       cargarHoras();
+      irA('paso-hora');
     } else if (n === 'hora') {
       pintarPros();
+      irA('paso-pro');
     } else if (n === 'profesional') {
       pintarResumen();
     }
+  });
+  form.addEventListener('input', function (e) {
+    if (e.target.id === 'nombre' || e.target.id === 'telefono') marcarListos();
   });
 
   $('semana-ant').addEventListener('click', function () { semana--; pintarDias(); cargarHoras(); });
@@ -318,7 +408,8 @@
   function exito(c) {
     T.pintar($('reserva-detalle'), T.h`
       <p class="font-semibold text-brand-darkest">${c.servicio} · ${T.pesos(c.precio)}</p>
-      <p class="first-letter:uppercase">${c.fecha_texto} de ${c.hora} a ${c.hasta}</p>
+      <p class="first-letter:uppercase">${c.fecha_texto}</p>
+      <p class="whitespace-nowrap">${hora12(c.hora)} a ${hora12(c.hasta)}</p>
       <p>Con ${c.profesional}</p>
       ${datos.sedes.length > 1 && T.h`<p>${c.sede}</p>`}
       ${c.direccion && T.h`<p>${c.direccion}</p>`}`);
