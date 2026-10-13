@@ -186,6 +186,7 @@
       nombre_negocio: $('negocio').value.trim(),
       tipo_negocio: $('tipo').value,
       telefono: $('whatsapp').value.trim(),
+      intervalo_citas_min: (document.querySelector('input[name="intervalo_citas_min"]:checked') || {}).value,
       slug: $('slug').value.trim().toLowerCase()
     };
     var pedidas = [T.api('PUT', '/api/negocio', negocio)];
@@ -205,7 +206,7 @@
   cargarHorario();
 
   T.guia('ajustes', $('contenido'), T.yo.rol === 'Admin' ? [
-    { titulo: 'Deja tu negocio listo', texto: 'Revisa el nombre, tu WhatsApp y el horario de atención: es lo que ven tus clientes al reservar.' },
+    { titulo: 'Deja tu negocio listo', texto: 'Revisa el nombre, tu WhatsApp, el horario de atención y cada cuánto das citas: es lo que ven tus clientes al reservar.' },
     { titulo: 'Tu link de reservas', texto: 'Elige cómo se ve tu link y compártelo. Toca «Guardar cambios» al terminar.' }
   ] : [
     { titulo: 'Tu cuenta', texto: 'Aquí cambias tu contraseña y cierras sesión en este celular.' }

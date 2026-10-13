@@ -27,7 +27,8 @@ from app.utils.helpers import ZONA_NEGOCIO, ahora_local, hora_12, hoy_local, nor
 from app.utils.validation import parse_int, sanitize_optional_text, sanitize_text
 from database import get_db
 
-PASO_MIN = 15  # cada cuanto se ofrece una hora libre
+INTERVALOS_CITA = (30, 60)  # cada cuantos minutos puede ofrecer horas un negocio (maximo 2 citas por hora)
+PASO_MIN = 30  # el de fabrica; cada negocio lo cambia en Ajustes (tiendas.intervalo_citas_min)
 MAX_DIAS_CONSULTA = 42  # vista de semana o de mes, no mas
 MAX_DIAS_BLOQUEO = 31  # vacaciones
 VIGENTES = ("reservada", "bloqueada")
@@ -437,7 +438,7 @@ def disponibilidad(id_tienda: int, id_sede: int, dia: date, id_servicio, id_prof
                    solo_online: bool = False) -> dict:
     """Horas de inicio libres ese dia para el servicio, por profesional: dentro
     del horario, fuera del almuerzo, sin cruzar citas ni bloqueos y, si es
-    hoy, desde ahora. Cada PASO_MIN minutos. `solo_online`: solo quienes
+    hoy, desde ahora. Cada `intervalo_citas_min` minutos del negocio. `solo_online`: solo quienes
     reciben reservas en linea (la pagina publica, T8)."""
     conn = get_db()
     try:
@@ -457,6 +458,7 @@ def disponibilidad(id_tienda: int, id_sede: int, dia: date, id_servicio, id_prof
         profesionales = cur.fetchall()
         servicio = None
         resultado = []
+        paso = _intervalo(cur, id_tienda)
         horario = _horario_del_dia(cur, id_sede, dia)
         for p in profesionales:
             try:
@@ -467,14 +469,22 @@ def disponibilidad(id_tienda: int, id_sede: int, dia: date, id_servicio, id_prof
                 continue  # no hace ese servicio
             resultado.append({"id_profesional": p["id_usuario"], "nombre": p["nombre_completo"],
                               "horas": _horas_libres(cur, id_tienda, id_sede, p["id_usuario"], dia, horario,
-                                                     int(servicio["duracion_min"]))})
+                                                     int(servicio["duracion_min"]), paso)})
     finally:
         conn.close()
-    return {"fecha": dia.isoformat(), "abierto": horario is not None, "paso_min": PASO_MIN,
+    return {"fecha": dia.isoformat(), "abierto": horario is not None, "paso_min": paso,
             "profesionales": resultado}
 
 
-def _horas_libres(cur, id_tienda, id_sede, id_profesional, dia, horario, duracion: int) -> list[str]:
+def _intervalo(cur, id_tienda) -> int:
+    """Cada cuantos minutos ofrece horas este negocio."""
+    cur.execute("SELECT intervalo_citas_min FROM tiendas WHERE id_tienda = %s", (id_tienda,))
+    fila = cur.fetchone()
+    paso = int(fila["intervalo_citas_min"]) if fila else PASO_MIN
+    return paso if paso in INTERVALOS_CITA else PASO_MIN
+
+
+def _horas_libres(cur, id_tienda, id_sede, id_profesional, dia, horario, duracion: int, paso_min: int) -> list[str]:
     if horario is None or dia < hoy_local():
         return []
     cur.execute(
@@ -485,7 +495,7 @@ def _horas_libres(cur, id_tienda, id_sede, id_profesional, dia, horario, duracio
     ocupado = [(f["inicio"], f["fin"]) for f in cur.fetchall()]
     if horario["almuerzo"]:
         ocupado.append(horario["almuerzo"])
-    paso, largo = timedelta(minutes=PASO_MIN), timedelta(minutes=duracion)
+    paso, largo = timedelta(minutes=paso_min), timedelta(minutes=duracion)
     t = horario["abre"]
     if dia == hoy_local():
         ahora = ahora_local()

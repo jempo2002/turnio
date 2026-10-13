@@ -57,6 +57,21 @@
             <input id="whatsapp" name="telefono" type="tel" inputmode="tel" autocomplete="tel" pattern="[0-9+ \(\)\-]{7,20}" maxlength="20" value="{{ negocio.telefono or '' }}" class="{{ campo }}">
           </div>
 
+          <!-- Cada cuánto se dan citas -->
+          <fieldset>
+            <legend class="block text-sm font-medium">¿Cada cuánto das citas?</legend>
+            <div class="mt-2 grid grid-cols-2 gap-2">
+              {% for minutos, titulo, detalle in ((30, 'Cada media hora', 'Hasta 2 citas por hora: 9:00 AM, 9:30 AM…'), (60, 'Cada hora', '1 cita por hora: 9:00 AM, 10:00 AM…')) %}
+              <label class="flex min-h-[72px] cursor-pointer flex-col justify-center rounded-2xl border border-brand-light bg-white p-3 transition has-[:checked]:border-brand-dark has-[:checked]:bg-brand-lightest/50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand">
+                <input type="radio" name="intervalo_citas_min" value="{{ minutos }}" class="sr-only"{% if negocio.intervalo_citas_min == minutos %} checked{% endif %}>
+                <span class="text-sm font-semibold">{{ titulo }}</span>
+                <span class="mt-0.5 text-xs text-brand-darkest/70">{{ detalle }}</span>
+              </label>
+              {% endfor %}
+            </div>
+            <p class="mt-1.5 text-xs text-brand-darkest/70">Son las horas que ven tus clientes al reservar y las que te ofrece la agenda.</p>
+          </fieldset>
+
           <!-- Enlace público -->
           <div>
             <label for="slug" class="block text-sm font-medium">Tu link de reservas</label>
