@@ -205,9 +205,9 @@ def test_horas_libres(client, negocio):
     r = client.get(f"/api/agenda/disponibilidad?fecha={DIA}&id_servicio={n['corte']}").get_json()
     horas = {p["id_profesional"]: p["horas"] for p in r["profesionales"]}
     carlos = horas[n["carlos"]]
-    assert carlos[:5] == ["08:00", "08:15", "08:30", "08:45", "09:00"]
-    assert "09:15" not in carlos and "10:45" not in carlos  # se cruzan con el corte de las 10
-    assert "11:00" in carlos and "11:15" not in carlos  # 11:15 + 60 min se mete al almuerzo
+    assert carlos[:4] == ["08:00", "08:30", "09:00", "11:00"]  # de fabrica, cada media hora
+    assert "09:30" not in carlos and "10:30" not in carlos  # se cruzan con el corte de las 10
+    assert "11:30" not in carlos  # 11:30 + 60 min se mete al almuerzo
     assert "13:00" in carlos and carlos[-1] == "15:00"  # despues, el bloqueo
     assert horas[n["luisa"]][-1] == "18:00"
     domingo = DIA + timedelta(days=5)
@@ -279,3 +279,31 @@ def test_dos_reservas_a_la_vez_solo_entra_una(app, negocio):
     for h in hilos:
         h.join()
     assert sorted(resultados) == ["ocupado", "ok"]
+
+
+def test_cada_negocio_elige_cada_cuanto_da_citas(client, negocio):
+    n = negocio
+    url = f"/api/agenda/disponibilidad?fecha={DIA}&id_servicio={n['corte']}"
+    r = client.get(url).get_json()
+    assert r["paso_min"] == 30  # de fabrica: cada media hora, maximo 2 por hora
+    carlos = {p["id_profesional"]: p["horas"] for p in r["profesionales"]}[n["carlos"]]
+    assert carlos[:3] == ["08:00", "08:30", "09:00"] and "08:15" not in carlos
+
+    # Cada hora: una cita por hora.
+    r = client.put("/api/negocio", json={"nombre_negocio": "Salon", "tipo_negocio": "peluqueria", "intervalo_citas_min": 60})
+    assert r.status_code == 200
+    assert client.get("/api/negocio").get_json()["negocio"]["intervalo_citas_min"] == 60
+    r = client.get(url).get_json()
+    carlos = {p["id_profesional"]: p["horas"] for p in r["profesionales"]}[n["carlos"]]
+    assert r["paso_min"] == 60 and carlos == ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"]
+
+
+def test_intervalo_de_citas_solo_media_hora_u_hora(client, negocio):
+    base = {"nombre_negocio": "Salon", "tipo_negocio": "peluqueria"}
+    for malo in (15, 45, 0, "abc"):
+        r = client.put("/api/negocio", json={**base, "intervalo_citas_min": malo})
+        assert r.status_code == 400, malo
+        assert "media hora" in r.get_json()["msg"]
+    # Sin el campo, no cambia el que ya tenia.
+    assert client.put("/api/negocio", json=base).status_code == 200
+    assert client.get("/api/negocio").get_json()["negocio"]["intervalo_citas_min"] == 30

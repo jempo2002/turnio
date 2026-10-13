@@ -10,7 +10,7 @@ from datetime import time, timedelta
 
 from mysql.connector import IntegrityError
 
-from app.services import imagen_service, vertical_service
+from app.services import agenda_service, imagen_service, vertical_service
 from app.services.errores import Conflicto
 from app.services.master_service import TIPOS_NEGOCIO, _parse_tipo
 from app.services.sede_service import ABRE, CIERRA, sede_de_tienda
@@ -29,7 +29,8 @@ def datos_negocio(id_tienda: int) -> dict:
     try:
         cur = conn.cursor(dictionary=True)
         cur.execute(
-            "SELECT nombre_negocio, slug, tipo_negocio, telefono, nit, id_logo FROM tiendas WHERE id_tienda = %s",
+            "SELECT nombre_negocio, slug, tipo_negocio, telefono, nit, id_logo, intervalo_citas_min "
+            "FROM tiendas WHERE id_tienda = %s",
             (id_tienda,),
         )
         fila = cur.fetchone()
@@ -48,11 +49,23 @@ def _parse_slug(raw) -> str:
     return slug
 
 
+def _parse_intervalo(raw) -> int:
+    try:
+        minutos = int(raw)
+    except (TypeError, ValueError):
+        minutos = 0
+    if minutos not in agenda_service.INTERVALOS_CITA:
+        raise ValueError("Elige si das citas cada media hora o cada hora.")
+    return minutos
+
+
 def actualizar_negocio(id_tienda: int, data: dict) -> None:
     nombre = sanitize_text(data.get("nombre_negocio"), "El nombre del negocio", max_len=150)
     tipo = _parse_tipo(data.get("tipo_negocio"))
     telefono = normalize_phone(data.get("telefono"), max_len=20)
     campos = {"nombre_negocio": nombre, "tipo_negocio": tipo, "telefono": telefono}
+    if data.get("intervalo_citas_min") not in (None, ""):
+        campos["intervalo_citas_min"] = _parse_intervalo(data["intervalo_citas_min"])
     if data.get("slug") not in (None, ""):
         campos["slug"] = _parse_slug(data["slug"])
     conn = get_db()
