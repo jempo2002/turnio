@@ -22,6 +22,10 @@
     sofia@turnio.demo      Profesional  (Norte)
     valeria@turnio.demo    Profesional  (Sur)
 
+3. Un Master demo para probar el panel Master (/panel-master):
+
+    master@turnio.demo     Master       (administra todos los negocios)
+
 Todos con la misma contrasena, que se pide por consola (o DEMO_CLAVE).
 Usa la base del .env (corre antes scripts/migrar.py). Se puede correr las
 veces que sea: un negocio que ya existe no se toca, solo se le crean los
@@ -340,6 +344,27 @@ def _sedes(id_tienda: int) -> dict[str, int]:
         conn.close()
 
 
+def sembrar_master(clave: str) -> bool:
+    """Crea master@turnio.demo si no existe. Devuelve si lo creo."""
+    from werkzeug.security import generate_password_hash
+
+    conn = get_db()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT 1 FROM usuarios WHERE correo = %s", (f"master@{DOMINIO}",))
+        if cur.fetchone():
+            return False
+        cur.execute(
+            "INSERT INTO usuarios (id_tienda, nombre_completo, correo, clave_hash, rol) "
+            "VALUES (NULL, 'Master Demo', %s, %s, 'Master')",
+            (f"master@{DOMINIO}", generate_password_hash(clave)),
+        )
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
 def en_produccion() -> bool:
     """En Railway manda el nombre del entorno (staging tambien usa
     FLASK_ENV=production); fuera de Railway, FLASK_ENV."""
@@ -368,6 +393,7 @@ def main() -> int:
     with app.app_context():
         for nombre, sembrador in ((NOMBRE, sembrar), (MULTI_NOMBRE, sembrar_multisede)):
             print(f'{"Creado" if sembrador(clave) else "Ya existía (solo se completaron usuarios)"}: "{nombre}"')
+        print(f'{"Creado" if sembrar_master(clave) else "Ya existía"}: master@{DOMINIO} (Master)')
     correos = ["admin", "admin2"] + [u[1] for u in USUARIOS[1:]] + ["multisede"] + [u[1] for u in MULTI_USUARIOS]
     print("Usuarios: " + ", ".join(f"{c}@{DOMINIO}" for c in correos))
     return 0

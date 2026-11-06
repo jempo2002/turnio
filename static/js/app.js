@@ -89,7 +89,13 @@
         }
         if (data.ok) {
           T.aviso({ tipo: 'exito', titulo: data.msg || 'Listo, quedó guardado.' });
-          window.setTimeout(function () { window.location.reload(); }, 900);
+          // `redirect` (solo rutas propias): a donde ir despues, por ejemplo
+          // al listado tras eliminar lo que se estaba viendo.
+          var destino = typeof data.redirect === 'string' && data.redirect.charAt(0) === '/' &&
+            data.redirect.charAt(1) !== '/' ? data.redirect : null;
+          window.setTimeout(function () {
+            if (destino) window.location.href = destino; else window.location.reload();
+          }, 900);
           return;
         }
         if (data.code === 'sin_sede') { window.location.href = '/seleccionar-sede'; return; }

@@ -126,7 +126,8 @@ def login_required(f):
             or not fila["estado_activo"]
             or fila["id_tienda"] != session.get("id_tienda")
             or session.get("huella") != huella
-            or (fila["rol"] != "Master" and fila["estado_tienda"] == "Eliminado")
+            # Suspendido por el Master: nadie del negocio entra hasta reactivarlo.
+            or (fila["rol"] != "Master" and fila["estado_tienda"] in ("Eliminado", "Suspendido"))
         ):
             if user_id:
                 log_seguridad("sesion_revocada")

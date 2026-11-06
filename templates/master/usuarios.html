@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block content %}
+<h1>Usuarios</h1>
+<p class="muted">Todas las cuentas activas de Turnio. Para cambiar el rol o la sede de alguien, o agregar personas a un negocio, entra a la ficha de su negocio.</p>
+
+<section class="tarjeta">
+  <form class="buscar filtros" method="get" action="{{ url_for('master.usuarios_page') }}" role="search">
+    <input type="search" name="q" value="{{ q }}" maxlength="100" placeholder="Nombre, correo, cédula o negocio" aria-label="Buscar usuario" />
+    <button class="btn" type="submit">Buscar</button>
+    {% if q %}<a class="btn-link" href="{{ url_for('master.usuarios_page') }}">Ver todos</a>{% endif %}
+  </form>
+  <table class="tabla tabla--tarjetas">
+    <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Negocio</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+    <tbody>
+    {% for u in usuarios %}
+      <tr>
+        <td><strong>{{ u.nombre_completo }}</strong>{% if u.cc %}<br /><small class="muted">CC {{ u.cc }}</small>{% endif %}</td>
+        <td data-th="Correo">{{ u.correo }}</td>
+        <td data-th="Rol">{{ u.rol }}{% if u.invitacion_pendiente %} <span class="chip">Invitación pendiente</span>{% endif %}</td>
+        <td data-th="Negocio">
+          {% if u.id_tienda %}
+            <a href="{{ url_for('master.negocio_page', id_tienda=u.id_tienda) }}">{{ u.nombre_negocio }}</a>
+            {% if u.sede %}<br /><small class="muted">{{ u.sede }}</small>{% endif %}
+            {% if u.estado_tienda == 'Suspendido' %}<span class="chip chip--error">Suspendido</span>{% endif %}
+          {% else %}<span class="muted">Turnio</span>{% endif %}
+        </td>
+        <td class="acciones">
+          <details>
+            <summary>Editar</summary>
+            <form class="form form--fila" data-api="PUT {{ url_for('master.api_usuario_editar', id_usuario=u.id_usuario) }}">
+              <input name="nombre" value="{{ u.nombre_completo }}" maxlength="150" required aria-label="Nombre" />
+              <input type="email" name="correo" value="{{ u.correo }}" maxlength="150" required aria-label="Correo" />
+              <button class="btn" type="submit">Guardar</button>
+            </form>
+          </details>
+          <details>
+            <summary>Cambiar contraseña</summary>
+            <form class="form form--fila" data-api="PUT {{ url_for('master.api_usuario_clave', id_usuario=u.id_usuario) }}">
+              <input type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" required aria-label="Contraseña nueva" placeholder="Contraseña nueva" />
+              <input type="password" name="confirm_password" minlength="8" maxlength="128" autocomplete="new-password" required aria-label="Repítela" placeholder="Repítela" />
+              <button class="btn" type="submit">Cambiar</button>
+            </form>
+          </details>
+          {% if u.id_usuario != session.id_usuario %}
+            <button class="btn-link btn-link--peligro" type="button"
+                    data-api="DELETE {{ url_for('master.api_usuario_desactivar', id_usuario=u.id_usuario) }}"
+                    data-confirmar="¿Desactivar a {{ u.nombre_completo }}?"
+                    data-detalle="No podrá volver a entrar. Su historial se conserva."
+                    data-boton="Desactivar">Desactivar</button>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">{% if q %}Nadie coincide con "{{ q }}".{% else %}No hay usuarios.{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if usuarios|length >= 100 %}<p class="muted">Se muestran los primeros 100. Busca para encontrar a alguien en particular.</p>{% endif %}
+</section>
+{% endblock %}

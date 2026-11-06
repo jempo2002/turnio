@@ -37,9 +37,11 @@ _HASH_SENUELO = generate_password_hash("turnio-senuelo")
 _CREDENCIALES_INVALIDAS = "Correo o contraseña incorrectos. Revisa que estén bien escritos o toca «¿Olvidaste tu contraseña?»."
 _SEDE_INACTIVA = "Tu sede ya no está activa. Pídele al administrador que te asigne otra."
 _USUARIO_LOGIN_SQL = (
-    "SELECT id_usuario, id_tienda, id_sede, nombre_completo, clave_hash, rol, estado_activo "
-    "FROM usuarios WHERE correo = %s LIMIT 1"
+    "SELECT u.id_usuario, u.id_tienda, u.id_sede, u.nombre_completo, u.clave_hash, u.rol, u.estado_activo, "
+    "t.estado AS estado_tienda "
+    "FROM usuarios u LEFT JOIN tiendas t ON t.id_tienda = u.id_tienda WHERE u.correo = %s LIMIT 1"
 )
+NEGOCIO_SUSPENDIDO = "Este negocio está suspendido. Escríbenos por WhatsApp para reactivarlo."
 
 
 def _datos_peticion() -> dict:
@@ -99,6 +101,8 @@ def login():
 
     if not user["estado_activo"]:
         return _error_login("Cuenta desactivada. Contacta al administrador.", 403)
+    if user["rol"] != "Master" and user["estado_tienda"] == "Suspendido":
+        return _error_login(NEGOCIO_SUSPENDIDO, 403)
 
     redirect_url = _abrir_sesion(user)
     if not redirect_url:
