@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}{{ n.nombre_negocio }}{% endblock %}
+{% macro select_sede(actual) %}
+  <select name="id_sede" aria-label="Sede">
+    <option value="" {% if actual is none %}selected{% endif %}>Todas (solo Admin)</option>
+    {% for s in n.sedes %}<option value="{{ s.id_sede }}" {% if s.id_sede == actual %}selected{% endif %}>{{ s.nombre }}</option>{% endfor %}
+  </select>
+{% endmacro %}
+{% block content %}
+<p class="migas"><a href="{{ url_for('master.panel') }}">← Negocios</a></p>
+<h1>{{ n.nombre_negocio }}
+  {% if n.situacion in ('vencido', 'suspendido') %}<span class="chip chip--error">{{ situaciones[n.situacion] }}</span>
+  {% elif n.situacion == 'al_dia' %}<span class="chip chip--ok">{{ situaciones[n.situacion] }}</span>
+  {% else %}<span class="chip">{{ situaciones[n.situacion] }}</span>{% endif %}
+</h1>
+<p class="muted">{{ tipos[n.tipo_negocio] }} · Reservas en <a href="/r/{{ n.slug }}" target="_blank" rel="noopener">/r/{{ n.slug }}</a> · Cliente desde {{ n.fecha_creacion.strftime('%d/%m/%Y') }}</p>
+
+<div class="dos-columnas">
+<section class="tarjeta">
+  <h2>Suscripción</h2>
+  <dl class="datos">
+    <dt>Plan</dt><dd>{{ n.plan_nombre }}{% if n.en_prueba %} <span class="chip">Prueba gratis</span>{% endif %}</dd>
+    <dt>Mensualidad</dt><dd>{{ n.mensualidad|pesos }}</dd>
+    <dt>Vence</dt><dd>{% if n.vence %}{{ n.vence.strftime('%d/%m/%Y') }}{% if n.dias is not none %} ({% if n.dias > 0 %}faltan {{ n.dias }} día{{ '' if n.dias == 1 else 's' }}{% else %}vencida{% endif %}){% endif %}{% else %}Sin fecha{% endif %}</dd>
+    {% if n.montaje_pendiente %}<dt>Montaje pendiente</dt><dd>{{ n.montaje_pendiente|pesos }}</dd>{% endif %}
+  </dl>
+
+  <form class="form form--fila" data-api="PUT {{ url_for('master.api_plan', id_tienda=n.id_tienda) }}">
+    <select name="plan_id" aria-label="Plan">
+      {% for pid, p in planes.items() %}<option value="{{ pid }}" {% if pid == n.plan_id %}selected{% endif %}>{{ p.nombre }} · {{ p.precio|pesos }}</option>{% endfor %}
+    </select>
+    <button class="btn" type="submit">Cambiar plan</button>
+  </form>
+
+  <h2 class="subtitulo">Registrar pago</h2>
+  <p class="muted">Suma los meses desde hoy o desde el vencimiento, lo que sea más tarde. Deja el monto vacío para cobrar {{ n.mensualidad|pesos }} por mes.</p>
+  <form class="form form--rejilla" data-api="POST {{ url_for('master.api_renovar', id_tienda=n.id_tienda) }}"
+        data-confirmar="¿Registrar el pago de {{ n.nombre_negocio }}?" data-detalle="La suscripción se extiende y el cobro queda en el historial." data-boton="Registrar pago" data-peligro="no">
+    <label>Meses
+      <select name="meses">{% for m in periodos %}<option value="{{ m }}">{{ m }} mes{{ '' if m == 1 else 'es' }}</option>{% endfor %}</select>
+    </label>
+    <label>Monto (opcional) <input name="monto" inputmode="numeric" maxlength="12" placeholder="{{ n.mensualidad }}" /></label>
+    <label>Nota (opcional) <input name="nota" maxlength="200" placeholder="Nequi, transferencia, descuento…" /></label>
+    <button class="btn btn--primario" type="submit">Registrar pago</button>
+  </form>
+
+  {% if n.montaje_pendiente %}
+    <p><button class="btn" type="button"
+            data-api="POST {{ url_for('master.api_montaje', id_tienda=n.id_tienda) }}"
+            data-confirmar="¿Registrar el pago del montaje?"
+            data-detalle="El montaje de {{ n.montaje_pendiente|pesos }} queda como pagado."
+            data-boton="Marcar pagado" data-peligro="no">Marcar montaje pagado ({{ n.montaje_pendiente|pesos }})</button></p>
+  {% endif %}
+
+  <details>
+    <summary>Corregir la fecha de vencimiento</summary>
+    <p class="muted">Para una cortesía o un pago mal registrado. No anota ningún cobro.</p>
+    <form class="form form--fila" data-api="PUT {{ url_for('master.api_vencimiento', id_tienda=n.id_tienda) }}">
+      <input type="date" name="fecha" value="{{ (n.vence or hoy).isoformat() }}" required aria-label="Nueva fecha de vencimiento" />
+      <button class="btn" type="submit">Guardar fecha</button>
+    </form>
+  </details>
+</section>
+
+<section class="tarjeta">
+  <h2>Datos del negocio</h2>
+  <form class="form" data-api="PUT {{ url_for('master.api_editar', id_tienda=n.id_tienda) }}">
+    <label>Nombre <input name="nombre_negocio" value="{{ n.nombre_negocio }}" maxlength="150" required /></label>
+    <label>Tipo
+      <select name="tipo_negocio">{% for tid, t in tipos.items() %}<option value="{{ tid }}" {% if tid == n.tipo_negocio %}selected{% endif %}>{{ t }}</option>{% endfor %}</select>
+    </label>
+    <label>NIT <input name="nit" value="{{ n.nit or '' }}" maxlength="30" /></label>
+    <label>Teléfono <input name="telefono" value="{{ n.telefono or '' }}" maxlength="20" inputmode="tel" /></label>
+    <label>Enlace de reservas (/r/…) <input name="slug" value="{{ n.slug }}" maxlength="60" pattern="[a-z0-9]+(-[a-z0-9]+)*" required /></label>
+    <button class="btn btn--primario" type="submit">Guardar datos</button>
+  </form>
+</section>
+</div>
+
+<section class="tarjeta">
+  <h2>Sedes ({{ n.sedes|length }})</h2>
+  <table class="tabla tabla--tarjetas">
+    <thead><tr><th>Sede</th><th>Dirección</th><th>Teléfono</th><th>Cobro</th></tr></thead>
+    <tbody>
+    {% for s in n.sedes %}
+      <tr>
+        <td><strong>{{ s.nombre }}</strong>{% if s.es_principal %} <span class="chip">Principal</span>{% endif %}</td>
+        <td data-th="Dirección">{{ s.direccion or '—' }}</td>
+        <td data-th="Teléfono">{{ s.telefono or '—' }}</td>
+        <td data-th="Cobro">
+          {% if s.extra %}Sede extra: {{ s.precio_mes|pesos }}/mes{% else %}Incluida en el plan{% endif %}
+          {% if s.costo_montaje %}<br /><small class="muted">Montaje {{ s.costo_montaje|pesos }} · {{ 'pagado' if s.montaje_pagado else 'pendiente' }}</small>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted">Las sedes las abre y cierra el Admin del negocio desde su pantalla Sedes.</p>
+</section>
+
+<section class="tarjeta">
+  <h2>Equipo ({{ n.usuarios|length }})</h2>
+  <p class="muted">Admin: {{ n.admins }}{% if n.tope_admins %} de {{ n.tope_admins }} que permite el plan{% endif %}. Un Admin maneja todas las sedes.</p>
+  <table class="tabla tabla--tarjetas">
+    <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Sede</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+    <tbody>
+    {% for u in n.usuarios %}
+      <tr>
+        <td><strong>{{ u.nombre_completo }}</strong>{% if u.cc %}<br /><small class="muted">CC {{ u.cc }}</small>{% endif %}</td>
+        <td data-th="Correo">{{ u.correo }}</td>
+        <td data-th="Rol">{{ u.rol }}{% if u.invitacion_pendiente %} <span class="chip">Invitación pendiente</span>{% endif %}</td>
+        <td data-th="Sede">{{ u.sede or 'Todas' }}</td>
+        <td class="acciones">
+          <details>
+            <summary>Editar</summary>
+            <form class="form form--fila" data-api="PUT {{ url_for('master.api_usuario_editar', id_usuario=u.id_usuario) }}">
+              <input name="nombre" value="{{ u.nombre_completo }}" maxlength="150" required aria-label="Nombre" />
+              <input type="email" name="correo" value="{{ u.correo }}" maxlength="150" required aria-label="Correo" />
+              <select name="rol" aria-label="Rol">{% for r in roles %}<option {% if r == u.rol %}selected{% endif %}>{{ r }}</option>{% endfor %}</select>
+              {{ select_sede(u.id_sede) }}
+              <button class="btn" type="submit">Guardar</button>
+            </form>
+          </details>
+          <details>
+            <summary>Cambiar contraseña</summary>
+            <form class="form form--fila" data-api="PUT {{ url_for('master.api_usuario_clave', id_usuario=u.id_usuario) }}">
+              <input type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" required aria-label="Contraseña nueva" placeholder="Contraseña nueva" />
+              <input type="password" name="confirm_password" minlength="8" maxlength="128" autocomplete="new-password" required aria-label="Repítela" placeholder="Repítela" />
+              <button class="btn" type="submit">Cambiar</button>
+            </form>
+          </details>
+          <button class="btn-link btn-link--peligro" type="button"
+                  data-api="DELETE {{ url_for('master.api_usuario_desactivar', id_usuario=u.id_usuario) }}"
+                  data-confirmar="¿Desactivar a {{ u.nombre_completo }}?"
+                  data-detalle="No podrá volver a entrar. Sus citas y ventas se conservan."
+                  data-boton="Desactivar">Desactivar</button>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">Este negocio no tiene usuarios activos.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h2 class="subtitulo">Agregar usuario</h2>
+  <p class="muted">Con los mismos topes del plan que tiene el Admin en su pantalla Equipo.</p>
+  <form class="form form--rejilla" data-api="POST {{ url_for('master.api_usuario_crear', id_tienda=n.id_tienda) }}">
+    <label>Nombre completo <input name="nombre" maxlength="150" required /></label>
+    <label>Cédula <input name="cc" inputmode="numeric" maxlength="15" required /></label>
+    <label>Correo <input type="email" name="correo" maxlength="150" autocomplete="off" required /></label>
+    <label>Rol <select name="rol">{% for r in roles %}<option {% if r == 'Profesional' %}selected{% endif %}>{{ r }}</option>{% endfor %}</select></label>
+    <label>Sede {{ select_sede(none) }}</label>
+    <label>Contraseña <input type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" required /></label>
+    <label>Repítela <input type="password" name="confirm_password" minlength="8" maxlength="128" autocomplete="new-password" required /></label>
+    <button class="btn btn--primario" type="submit">Agregar usuario</button>
+  </form>
+</section>
+
+<section class="tarjeta">
+  <h2>Cobros</h2>
+  <table class="tabla tabla--tarjetas">
+    <thead><tr><th>Fecha</th><th>Concepto</th><th>Monto</th><th>Hasta</th><th>Nota</th></tr></thead>
+    <tbody>
+    {% for p in n.pagos %}
+      <tr>
+        <td>{{ p.fecha.strftime('%d/%m/%Y') }}</td>
+        <td data-th="Concepto">{{ p.concepto }}{% if p.meses %} · {{ p.meses }} mes{{ '' if p.meses == 1 else 'es' }}{% endif %}{% if p.plan_nombre %} · {{ p.plan_nombre }}{% endif %}</td>
+        <td data-th="Monto">{{ p.monto|pesos }}</td>
+        <td data-th="Hasta">{{ p.vence_hasta.strftime('%d/%m/%Y') if p.vence_hasta else '—' }}</td>
+        <td data-th="Nota">{{ p.nota or '' }}{% if p.registro %}<br /><small class="muted">Registró {{ p.registro }}</small>{% endif %}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">Sin cobros registrados todavía.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="tarjeta">
+  <h2>Acceso del negocio</h2>
+  {% if n.estado == 'Suspendido' %}
+    <p class="muted">Está suspendido: nadie del equipo puede entrar y su enlace de reservas no abre.</p>
+    <button class="btn btn--primario" type="button"
+            data-api="POST {{ url_for('master.api_reactivar', id_tienda=n.id_tienda) }}"
+            data-confirmar="¿Reactivar {{ n.nombre_negocio }}?" data-detalle="Su equipo vuelve a entrar y su enlace de reservas vuelve a abrir."
+            data-boton="Reactivar" data-peligro="no">Reactivar negocio</button>
+  {% else %}
+    <p class="muted">Suspender cierra las sesiones del equipo y apaga el enlace de reservas, sin borrar nada. Se puede reactivar cuando quieras.</p>
+    <button class="btn" type="button"
+            data-api="POST {{ url_for('master.api_suspender', id_tienda=n.id_tienda) }}"
+            data-confirmar="¿Suspender {{ n.nombre_negocio }}?" data-detalle="Su equipo no podrá entrar y sus clientes no podrán reservar hasta que lo reactives."
+            data-boton="Suspender">Suspender negocio</button>
+  {% endif %}
+  <button class="btn-link btn-link--peligro" type="button"
+          data-api="DELETE {{ url_for('master.api_eliminar', id_tienda=n.id_tienda) }}"
+          data-confirmar="¿Eliminar {{ n.nombre_negocio }}?"
+          data-detalle="Sus usuarios dejan de entrar y se libera su NIT y sus correos. El historial se conserva, pero no se puede deshacer desde el panel."
+          data-boton="Eliminar negocio">Eliminar negocio</button>
+</section>
+{% endblock %}

@@ -101,10 +101,11 @@ railway ssh --environment staging --service <servicio web>
 python scripts/crear_demo.py      # pide la contraseña de las cuentas demo
 ```
 
-Crea dos negocios con citas de hoy, servicios y productos. Todas las cuentas usan la misma contraseña:
+Crea dos negocios con citas de hoy, servicios y productos, y un Master demo para el panel Master. Todas las cuentas usan la misma contraseña:
 
 | Negocio | Correo | Rol |
 |---|---|---|
+| Turnio (panel Master) | `master@turnio.demo` | Master: entra a `/panel-master` |
 | Barbería Turnio Demo (prueba del Pro) | `admin@turnio.demo` | Admin |
 | | `admin2@turnio.demo` | Admin (el segundo, tope del plan) |
 | | `recepcion@turnio.demo` | Recepción |

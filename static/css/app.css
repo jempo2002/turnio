@@ -135,3 +135,26 @@ details[open] { flex-basis: 100%; }
 
 /* Texto solo para lectores de pantalla (T9: encabezado de la columna de acciones). */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* Panel Master: cifras, filtros y ficha del negocio. */
+.cifras { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+.cifra {
+  display: grid; gap: 0.1rem; padding: 0.85rem 1rem; background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: var(--radio); color: var(--texto); text-decoration: none;
+}
+a.cifra:hover { border-color: var(--primario-500); }
+.cifra strong { font-size: 1.35rem; font-weight: 800; }
+.cifra small { color: var(--texto-suave); font-weight: 600; }
+.cifra--alerta strong { color: var(--peligro); }
+.filtros { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+.filtros .chip { font-size: 0.85rem; padding: 0.35rem 0.8rem; }
+.chip--activo { background: var(--primario); color: #fff; border-color: var(--primario); }
+.chip--ok { background: var(--ok-suave); color: var(--ok); border-color: #a7f3d0; }
+.buscar { display: flex; gap: 0.5rem; flex: 1 1 16rem; }
+.buscar input { flex: 1; }
+.migas { margin: 0 0 0.5rem; font-size: 0.9rem; }
+.dos-columnas { display: grid; gap: 0 1.25rem; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); }
+.datos { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 1rem; margin: 0 0 1rem; }
+.datos dt { color: var(--texto-suave); font-weight: 600; }
+.datos dd { margin: 0; }
+.subtitulo { margin-top: 1.25rem; }

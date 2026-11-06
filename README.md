@@ -21,7 +21,7 @@ Tomado de jemPOS Chef (que no se modifica):
 | Sesión revalidada en la base, roles, solo lectura al vencer | `app/utils/decorators.py` |
 | HTTPS, HSTS, CSP, cookies seguras, ProxyFix | `app/security.py` |
 | Planes y límites | `app/services/plan_service.py` |
-| Panel Master: alta de negocios, plan, pagos, baja | `app/services/master_service.py`, `/panel-master` |
+| Panel Master: resumen, negocios (filtros, ficha, editar, suspender, baja), plan, pagos con historial, usuarios de toda la plataforma | `app/services/master_service.py`, `/panel-master`, `/panel-master/usuarios` |
 | Sedes y equipo | `app/services/sede_service.py`, `app/services/usuario_service.py`, `/sedes`, `/equipo` |
 | Pool MySQL con zona horaria de Colombia | `database.py`, `app/utils/helpers.py` |
 
