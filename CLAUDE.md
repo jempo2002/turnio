@@ -14,6 +14,9 @@ Turnio es una agenda y caja mobile-first para negocios con cita (barberías, sal
 ## Roadmap
 La auditoría y las tareas (T1 a T15) están en `docs/auditoria-y-workflow.md`.
 
+## Normas generales
+Las normas de seguridad, usabilidad, UX/UI y rendimiento (S/U/D/R1–R31) y su registro de cambios están en `docs/NORMAS.md`. Revísalas antes de tocar una interfaz.
+
 ## Backend
 - El backend es la app Flask de la raíz (`app/`), construida sobre jemPOS Chef. Se conservan sus nombres (`tiendas`, `id_tienda`) para que las piezas de jemPOS se porten sin renombrar.
 - Cambios de la base: un archivo nuevo en `migrations/` (nunca editar uno aplicado) y `python scripts/migrar.py`.
